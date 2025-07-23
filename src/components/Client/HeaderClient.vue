@@ -34,7 +34,7 @@
                 <li><router-link class="dropdown-item" to="">Quên mật khẩu</router-link></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><router-link class="dropdown-item" to="">Thông tin tài khoản</router-link></li>
-                <li><router-link class="dropdown-item" to="">Quản lý hệ thống</router-link></li>
+                <li><router-link to="/quanly/tongquan" class="dropdown-item" >Quản lý hệ thống</router-link></li>
                 <li><router-link class="dropdown-item" to="">Đổi mật khẩu</router-link></li>
                 <li><router-link class="dropdown-item" to="">Đăng xuất</router-link></li>
             </ul>
@@ -57,7 +57,7 @@
         height: 60px;    
         background-color: #fff; 
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
-        z-index: 1000; 
+        z-index: 10; 
     }
     .dropdown-toggle::after {
         display: none !important;

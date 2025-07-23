@@ -1,39 +1,6 @@
 <template>
     <!--------------------------------------- Chứng nhận--------------------------------------->
-    <div class="chungnhan">
-        <div class="item">
-          <i class="bi bi-patch-check"></i>
-          <p>
-            Sản phẩm
-            <br>
-            CHÍNH HÃNG
-          </p>
-          
-        </div>
-        <div class="item">
-          <i class="bi bi-cart3"></i>
-          <p>Giao hàng 
-            <br>
-            TOÀN QUỐC
-          </p>
-        </div>
-        <div class="item">
-          <i class="bi bi-credit-card-2-back"></i>
-          <p>
-            Thanh toán
-            <br>
-            DỄ DÀNG
-          </p>
-        </div>
-        <div class="item">
-            <i class="bi bi-arrow-repeat"></i>
-          <p>
-            Bảo hành
-            <br>
-            1 đổi 1
-          </p>
-        </div>
-      </div>
+
       <hr>
        <!--------------------------------------- Footer --------------------------------------->
     
