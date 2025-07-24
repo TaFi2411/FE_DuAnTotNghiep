@@ -118,7 +118,7 @@ export default {
     },
     checkout() {
       // Chuyển sang trang checkout
-      this.$router.push("/checkout");
+      this.$router.push("/thanhtoan");
     },
   },
 };

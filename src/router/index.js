@@ -4,12 +4,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LayoutClient from '@/layout/LayoutClient.vue';
 import LayoutAdmin from '@/layout/LayoutAdmin.vue';
 import Home from '@/views/Client/Home.vue'
-import ProductDetail from '@/views/Client/ProductDetail.vue';
-import Product from '@/views/Client/Product.vue';
-import Cart from '@/views/Client/Cart.vue';
-import Checkout from '@/views/Client/Checkout.vue';
 
-import About from '@/views/Client/About.vue';
 //Admin
 import Dashboard from '@/views/Admin/Dashboard.vue';
 import ProductList from '@/views/Admin/Product.vue/ProductList.vue';
@@ -19,35 +14,34 @@ import ProductType from '@/views/Admin/Product.vue/ProductType.vue';
 //User
 import Introduce from '@/views/Client/Introduce.vue';
 import Support from '@/views/Client/Support.vue';
+import ProductDetail from '@/views/Client/Products/ProductDetail.vue';
+import Product from '@/views/Client/Products/Product.vue';
+import Cart from '@/views/Client/Cart.vue';
+import Checkout from '@/views/Client/Checkout.vue';
+
+
 const clientRouter =[
   { 
     path: '', 
     component: Home
   },
     { 
-      path: '/ProductDetail/:id', 
+      path: '/sanpham/chitietsanpham/:id', 
     component: ProductDetail
   },
       { 
-      path: '/Product', 
+      path: '/sanpham', 
     component: Product
   },
         { 
-      path: '/Cart', 
+      path: '/giohang', 
     component: Cart
   },
    { 
-      path: '/Checkout', 
+      path: '/thanhtoan', 
     component: Checkout
   },
-   { 
-      path: '/Support', 
-    component: Support
-  },
-     { 
-      path: '/About', 
-    component: About
-  },
+
   { path: '/gioithieu', 
     component: Introduce
   },
@@ -78,12 +72,6 @@ const router = createRouter({
       children: clientRouter
     },
  
-    // {
-    //   path: '/',
-    //   name: 'adminRouter',
-    //   component: AdminLayout,
-    //   children: adminRouter
-    // },
     {
       path: '/',
       name: 'adminRouter',

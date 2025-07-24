@@ -106,7 +106,7 @@
             v-for="product in displayedProducts"
             :key="product.id"
           >
-            <RouterLink :to="`/ProductDetail/${product.id}`" class="text-decoration-none">
+            <RouterLink :to="`/sanpham/chitietsanpham/${product.id}`" class="text-decoration-none">
               <div class="card h-100 position-relative overflow-hidden product-card-hover">
                 <!-- Badge mẫu mới -->
                 <span class="badge bg-danger position-absolute top-0 start-0 m-2 badge-pulse">
