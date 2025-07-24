@@ -20,9 +20,6 @@ import { RouterView } from 'vue-router';
 </template>
 
 <style scoped>
-.header{
-  margin-left: 300px;
-}
 .content {
   margin-top: 60px;
   margin-left: 300px;

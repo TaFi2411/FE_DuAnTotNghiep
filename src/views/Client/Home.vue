@@ -72,12 +72,12 @@
       <div class="content" style="color: white">
         <h1>Watch</h1>
         <p style="color: white">Apple Watch - Công nghệ trên cổ tay bạn.</p>
-        <router-link class="buy-btn" style="border-color: white; color: white"
-          >Mua sắm iPad</router-link
-        >
+        <router-link class="buy-btn" style="border-color: white; color: white">
+          Mua sắm iPad
+        </router-link>
       </div>
-      <div class="image-banner-watch">
-        <img src="/images/banner-home-watch.jpg" alt="" width="100%" />
+      <div class="">
+        <img src="/images/banner-home-watch.jpg" alt="" width="100%" height=""/>
       </div>
     </div>
 
@@ -254,7 +254,7 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: left;
   height: 220px;
-    background: linear-gradient(#000000 , #f9f9f9,#252525);
+  background: linear-gradient(#000000, #f9f9f9, #252525);
 }
 
 .apple-card i {
@@ -278,7 +278,6 @@ export default {
 .apple-card.blue h3 {
   font-size: 60px;
   color: #007aff;
-  
 }
 
 .apple-card.green i,
@@ -297,11 +296,10 @@ export default {
   display: flex;
   margin: 40px;
   margin-bottom: 0px;
-  
 }
 
 .item > p {
-    color: white;
+  color: white;
   margin: 10px;
   margin-left: 10px;
   font-family: Arial, Helvetica, sans-serif;
@@ -330,7 +328,6 @@ export default {
   padding-left: 100px;
   padding-right: 100px;
   margin-bottom: 100px;
-
 }
 
 .modal-content {
@@ -497,12 +494,7 @@ export default {
 }
 
 .container-banner-ipad {
-  background: linear-gradient(
-    to bottom,
-    #000000 16%,
-    #ffffff80 60%,
-    #000000 100%
-  );
+  background: linear-gradient(to bottom, #000000 16%, #ffffff80 60%, #000000 100%);
   height: 520px;
   border-left: 5px solid white;
 }
@@ -515,26 +507,33 @@ export default {
 
 .container-banner-watch {
   background: linear-gradient(to bottom, #ff69b4 0%, #000000 30%);
-
   background-color: #278ff7;
   height: 610px;
   border-right: 5px solid white;
+  overflow: hidden;
 }
 
 .image-banner-watch {
   display: flex;
   justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.container-banner-watch img {
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .container-banner-ipod {
-  background: linear-gradient(
-    to bottom,
+  background: linear-gradient(to bottom,
     #000000 0%,
     #000000 35%,
     #0071e3 50%,
     #000000 65%,
-    #000000 100%
-  );
+    #000000 100%);
   height: 610px;
   border-left: 5px solid white;
 }
@@ -542,7 +541,60 @@ export default {
 .image-banner-ipod {
   display: flex;
   justify-content: center;
-
   height: 400px;
 }
+
+.banner img,
+.container-banner-iphone img,
+.container-banner-macbook img,
+.container-banner-ipad img,
+.container-banner-watch img,
+.container-banner-ipod img {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  overflow: hidden;
+}
+
+@media (max-width: 992px) {
+  .banner {
+    position: relative;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .banner-left,
+  .banner-center,
+  .banner-right {
+    position: static;
+    margin: 10px 0;
+  }
+
+  .title-banner {
+    gap: 0;
+    padding: 0 20px;
+  }
+
+  .buy-now-container {
+    position: static;
+    transform: none;
+    margin: 20px 0;
+  }
+
+  .container-banner-iphone,
+  .container-banner-macbook,
+  .container-banner-ipad,
+  .container-banner-watch,
+  .container-banner-ipod {
+    height: auto;
+    padding: 20px 0;
+    text-align: center;
+  }
+}
 </style>
+

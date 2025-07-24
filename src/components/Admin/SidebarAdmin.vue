@@ -32,14 +32,17 @@
               data-bs-parent="#accordionExample"
             >
               <div class="accordion-body p-0">
-                <router-link to="/item1" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                <router-link to="/quanly/sanpham/danhsachsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Danh sách sản phẩm
+                </router-link>
+                <router-link to="/quanly/sanpham/chitietsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                  Danh sách chi tiết sản phẩm
                 </router-link>
 
                  <router-link to="/quanly/sanpham/loaisanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Loại sản phẩm
                 </router-link>
-                <router-link to="/item1" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                <router-link to="/quanly/sanpham/thuonghieusanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Thương hiệu sản phẩm
                 </router-link>
               </div>
@@ -59,10 +62,10 @@
 <style scoped>
 .sidebar {
   position: fixed;
-  z-index: 100;
+  
   height: 800px;
   width: 300px;
-  background-color: #fefefe;
+  background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   border: 1px solid #eaeaea;
   padding-left: 20px;
