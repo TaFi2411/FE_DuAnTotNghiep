@@ -6,7 +6,6 @@ import { RouterView } from 'vue-router';
 </script>
 
 <template>
-  <div class="d-flex">
     <SidebarAdmin />
     <div>
       <div class="header fixed-top z-1 top-0">
@@ -16,14 +15,12 @@ import { RouterView } from 'vue-router';
         <RouterView />
       </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
 .content {
-  margin-top: 60px;
   margin-left: 300px;
-  padding: 20px;
- 
+  padding: 30px;
+  width: calc(100%-300px);
 }
 </style>

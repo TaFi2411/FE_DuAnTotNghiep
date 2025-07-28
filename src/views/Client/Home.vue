@@ -11,7 +11,7 @@
         </p>
       </div>
       <div class="buy-now-container">
-        <router-link class="buy-now-btn">Mua Sắm Ngay</router-link>
+        <router-link to="/sanpham" class="buy-now-btn">Mua Sắm Ngay</router-link>
       </div>
       <div class="banner-center">
         <img
@@ -254,7 +254,7 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   text-align: left;
   height: 220px;
-  background: linear-gradient(#000000, #f9f9f9, #252525);
+  background: linear-gradient(#868585be, #ffffff, #9b9b9b);
 }
 
 .apple-card i {
@@ -386,7 +386,7 @@ export default {
   top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 3;
+  z-index: 2;
 }
 
 .buy-now-btn {

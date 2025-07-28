@@ -5,9 +5,9 @@
 
 <template >
 
-    <div class="d-flex flex-column align-items-center" style="margin-top: 110px;">
+    <div class="d-flex flex-column align-items-center" >
         <i class="bi bi-apple" style="font-size: 66px;"> </i>
-      <h3 class="mt-2 fw-bold">TaFi Store</h3>
+      <h3 class="mt-2 fw-bold">TDT Store</h3>
     </div>
 
       <div class="container" >
@@ -18,7 +18,7 @@
                 </div>
                 <div class="col-md-6">
                     <h2 class="section-title">Nguồn Gốc</h2>
-                    <p>TaFi Store được thành lập với mục tiêu mang đến cho khách hàng những sản phẩm công nghệ chất lượng cao và dịch vụ tốt nhất.</p>
+                    <p>TDT Store được thành lập với mục tiêu mang đến cho khách hàng những sản phẩm công nghệ chất lượng cao và dịch vụ tốt nhất.</p>
                     <ul>
                         <li><strong>Khởi đầu:</strong> Xuất hiện trên thị trường với sứ mệnh kết nối công nghệ với người tiêu dùng.</li>
                         <li><strong>Tăng trưởng:</strong> Phát triển uy tín và chất lượng dịch vụ.</li>
@@ -33,7 +33,7 @@
             <h2 class="section-title">Dịch Vụ</h2>
             <div class="row">
                 <div class="col-md-6">
-                    <p>TaFi Store là địa chỉ tin cậy chuyên cung cấp các sản phẩm chính hãng của Apple.</p>
+                    <p>TDT Store là địa chỉ tin cậy chuyên cung cấp các sản phẩm chính hãng của Apple.</p>
                     <ul>
                         <li>Sản phẩm chính hãng Apple</li>
                         <li>Tư vấn chuyên sâu</li>
@@ -52,12 +52,12 @@
       <!--------------------------------------- --------------------------------------->
       <div class="container mt-3">
         <section class="content bg-light p-4 rounded">
-            <h2 class="section-title"><i class="fab fa-apple"></i> TaFi Store</h2>
+            <h2 class="section-title"><i class="fab fa-apple"></i> TDT Store</h2>
             <div class="d-flex justify-content-between flex-wrap text-center">
                 <div class="col-md-2">
                     <i class="bi bi-shop" style="font-size: 60px;"></i>
                     <h5><strong>Gồm 82 cửa hàng</strong></h5>
-                    <p>TaFi Store là trung tâm dịch vụ ủy quyền chính thức của Apple.</p>
+                    <p>TDT Store là trung tâm dịch vụ ủy quyền chính thức của Apple.</p>
                 </div>
                 <div class="col-md-2">
                     <i class="bi bi-award" style="font-size: 60px;"></i>

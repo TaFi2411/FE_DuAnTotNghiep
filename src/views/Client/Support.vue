@@ -4,17 +4,17 @@
 
 <template >
     
-    <div class="chao" style="margin-top: 120px;">
+    <div class="chao" style="margin-top: 10px;">
             <h2 align="center">
-              Chào Bạn Mừng Bạn Đã Đến Với Trung Tâm Hỗ Trợ Của TaFi Store
+              Chào Bạn Mừng Bạn Đã Đến Với Trung Tâm Hỗ Trợ Của TDT Store
             </h2>
           </div>
           <div class="row" style="padding: 20px;">
             <div class="col-md-7">
                 <div class="support-box">
-                    <h3 class="text-center fw-bold">Trung Tâm Hỗ Trợ TaFi Store 🎧</h3>
+                    <h3 class="text-center fw-bold">Trung Tâm Hỗ Trợ TDT Store 🎧</h3>
                     <p>
-                        Tại TaFi Store, chúng tôi luôn sẵn sàng hỗ trợ bạn trong quá trình sử dụng sản phẩm và dịch vụ của chúng tôi.
+                        Tại TDT Store, chúng tôi luôn sẵn sàng hỗ trợ bạn trong quá trình sử dụng sản phẩm và dịch vụ của chúng tôi.
                     </p>
                     <p>
                         Chúng tôi hỗ trợ bạn với mọi hình thức Online và trực tuyến. Nếu bạn có những phản ánh xấu về cửa hàng, hãy gửi thông tin để chúng tôi cải thiện.
@@ -207,14 +207,14 @@
     .chao{
     margin-top: 30px;
     width: 100%;
-    background-color: #f0f0f0;
+    background-color: #ffffff;
     color: #343434;
     border-radius: 20px;
     margin-bottom: 20px;
 }
 
 .support-box {
-    background-color: #e3f2fd; /* Nền xanh nhạt */
+    background-color: #ffffff; /* Nền xanh nhạt */
     border-radius: 15px;
     padding: 25px;
     box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);

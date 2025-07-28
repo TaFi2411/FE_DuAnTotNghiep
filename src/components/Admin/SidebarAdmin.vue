@@ -1,10 +1,6 @@
 <template>
   <div class="sidebar d-none d-md-block border-end-0">
-    <div class="logo pt-1">
-      <router-link to="/" class="d-flex justify-content-center align-items-center">
-        <img src="/images/Logo.png" class="logo" width="60%" height="60px">
-      </router-link>
-    </div>
+  
 
     <div class="menu">
       <ul class="list-group mt-5 custom-list">
@@ -35,23 +31,55 @@
                 <router-link to="/quanly/sanpham/danhsachsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Danh sách sản phẩm
                 </router-link>
-                <router-link to="/quanly/sanpham/chitietsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                <router-link to="/quanly/sanpham/danhsachchitietsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Danh sách chi tiết sản phẩm
                 </router-link>
 
                  <router-link to="/quanly/sanpham/loaisanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Loại sản phẩm
                 </router-link>
-                <router-link to="/quanly/sanpham/thuonghieusanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
-                  Thương hiệu sản phẩm
-                </router-link>
+              
               </div>
             </div>
           </div>
         </div>
 
+        <router-link to="/item3" class="list-group-item custom-item">Voucher</router-link>
         <router-link to="/item3" class="list-group-item custom-item">Đơn hàng</router-link>
-        <router-link to="/item3" class="list-group-item custom-item">Địa chỉ</router-link>
+        <div class="accordion custom-accordion" id="accordionExample">
+          <div class="accordion-item border-0">
+            <h2 class="accordion-header" id="headingOne">
+              <button
+                class="accordion-button collapsed custom-item"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#address"
+                aria-expanded="false"
+                aria-controls="address"
+              >
+                Địa chỉ
+              </button>
+            </h2>
+            <div
+              id="address"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingOne"
+              data-bs-parent="#accordionExample"
+            >
+              <div class="accordion-body p-0">
+                <router-link to="/quanly/diachi/tinh-thanhpho" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                  Tỉnh / Thành phố
+                </router-link>
+                <router-link to="/quanly/diachi/xa-phuong" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                  Xã / Phường
+                </router-link>
+
+                
+              
+              </div>
+            </div>
+          </div>
+        </div>
         <router-link to="/item4" class="list-group-item custom-item">Tài khoản</router-link>
         <router-link to="/item5" class="list-group-item custom-item">Thống kê</router-link>
       </ul>

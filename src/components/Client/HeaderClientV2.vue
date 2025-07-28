@@ -1,11 +1,7 @@
 <template>
   <div>
-    <nav class="navbar navbar-expand-sm navbar-light bg-light position-fixed top-0 end-0 start-0 z-3">
+    <nav class="navbar navbar-expand-sm navbar-light position-fixed top-0 end-0 start-0 z-3">
       <div class="container-fluid">
-        <div class="me-lg-5 d-flex justify-content-between">
-        <router-link class="">
-          <img src="/images/Logo.png" class="logo" />
-        </router-link>
         <button
           class="navbar-toggler d-lg-none po"
           type="button"
@@ -17,6 +13,10 @@
         >
           <span class="navbar-toggler-icon"></span>
         </button>
+        <div class="me-lg-5 d-flex justify-content-between">
+        <router-link class="">
+          <img src="/images/Logo.png" class="logo" />
+        </router-link>
         </div>
         <div class="collapse navbar-collapse" id="collapsibleNavId">
           <form class="search align-items-center d-none d-lg-flex">
@@ -28,11 +28,12 @@
             />
             <button class="button-search"><i class="bi bi-search"></i></button>
           </form>
-          <ul class="navbar-nav me-auto mt-2 mt-lg-0">
+          <ul class="navbar-nav me-auto ms-3 mt-2 mt-lg-0">
             <li class="nav-item">
-              <router-link class="nav-link active" to="/" aria-current="page"
+              <router-link class="nav-link " to="/" aria-current="page"
                 >Trang chủ
-                <span class="visually-hidden">(current)</span></router-link
+                <!-- <span class="visually-hidden">(current)</span> -->
+                </router-link
               >
             </li>
             <li class="nav-item">
@@ -42,7 +43,7 @@
               <router-link class="nav-link" to="gioithieu">Giới thiệu</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="hotro">Hổ trợ</router-link>
+              <router-link class="nav-link" to="hotro">Hỗ trợ</router-link>
             </li>
             <li class="nav-item">
               <router-link class="nav-link" to="giohang">Giỏ hàng</router-link>
@@ -68,10 +69,10 @@
                 <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
-                  <router-link class="dropdown-item" to="">Đăng ký</router-link>
+                  <router-link class="dropdown-item" to="/dangky">Đăng ký</router-link>
                 </li>
                 <li>
-                  <router-link class="dropdown-item" to=""
+                  <router-link class="dropdown-item" to="/dangnhap"
                     >Đăng nhập</router-link
                   >
                 </li>
@@ -113,6 +114,28 @@
 <script setup></script>
 
 <style scoped>
+.nav-link {
+  font-size: 18px;
+  color: #333;
+  transition: transform 0.3s ease, opacity 0.2s, color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #007ff7;             
+  transform: translateY(-6px); 
+          
+}
+
+
+
+.nav-link:focus {
+    border-bottom: 2px solid #303233;
+}
+
+.navbar {
+  background-color: #ffffff; 
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); 
+}
 .search {
   position: relative;
 }
@@ -139,4 +162,5 @@
   text-decoration: none;
   font-weight: bold;
 }
+
 </style>

@@ -9,8 +9,9 @@ import Home from '@/views/Client/Home.vue'
 import Dashboard from '@/views/Admin/Dashboard.vue';
 import ProductList from '@/views/Admin/Product.vue/ProductList.vue';
 import ProductType from '@/views/Admin/Product.vue/ProductType.vue';
-
-
+import ProductDetailAd from '@/views/Admin/Product.vue/ProductDetail.vue';
+import City from '@/views/Admin/Address/City.vue';
+import Ward from '@/views/Admin/Address/Ward.vue';
 //User
 import Introduce from '@/views/Client/Introduce.vue';
 import Support from '@/views/Client/Support.vue';
@@ -19,6 +20,9 @@ import Product from '@/views/Client/Products/Product.vue';
 import Cart from '@/views/Client/Cart.vue';
 import Checkout from '@/views/Client/Checkout.vue';
 
+//Auth
+import Login from '@/views/Auth/Login.vue';
+import Register from '@/views/Auth/Register.vue';
 
 const clientRouter =[
   { 
@@ -48,6 +52,12 @@ const clientRouter =[
   { path: '/hotro', 
     component: Support
   },
+  { path: '/dangnhap', 
+    component: Login
+  },
+  { path: '/dangky', 
+    component: Register
+  },
 ];
 
 const adminRouter =[
@@ -57,8 +67,17 @@ const adminRouter =[
   { path: '/quanly/sanpham/danhsachsanpham',
     component: ProductList
   },
+  { path: '/quanly/sanpham/danhsachchitietsanpham',
+    component: ProductDetailAd
+  },
   { path: '/quanly/sanpham/loaisanpham',
     component: ProductType
+  },
+  { path: '/quanly/diachi/tinh-thanhpho',
+    component: City
+  },
+  { path: '/quanly/diachi/xa-phuong',
+    component: Ward
   },
 ];
 

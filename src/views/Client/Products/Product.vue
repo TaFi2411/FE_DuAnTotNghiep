@@ -1,7 +1,37 @@
 <template>
+    <div class="container-banner">
+        <div id="carouselExampleControls"  class="carousel slide mt-3" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="/images/banner-trangchu-1.png" class="d-block w-100" alt="Banner 1">
+            </div>
+            <div class="carousel-item">
+                <img src="/images/banner-trangchu-2.png" class="d-block w-100" alt="Banner 2">
+            </div>
+            <div class="carousel-item">
+                <img src="/images/banner-trangchu-3.png" class="d-block w-100" alt="Banner 3">
+            </div>
+            <div class="carousel-item">
+                <img src="/images/banner-trangchu-4.jpg" class="d-block w-100" alt="Banner 3">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleControls" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+     </div>
   <div class="container mt-4">
-     <!-- Bộ lọc ngang -->
-   <div class="locngang d-flex flex-wrap gap-2 mb-4" >
+    <div class="d-flex justify-content-between align-items-center my-4">
+      <div class="">
+     <h5>Bộ lọc</h5>
+     </div>
+   <div class="locngang d-flex flex-wrap gap-4 ms-4 justify-content-center align-content-center" >
+    
     <button
     class="btn btn-dark-custom"
     :class="{ active: categoryFilter === '' }"
@@ -23,7 +53,7 @@
     :class="{ active: categoryFilter === 'Laptop' }"
     @click="categoryFilter = 'Laptop'"
   >
-    <i class="bi bi-laptop me-1"></i> Laptop
+    <i class="bi bi-laptop me-1"></i> Macbook
   </button>
 
   <button
@@ -41,13 +71,22 @@
   >
     <i class="bi bi-earbuds me-1"></i> AirPods
   </button>
+  <button
+    class="btn btn-dark-custom"
+    :class="{ active: categoryFilter === 'AirPods' }"
+    @click="categoryFilter = 'AirPods'"
+  >
+    <i class="bi bi-smartwatch"></i> Watch
+  </button>
  
 </div>
-
+<div></div>
+</div>
+  <hr>
     <div class="row">
       <!-- Bộ lọc bên trái -->
       <div class="col-md-3">
-        <h5>Bộ lọc</h5>
+        
         <form @submit.prevent="applyFilters">
           <!-- Dung lượng -->
           <div class="boloc mb-3">
@@ -79,7 +118,7 @@
             </div>
           </div>
 
-          <!-- Giá tiền -->
+         
           <div class="boloc mb-3">
             <label class="form-label">Giá tiền</label>
             <div class="form-check" v-for="option in prices" :key="option.value">
@@ -98,11 +137,11 @@
         </form>
       </div>
 
-      <!-- Sản phẩm bên phải -->
+
       <div class="col-md-9">
         <div class="row">
           <div
-            class="col-lg-3 col-md-4 col-sm-6 mb-4"
+            class="col-lg-4 col-md-4 col-sm-6 mb-4"
             v-for="product in displayedProducts"
             :key="product.id"
           >
@@ -124,9 +163,14 @@
 
                 <!-- Nội dung -->
                 <div class="card-body">
-                  <h6 class="card-title text-dark">{{ product.name }}</h6>
-               
-                  <p class="card-text text-danger fw-bold">{{ formatPrice(product.price) }}</p>
+                  <p class="card-title text-dark  fw-bold">{{ product.name }}</p>
+                  
+                  <p class="card-text text-danger  fw-bold">{{ formatPrice(product.price) }}</p>
+                  <div class="capasitiy d-flex  gap-2">
+                    <button type="button" class="btn btn-outline-dark">128GB</button>
+                    <button type="button" class="btn btn-outline-dark">256GB</button>
+                    <button type="button" class="btn btn-outline-dark">512GB</button>
+                  </div>
                 </div>
               </div>
             </RouterLink>
@@ -161,7 +205,7 @@ const prices = [
 ]
 
 const allProducts = ref([
-  { id: 1, name: 'Điện thoại iPhone 16 Pro Max 256GB', capacity: '128GB', color: 'Đen', price: 24, image: '/images/Ip16prm-1tb.png' },
+  { id: 1, name: 'iPhone 16 Pro Max ', capacity: '128GB', color: 'Đen', price: 24, image: '/images/Ip16prm-1tb.png' },
   { id: 2, name: 'iPhone 14', capacity: '256GB', color: 'Trắng', price: 28, image: '/images/Ip16plus.png' },
   { id: 3, name: 'iPhone 15 Pro', capacity: '128GB', color: 'Xanh', price: 35, image: '/images/Ip16.png' },
   { id: 4, name: 'iPhone 13 Mini', capacity: '64GB', color: 'Vàng', price: 18, image: '/images/Ip16prm-1tb.png' },
@@ -207,6 +251,27 @@ function formatPrice(price) {
 </script>
 
 <style scoped>
+#carouselExampleControls>.carousel-control-prev{
+    background-color: rgb(117, 117, 117);
+    width: 50px;
+    height: 50px;
+    top: 175px;
+    border-radius: 50%;
+    margin-left: 60px;
+}
+#carouselExampleControls>.carousel-control-next{
+    background-color: rgb(117, 117, 117);
+    width: 50px;
+    height: 50px;
+    top: 175px;
+    border-radius: 50%;
+    margin-right: 60px;
+}
+
+.carousel-item img {
+    height: 400px; 
+    object-fit: cover;
+}
 .product-img {
   height: 200px;
   object-fit: contain;
@@ -357,5 +422,9 @@ function formatPrice(price) {
   transform: scale(1.3);
 }
 
-
+video{
+    object-fit: cover;
+    border-radius: 60px;
+    padding: 20px;
+}
 </style>
