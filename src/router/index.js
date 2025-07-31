@@ -12,6 +12,8 @@ import ProductType from '@/views/Admin/Product.vue/ProductType.vue';
 import ProductDetailAd from '@/views/Admin/Product.vue/ProductDetail.vue';
 import City from '@/views/Admin/Address/City.vue';
 import Ward from '@/views/Admin/Address/Ward.vue';
+import ProductAttribute from '@/views/Admin/Product.vue/ProductAttribute.vue';
+import ProductAttributeValue from '@/views/Admin/Product.vue/ProductAttributeValue.vue';
 import AuthAdmin from '@/views/Admin/Auth.vue';
 //User
 import Introduce from '@/views/Client/Introduce.vue';
@@ -74,9 +76,16 @@ const adminRouter =[
   { path: '/quanly/sanpham/loaisanpham',
     component: ProductType
   },
+  { path: '/quanly/sanpham/thuoctinhsanpham',
+    component: ProductAttribute
+  },
+  { path: '/quanly/sanpham/giatrithuoctinh',
+    component: ProductAttributeValue
+  },
   { path: '/quanly/diachi/tinh-thanhpho',
     component: City
   },
+
   { path: '/quanly/diachi/xa-phuong',
     component: Ward
   },
