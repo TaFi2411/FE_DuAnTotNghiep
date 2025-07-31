@@ -12,6 +12,7 @@ import ProductType from '@/views/Admin/Product.vue/ProductType.vue';
 import ProductDetailAd from '@/views/Admin/Product.vue/ProductDetail.vue';
 import City from '@/views/Admin/Address/City.vue';
 import Ward from '@/views/Admin/Address/Ward.vue';
+import AuthAdmin from '@/views/Admin/Auth.vue';
 //User
 import Introduce from '@/views/Client/Introduce.vue';
 import Support from '@/views/Client/Support.vue';
@@ -78,6 +79,9 @@ const adminRouter =[
   },
   { path: '/quanly/diachi/xa-phuong',
     component: Ward
+  },
+  { path: '/quanly/taikhoan',
+    component: AuthAdmin
   },
 ];
 
