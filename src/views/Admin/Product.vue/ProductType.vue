@@ -5,7 +5,7 @@
     </div>
 
     <div class="form-type">
-      <form @submit.prevent="addCategory">
+      <form @submit.prevent="isEditing ? updateCategory() : addCategory()">
         <div class="mb-3">
           <label class="form-label">Tên loại</label>
           <input v-model="name" type="text" class="form-control" placeholder="Nhập tên loại" required>
@@ -21,7 +21,10 @@
           <label class="form-check-label" for="ngunghoatdong">Ngừng hoạt động</label>
         </div>
 
-        <button type="submit" class="btn btn-primary mt-3">Thêm</button>
+        <button type="submit" class="btn btn-primary mt-3">
+          {{ isEditing ? 'Cập nhật' : 'Thêm' }}
+        </button>
+        <button v-if="isEditing" @click="cancelEdit" class="btn btn-secondary mt-3 ms-2">Hủy</button>
       </form>
 
       <table class="table mt-4">
@@ -30,6 +33,7 @@
             <th scope="col">ID</th>
             <th scope="col">Tên loại</th>
             <th scope="col">Trạng thái</th>
+            <th scope="col">Hành động</th>
           </tr>
         </thead>
         <tbody>
@@ -37,6 +41,10 @@
             <td>{{ item.id }}</td>
             <td>{{ item.name }}</td>
             <td>{{ item.status ? 'Hoạt động' : 'Ngừng hoạt động' }}</td>
+            <td>
+              <button @click="editCategory(item)" class="btn btn-warning btn-sm me-2">Sửa</button>
+              <button @click="deleteCategory(item.id)" class="btn btn-danger btn-sm">Xóa</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -48,16 +56,15 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 
-// API URL – bạn thay bằng link thật sau
 const API_URL = 'http://localhost:8080/api/category'
 
-
-// Dữ liệu
 const categories = ref([])
 const name = ref('')
-const status = ref('true') // mặc định là hoạt động
+const status = ref('true')
+const isEditing = ref(false)
+const editingId = ref(null)
 
-// Gọi API lấy danh sách loại sản phẩm
+// Lấy danh sách
 const fetchCategories = async () => {
   try {
     const res = await axios.get(API_URL)
@@ -67,28 +74,65 @@ const fetchCategories = async () => {
   }
 }
 
-// Gọi API thêm loại sản phẩm mới
+// Thêm mới
 const addCategory = async () => {
   try {
     const newCategory = {
       name: name.value,
-      status: status.value === 'true' // ép kiểu chuỗi thành boolean
+      status: status.value === 'true'
     }
-
     await axios.post(API_URL, newCategory)
-
-    // Clear input
     name.value = ''
     status.value = 'true'
-
-    // Reload danh sách
     await fetchCategories()
   } catch (err) {
     console.error('Lỗi khi thêm loại sản phẩm:', err)
   }
 }
 
-// Gọi khi trang được load
+// Bắt đầu sửa
+const editCategory = (item) => {
+  name.value = item.name
+  status.value = item.status ? 'true' : 'false'
+  isEditing.value = true
+  editingId.value = item.id
+}
+
+// Hủy sửa
+const cancelEdit = () => {
+  name.value = ''
+  status.value = 'true'
+  isEditing.value = false
+  editingId.value = null
+}
+
+// Cập nhật
+const updateCategory = async () => {
+  try {
+    const updated = {
+      name: name.value,
+      status: status.value === 'true'
+    }
+    await axios.put(`${API_URL}/${editingId.value}`, updated)
+    cancelEdit()
+    await fetchCategories()
+  } catch (err) {
+    console.error('Lỗi khi cập nhật loại sản phẩm:', err)
+  }
+}
+
+// Xóa
+const deleteCategory = async (id) => {
+  if (confirm('Bạn có chắc muốn xóa không?')) {
+    try {
+      await axios.delete(`${API_URL}/${id}`)
+      await fetchCategories()
+    } catch (err) {
+      console.error('Lỗi khi xóa loại sản phẩm:', err)
+    }
+  }
+}
+
 onMounted(() => {
   fetchCategories()
 })
