@@ -1,56 +1,49 @@
 <template>
-  <div class="wrapper">
-    <div class="form-container">
-      <h2 class="form-title">Quản lý thương hiệu sản phẩm</h2>
+  <div class="container" style="width: 100%;">
+    <div class="title d-flex justify-content-center">
+      <h1>Thêm loại sản phẩm</h1>
+    </div>
 
-      <form class="form-section">
-        <div class="form-group">
-          <label for="name">Tên thương hiệu</label>
-          <input type="text" id="name" placeholder="Nhập tên thương hiệu" required />
+    <div class="form-type">
+      <form @submit.prevent="isEditing ? updateCategory() : addCategory()">
+        <div class="mb-3">
+          <label class="form-label">Tên loại</label>
+          <input v-model="name" type="text" class="form-control" placeholder="Nhập tên loại" required>
         </div>
 
-        <div class="form-group">
-          <label>Trạng thái</label>
-          <div class="radio-options">
-            <label><input type="radio" value="active" name="status" checked /> Hoạt động</label>
-            <label><input type="radio" value="inactive" name="status" /> Ngừng hoạt động</label>
-          </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" value="true" v-model="status" id="hoatdong">
+          <label class="form-check-label" for="hoatdong">Hoạt động</label>
         </div>
 
-        <button class="btn btn-primary" type="submit">Thêm mới</button>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" value="false" v-model="status" id="ngunghoatdong">
+          <label class="form-check-label" for="ngunghoatdong">Ngừng hoạt động</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">
+          {{ isEditing ? 'Cập nhật' : 'Thêm' }}
+        </button>
+        <button v-if="isEditing" @click="cancelEdit" class="btn btn-secondary mt-3 ms-2">Hủy</button>
       </form>
 
-      <div class="search-bar">
-        <input type="text" placeholder="Tìm kiếm thương hiệu sản phẩm..." />
-        <button class="btn btn-secondary">Tìm</button>
-      </div>
-
-      <table class="product-table">
+      <table class="table mt-4">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Tên thương hiệu</th>
-            <th>Trạng thái</th>
-            <th>Hành động</th>
+            <th scope="col">ID</th>
+            <th scope="col">Tên loại</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Hành động</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Điện thoại</td>
-            <td><span class="status-active">Hoạt động</span></td>
+          <tr v-for="item in categories" :key="item.id">
+            <td>{{ item.id }}</td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.status ? 'Hoạt động' : 'Ngừng hoạt động' }}</td>
             <td>
-              <button class="btn btn-edit">Sửa</button>
-              <button class="btn btn-delete">Xóa</button>
-            </td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Laptop</td>
-            <td><span class="status-inactive">Ngừng hoạt động</span></td>
-            <td>
-              <button class="btn btn-edit">Sửa</button>
-              <button class="btn btn-delete">Xóa</button>
+              <button @click="editCategory(item)" class="btn btn-warning btn-sm me-2">Sửa</button>
+              <button @click="deleteCategory(item.id)" class="btn btn-danger btn-sm">Xóa</button>
             </td>
           </tr>
         </tbody>
@@ -59,162 +52,88 @@
   </div>
 </template>
 
-<style scoped>
-.wrapper {
-  display: flex;
-  justify-content: center;
-  padding: 20px 20px;
-  background-color: white;
-  min-height: 100vh;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-}
+<script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-.form-container {
-  width: 100%;
-  max-width: 980px;
-  background-color: #fff;
-  padding: 56px;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.07);
-  border: 1px solid #e5eaf0;
-}
+const API_URL = 'http://localhost:8080/api/category'
 
-.form-title {
-  font-size: 30px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin-bottom: 36px;
-  text-align: center;
-  padding-bottom: 14px;
-  border-bottom: 2px solid #d0d7de;
-  letter-spacing: 0.5px;
-}
+const categories = ref([])
+const name = ref('')
+const status = ref('true')
+const isEditing = ref(false)
+const editingId = ref(null)
 
-.form-section {
-  margin-bottom: 40px;
-}
-
-.form-group {
-  margin-bottom: 28px;
-}
-
-label {
-  font-weight: 600;
-  margin-bottom: 10px;
-  display: block;
-  color: #222;
-}
-
-input[type="text"] {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 16px;
-  background-color: #fdfdfd;
-  transition: border-color 0.3s ease;
-}
-
-input[type="text"]:focus {
-  border-color: #1976d2;
-  outline: none;
-  background-color: #fff;
-}
-
-.radio-options {
-  display: flex;
-  gap: 30px;
-  margin-top: 12px;
-  font-size: 15px;
-}
-
-.search-bar {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 15px;
-  transition: background-color 0.25s, transform 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary {
-  background-color: #1976d2;
-  color: #fff;
-}
-
-.btn-secondary {
-  background-color: #f1f3f4;
-  color: #333;
-}
-
-.btn-edit {
-  background-color: #43a047;
-  color: white;
-  margin-right: 6px;
-}
-
-.btn-delete {
-  background-color: #e53935;
-  color: white;
-}
-
-.product-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e0e0e0;
-}
-
-.product-table th,
-.product-table td {
-  padding: 18px;
-  text-align: center;
-  border-bottom: 1px solid #ececec;
-  font-size: 15px;
-}
-
-.product-table th {
-  background-color: #f6f8fa;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.status-active {
-  color: #2e7d32;
-  font-weight: 600;
-}
-
-.status-inactive {
-  color: #c62828;
-  font-weight: 600;
-}
-
-@media (max-width: 768px) {
-  .form-container {
-    padding: 32px;
-  }
-
-  .search-bar {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
+// Lấy danh sách
+const fetchCategories = async () => {
+  try {
+    const res = await axios.get(API_URL)
+    categories.value = res.data
+  } catch (err) {
+    console.error('Lỗi khi tải danh sách loại:', err)
   }
 }
-</style>
+
+// Thêm mới
+const addCategory = async () => {
+  try {
+    const newCategory = {
+      name: name.value,
+      status: status.value === 'true'
+    }
+    await axios.post(API_URL, newCategory)
+    name.value = ''
+    status.value = 'true'
+    await fetchCategories()
+  } catch (err) {
+    console.error('Lỗi khi thêm loại sản phẩm:', err)
+  }
+}
+
+// Bắt đầu sửa
+const editCategory = (item) => {
+  name.value = item.name
+  status.value = item.status ? 'true' : 'false'
+  isEditing.value = true
+  editingId.value = item.id
+}
+
+// Hủy sửa
+const cancelEdit = () => {
+  name.value = ''
+  status.value = 'true'
+  isEditing.value = false
+  editingId.value = null
+}
+
+// Cập nhật
+const updateCategory = async () => {
+  try {
+    const updated = {
+      name: name.value,
+      status: status.value === 'true'
+    }
+    await axios.put(`${API_URL}/${editingId.value}`, updated)
+    cancelEdit()
+    await fetchCategories()
+  } catch (err) {
+    console.error('Lỗi khi cập nhật loại sản phẩm:', err)
+  }
+}
+
+// Xóa
+const deleteCategory = async (id) => {
+  if (confirm('Bạn có chắc muốn xóa không?')) {
+    try {
+      await axios.delete(`${API_URL}/${id}`)
+      await fetchCategories()
+    } catch (err) {
+      console.error('Lỗi khi xóa loại sản phẩm:', err)
+    }
+  }
+}
+
+onMounted(() => {
+  fetchCategories()
+})
+</script>
