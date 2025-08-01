@@ -54,7 +54,7 @@
           </div>
         </div>
 
-        <router-link to="/item3" class="list-group-item custom-item">Voucher</router-link>
+        <router-link to="/quanly/voucher" class="list-group-item custom-item">Voucher</router-link>
         <router-link to="/item3" class="list-group-item custom-item">Đơn hàng</router-link>
         <div class="accordion custom-accordion" id="accordionExample">
           <div class="accordion-item border-0">

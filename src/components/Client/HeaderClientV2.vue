@@ -110,13 +110,13 @@
     </nav>
   </div>
 </template>
-
+<!-- Cua manh tuong -->
 <script setup>
+import { ref, onMounted } from 'vue'           // ✅ BỔ SUNG
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const router = useRouter()
-
 const isLoggedIn = ref(false)
 
 onMounted(() => {
@@ -126,18 +126,16 @@ onMounted(() => {
 
 const logout = () => {
   localStorage.removeItem('token')
-
   delete axios.defaults.headers.common['Authorization']
-
-
   router.push('/dangnhap')
-}
+} // ✅ ĐÃ ĐÓNG DẤU ngoặc
 </script>
+
 
 <style scoped>
 .nav-link {
   font-size: 18px;
-  color: #333;
+  color: #000000;
   transition: transform 0.3s ease, opacity 0.2s, color 0.3s ease;
 }
 
@@ -154,8 +152,8 @@ const logout = () => {
 }
 
 .navbar {
-  background-color: #ffffff; 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); 
+  background-color: #fbfbfb; 
+ 
 }
 .search {
   position: relative;
@@ -183,5 +181,31 @@ const logout = () => {
   text-decoration: none;
   font-weight: bold;
 }
+.navbar {
+  opacity: 1; /* KHÔNG dùng thấp hơn 1 */
+  background-color: rgba(255, 255, 255, 0.8); /* dùng rgba để tạo cảm giác trong suốt */
+  backdrop-filter: blur(10px);
+}
+
+
+.navbar {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: saturate(180%) blur(10px); /* chỉ mờ nền navbar */
+  -webkit-backdrop-filter: saturate(180%) blur(10px); /* safari hỗ trợ */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+  z-index: 1030; /* vừa đủ */
+}
+
+.dropdown-menu {
+  background-color: #fff !important;
+  backdrop-filter: none !important; /* loại bỏ hiệu ứng mờ */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.05);
+  z-index: 1060 !important; /* phải cao hơn navbar */
+  position: absolute !important;
+}
+
+
 
 </style>

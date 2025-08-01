@@ -15,7 +15,13 @@ import { RouterView } from 'vue-router'
 <style>
 .main-content {
   padding-top: 50px; /* Điều chỉnh theo chiều cao thật của Header */
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+  color: #000000; /* màu chữ đậm hơn */
 }
+
+
 </style>
 
 

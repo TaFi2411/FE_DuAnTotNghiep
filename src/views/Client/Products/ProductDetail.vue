@@ -1,26 +1,25 @@
 <template>
-  <div class="container mt-4">
-    <div v-if="loading" class="text-center">
-      <div class="spinner-border" role="status"></div>
-      <p>Đang tải sản phẩm...</p>
-    </div>
-
-    <div v-else-if="product" class="row">
-      <div class="col-md-6">
-        <img :src="getImageUrl(product.image)" class="img-fluid" alt="Ảnh sản phẩm" />
+  <div class="container mt-5" v-if="sku">
+    <div class="row">
+      <div class="col-md-5">
+        <img :src="getImageUrl(sku.skuImage)" class="img-fluid rounded shadow" />
       </div>
-      <div class="col-md-6">
-        <h2>{{ product.name }}</h2>
-        <p class="text-muted">{{ product.description }}</p>
-        <p><strong>Giá:</strong> {{ product.price }} triệu</p>
-        <router-link to="/" class="btn btn-secondary mt-3">Quay lại</router-link>
+
+      <div class="col-md-7">
+        <h2>{{ sku.skuName }}</h2>
+    
+        <p>Mô tả: {{ sku.skuDiscriptione }}</p>
+        <p>Giá: <strong class="text-danger">{{ formatCurrency(sku.skuPrice) }}</strong></p>
+        <p>Số lượng còn: {{ sku.skuQuantity }}</p>
+        <!-- <p>Ngày tạo: {{ formatDate(sku.skuCreatedate) }}</p> -->
+        <p v-if="sku.optionAttributeName">
+          {{ sku.optionAttributeName }}: <strong>{{ sku.attributeName }}</strong>
+        </p>
       </div>
     </div>
-
-    <div v-else class="text-center text-danger">
-      <p>Không tìm thấy sản phẩm.</p>
-    </div>
+  
   </div>
+  <div v-else class="text-center mt-5">Đang tải dữ liệu...</div>
 </template>
 
 <script setup>
@@ -28,29 +27,40 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from '@/utils/axios'
 
+const sku = ref(null)
 const route = useRoute()
-const product = ref(null)
-const loading = ref(true)
 
 const getImageUrl = (path) => {
-  if (!path) return 'https://via.placeholder.com/200x200?text=No+Image'
+  if (!path) return 'https://via.placeholder.com/400x400?text=No+Image'
   if (path.startsWith('http')) return path
   return `http://localhost:8080/images/${path}`
 }
 
-const fetchProduct = async () => {
-  try {
-    const id = route.params.id
-    const res = await axios.get(`/product/${id}`)
-    product.value = res.data
-  } catch (err) {
-    console.error('Lỗi khi tải sản phẩm:', err)
-  } finally {
-    loading.value = false
-  }
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(value)
 }
 
-onMounted(() => {
-  fetchProduct()
+const formatDate = (dateStr) => {
+  return new Date(dateStr).toLocaleDateString('vi-VN')
+}
+
+onMounted(async () => {
+  try {
+    const { id } = route.params
+    const res = await axios.get(`/skuAttribute/${id}`)
+    sku.value = res.data
+  } catch (err) {
+    console.error('Lỗi khi lấy chi tiết sản phẩm:', err)
+  }
 })
 </script>
+
+<style scoped>
+img {
+  max-height: 400px;
+  object-fit: contain;
+}
+</style>
