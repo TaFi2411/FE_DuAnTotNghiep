@@ -1,101 +1,178 @@
 <template>
   <div class="container mt-4">
-    <h2 class="mb-4 text-center">Sản phẩm nổi bật</h2>
+    <!-- BỘ LỌC DANH MỤC -->
+   <div class="filter-buttons">
+
+  <button
+    v-for="cat in categories"
+    :key="cat"
+    class="btn-filter"
+    :class="{ active: selectedCategory === cat }"
+    @click="filterByCategory(cat)"
+  >
+    {{ cat }}
+  </button>
+</div>
+
+
+  
+    
     <div class="row">
-      <div v-for="product in products" :key="product.id" class="col-md-3 mb-4">
-        <div class="card h-100 ">
-          <img
-            :src="getImageUrl(product.image)"
-            class="card-img-top"
-            alt="Ảnh sản phẩm"
-          
-          />
+      <div
+        v-for="product in displayedProducts"
+        :key="product.id"
+        class="col-md-3 mb-4"
+      >
+        <div class="card h-100">
+          <router-link :to="`/sanpham/chitietsanpham/${product.id}`" class="image-wrapper">
+            <img
+              :src="getImageUrl(product.image)"
+              class="card-img-top"
+              alt="Ảnh sản phẩm"
+            />
+          </router-link>
           <div class="card-body d-flex flex-column">
             <h5 class="card-title">{{ product.name }}</h5>
-            <!-- <p class="card-text text-muted">
-              Màu: {{ product.color }} | Dung lượng: {{ product.capacity }}
-            </p>
-            <p class="fw-bold text-danger">{{ product.price }} triệu</p> -->
-            <router-link
-              :to="`/sanpham/chitietsanpham/${product.id}`"
-              class="btn btn-primary mt-auto"
-            >
-              Xem 
-            </router-link>
+            <div class="button-row mt-auto">
+              <router-link
+                :to="`/sanpham/chitietsanpham/${product.id}`"
+                class="btn btn-outline-primary btn-find"
+              >
+                Tìm hiểu thêm
+              </router-link>
+              <button class="btn btn-primary btn-buy">Mua ></button>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- NÚT XEM THÊM -->
+   <div class="text-center mt-4" v-if="displayedProducts.length < filteredProducts.length">
+
+  <button class="btn xemthem" @click="visibleCount += 8">
+  Xem thêm
+</button>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import axios from '@/utils/axios' // Đã cấu hình sẵn baseURL
+import { ref, onMounted, computed } from 'vue'
+import axios from '@/utils/axios'
 
 const products = ref([])
+const selectedCategory = ref('Điện thoại')
+const visibleCount = ref(8)
 
-// Hàm xử lý ảnh nếu ảnh chỉ là đường dẫn tương đối
+const categories = ['Điện thoại', 'iPad', 'Mac', 'AirPods', 'Smartwatch']
+
 const getImageUrl = (path) => {
   if (!path) return 'https://via.placeholder.com/200x200?text=No+Image'
   if (path.startsWith('http')) return path
-return `http://localhost:8080/images/${path}`
-
+  return `http://localhost:8080/images/${path}`
 }
 
 const getProducts = async () => {
   try {
     const res = await axios.get('/product')
-    console.log('Dữ liệu sản phẩm:', res.data)
     products.value = res.data
-
+   
+visibleCount.value = 8 
   } catch (err) {
     console.error('Lỗi gọi API:', err)
   }
 }
-// const getProducts = async () => {
-//   try {
-//     const res = await axios.get('/product')
-//    products.value = res.data
-//   } catch (err) {
-//     console.error('Lỗi khi tải danh sách loại:', err)
-//   }
-// }
+
+const filterByCategory = (category) => {
+  selectedCategory.value = category
+  visibleCount.value = 4
+}
+
+const filteredProducts = computed(() => {
+  if (!selectedCategory.value) return products.value
+  return products.value.filter((p) => {
+    const productCategory = p.categoryName?.trim().toLowerCase()
+    const selected = selectedCategory.value.trim().toLowerCase()
+    return productCategory === selected
+  })
+})
+
+const displayedProducts = computed(() => {
+  return filteredProducts.value.slice(0, visibleCount.value)
+})
+
 onMounted(() => {
   getProducts()
 })
 </script>
 
 <style scoped>
-.card-title {
-  font-size: 1.1rem;
-  min-height: 50px;
-  text-align:center ;
-}
-
 .card {
-
- border: none;
-  transition: transform 0.3s ease;
-  
+  border: none;
+}
+.btn-outline-dark.active {
+  background-color: #000;
+  color: white;
+  border-color: #000;
 }
 
-.card:hover {
-  transform: translateY(-5px); /* nhẹ nhàng nâng card lên khi hover */
+.image-wrapper {
+  overflow: hidden;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
 }
 
 .card-img-top {
-  height: 300px;
-  object-fit: contain; /* Đổi từ cover sang contain */
-  /* background-color: #f8f8f8;  */
-
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.4s ease;
 }
 
+.card:hover .card-img-top {
+  transform: translateY(-4px) scale(1.0);
+}
 
+.card-title {
+  font-size: 1.1rem;
+  min-height: 50px;
+  text-align: center;
+  color: #333;
+}
 
-.card-img-top:hover {
-  transform: scale(1.05); /* phóng to ảnh nhẹ khi hover */
-  z-index: 2;
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-find {
+  flex: 7;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-buy {
+  flex: 3;
+  background-color: transparent;
+  color: #007bff;
+  border: none;
+  border-radius: 25px;
+  transition: color 0.3s ease, text-decoration 0.3s ease;
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-buy:hover {
+  text-decoration: underline;
+  color: #0056b3;
+  background-color: transparent;
 }
 
 @media (max-width: 768px) {
@@ -104,7 +181,6 @@ onMounted(() => {
     max-width: 50%;
   }
 }
-
 @media (max-width: 576px) {
   .col-md-3 {
     flex: 0 0 100%;
@@ -112,5 +188,45 @@ onMounted(() => {
   }
 }
 
-</style>
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
 
+.filter-buttons .btn-filter {
+  padding: 10px 20px;
+ 
+  background-color: white;
+  color: #000000;
+  font-weight: 500;
+ border:none;
+}
+
+
+
+.filter-buttons .btn-filter.active {
+
+  text-decoration: underline;
+
+ 
+}
+.xemthem:hover {
+  flex: 7;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  transition: background-color 0.3s ease;
+}
+.xemthem {
+  flex: 7;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  transition: background-color 0.3s ease;
+}
+</style>

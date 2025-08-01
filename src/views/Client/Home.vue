@@ -371,7 +371,7 @@ export default {
   height: 600px;
   background-color: #ffffff;
   color: #000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+
 }
 
 .banner-left {
