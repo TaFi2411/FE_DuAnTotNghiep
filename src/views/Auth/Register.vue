@@ -189,8 +189,8 @@ const Register = async () => {
       status: status.value === 'true'
     }
 
-    const response = await axios.post(API_URL, newAccount)
-    console.log('Đăng ký thành công:', response.data)
+    const request = await axios.post(API_URL, newAccount)
+    console.log('Đăng ký thành công:', request.data)
 
     email.value = ''
     fullname.value = ''

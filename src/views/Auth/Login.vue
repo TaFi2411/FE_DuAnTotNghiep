@@ -76,6 +76,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 import { useRouter } from 'vue-router'
 
 const email = ref('')
@@ -107,15 +108,25 @@ const login = async () => {
       password: password.value
     })
 
+    
+
     const token = response.data.token
     if (token) {
-      localStorage.setItem('token', token)
-
-     
+      sessionStorage.setItem('token', token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      alert('Đăng nhập thành công!')
+      
+       Swal.fire({
+      icon: 'success',
+      title: 'Đăng nhập thành công!',
+      showConfirmButton: false,
+      timer: 1000
+    })
+    
+    setTimeout(() => {
       router.push('/')
+    }, 1000)
+
+
     } else {
       alert('Đăng nhập không thành công, token không hợp lệ!')
     }
@@ -124,6 +135,7 @@ const login = async () => {
     alert('Email hoặc mật khẩu không đúng!')
   }
 }
+
 
 const dangNhapFacebook = () => {
   alert('Chức năng đăng nhập Facebook chưa được hỗ trợ.')
