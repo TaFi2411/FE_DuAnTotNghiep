@@ -48,7 +48,7 @@
     <div id="editor"></div>
   </div>
 </template>
-
+<!-- Của Thế Tài -->
 <script setup>
 import { onMounted, watch, ref } from 'vue';
 import Quill from 'quill';
