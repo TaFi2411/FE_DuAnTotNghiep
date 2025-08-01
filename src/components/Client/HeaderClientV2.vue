@@ -14,9 +14,9 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="me-lg-5 d-flex justify-content-between">
-        <router-link class="">
-          <img src="/images/Logo.png" class="logo" />
-        </router-link>
+          <router-link class="">
+            <img src="/images/Logo.png" class="logo" />
+          </router-link>
         </div>
         <div class="collapse navbar-collapse" id="collapsibleNavId">
           <form class="search align-items-center d-none d-lg-flex">
@@ -66,38 +66,28 @@
                 style="width: 260px"
                 aria-labelledby="dropdownMenuButton1"
               >
-              <div class="noLogin" >
-                <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
-                <li><hr class="dropdown-divider" /></li>
-                <li>
-                  <router-link class="dropdown-item" to="/dangky">Đăng ký</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/dangnhap"
-                    >Đăng nhập</router-link
-                  >
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to=""
-                    >Quên mật khẩu</router-link
-                  >
-                </li>
+                <div class="noLogin">
+                  <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <router-link class="dropdown-item" to="/dangky">Đăng ký</router-link>
+                  </li>
+                  <li>
+                    <router-link class="dropdown-item" to="/dangnhap">Đăng nhập</router-link>
+                  </li>
+                  <li>
+                    <router-link class="dropdown-item" to="">Quên mật khẩu</router-link>
+                  </li>
                 </div>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
-                  <router-link class="dropdown-item" to=""
-                    >Thông tin tài khoản</router-link
-                  >
+                  <router-link class="dropdown-item" to="">Thông tin tài khoản</router-link>
                 </li>
                 <li>
-                  <router-link to="/quanly/tongquan" class="dropdown-item"
-                    >Quản lý hệ thống</router-link
-                  >
+                  <router-link to="/quanly/tongquan" class="dropdown-item">Quản lý hệ thống</router-link>
                 </li>
                 <li>
-                  <router-link class="dropdown-item" to=""
-                    >Đổi mật khẩu</router-link
-                  >
+                  <router-link class="dropdown-item" to="">Đổi mật khẩu</router-link>
                 </li>
                 <li>
                   <a class="dropdown-item" @click.prevent="logout">Đăng xuất</a>
@@ -138,19 +128,13 @@ const logout = () => {
   color: #000000;
   transition: transform 0.3s ease, opacity 0.2s, color 0.3s ease;
 }
-
 .nav-link:hover {
-  color: #007ff7;             
-  transform: translateY(-6px); 
-          
+  color: #007ff7;
+  transform: translateY(-6px);
 }
-
-
-
 .nav-link:focus {
-    border-bottom: 2px solid #303233;
+  border-bottom: 2px solid #303233;
 }
-
 .navbar {
   background-color: #fbfbfb; 
  
