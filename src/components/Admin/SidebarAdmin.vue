@@ -90,7 +90,7 @@
             </div>
           </div>
         </div>
-        <router-link to="/item4" class="list-group-item custom-item">Tài khoản</router-link>
+        <router-link to="/quanly/taikhoan" class="list-group-item custom-item">Tài khoản</router-link>
         <router-link to="/item5" class="list-group-item custom-item">Thống kê</router-link>
       </ul>
     </div>

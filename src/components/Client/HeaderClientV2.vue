@@ -66,6 +66,7 @@
                 style="width: 260px"
                 aria-labelledby="dropdownMenuButton1"
               >
+              <div class="noLogin" >
                 <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
@@ -81,6 +82,7 @@
                     >Quên mật khẩu</router-link
                   >
                 </li>
+                </div>
                 <li><hr class="dropdown-divider" /></li>
                 <li>
                   <router-link class="dropdown-item" to=""
@@ -98,9 +100,7 @@
                   >
                 </li>
                 <li>
-                  <router-link class="dropdown-item" to=""
-                    >Đăng xuất</router-link
-                  >
+                  <a class="dropdown-item" @click.prevent="logout">Đăng xuất</a>
                 </li>
               </ul>
             </div>
@@ -111,7 +111,28 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+
+const router = useRouter()
+
+const isLoggedIn = ref(false)
+
+onMounted(() => {
+  const token = sessionStorage.getItem('token')
+  isLoggedIn.value = !!token
+})
+
+const logout = () => {
+  localStorage.removeItem('token')
+
+  delete axios.defaults.headers.common['Authorization']
+
+
+  router.push('/dangnhap')
+}
+</script>
 
 <style scoped>
 .nav-link {
