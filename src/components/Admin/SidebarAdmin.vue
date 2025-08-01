@@ -38,6 +38,16 @@
                  <router-link to="/quanly/sanpham/loaisanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
                   Loại sản phẩm
                 </router-link>
+
+                 <router-link to="/quanly/sanpham/thuoctinhsanpham" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                  Thuộc tính sản phẩm
+                </router-link>
+
+                 <router-link to="/quanly/sanpham/giatrithuoctinh" class="list-group-item custom-item ps-5" style="font-size: 17px;">
+                  Giá trị thuộc tính
+                </router-link>
+
+                 
               
               </div>
             </div>
@@ -80,7 +90,7 @@
             </div>
           </div>
         </div>
-        <router-link to="/item4" class="list-group-item custom-item">Tài khoản</router-link>
+        <router-link to="/quanly/taikhoan" class="list-group-item custom-item">Tài khoản</router-link>
         <router-link to="/item5" class="list-group-item custom-item">Thống kê</router-link>
       </ul>
     </div>

@@ -201,7 +201,7 @@ onMounted(() => {
  
   background-color: white;
   color: #000000;
-  font-weight: 500;
+
  border:none;
 }
 

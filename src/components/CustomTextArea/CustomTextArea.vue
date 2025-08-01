@@ -50,21 +50,41 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
-import Quill from 'quill'
+import { onMounted, watch, ref } from 'vue';
+import Quill from 'quill';
+
+const props = defineProps({
+  modelValue: String
+});
+const emit = defineEmits(['update:modelValue']);
+
+let quill;
 
 onMounted(() => {
-  const quill = new Quill('#editor', {
+  quill = new Quill('#editor', {
     modules: {
-    //   syntax: true,
       toolbar: '#toolbar-container',
     },
-    // placeholder: 'Compose an epic...',
-    theme: 'snow'
-  })
+    theme: 'snow',
+  });
 
-  // Nếu bạn muốn truy cập nội dung sau này, có thể lưu quill vào biến hoặc expose qua `defineExpose()`
-})
+  // Gán nội dung ban đầu từ modelValue vào Quill
+  if (props.modelValue) {
+    quill.root.innerHTML = props.modelValue;
+  }
+
+  // Lắng nghe khi nội dung thay đổi
+  quill.on('text-change', () => {
+    emit('update:modelValue', quill.root.innerHTML);
+  });
+});
+
+// Đồng bộ khi modelValue thay đổi từ bên ngoài
+watch(() => props.modelValue, (newVal) => {
+  if (quill && quill.root.innerHTML !== newVal) {
+    quill.root.innerHTML = newVal || '';
+  }
+});
 </script>
 
 <style scoped>

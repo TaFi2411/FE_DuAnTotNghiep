@@ -16,7 +16,33 @@
       <div class="tab-content">
         <!-- DANH SÁCH -->
         <div id="list" class="container tab-pane active"><br />
-          <table class="table table-striped table-hover align-middle">
+
+          <!-- Form tìm kiếm -->
+          <form class="row g-2 mb-3" @submit.prevent="doSearch">
+            <div class="col-md-4">
+              <input
+                v-model="searchNameInput"
+                type="text"
+                class="form-control"
+                placeholder="Nhập tên sản phẩm..."
+              />
+            </div>
+            <div class="col-md-4">
+              <select v-model="searchCategoryInput" class="form-select">
+                <option value="">-- Tất cả loại sản phẩm --</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary w-100" type="submit">Tìm kiếm</button>
+            </div>
+          </form>
+
+          <span class="text-muted">Tìm thấy {{ filteredProducts.length }} kết quả</span>
+
+          <table class="table table-striped table-hover align-middle mt-2">
             <thead>
               <tr>
                 <th style="width: 70px;">ID</th>
@@ -28,7 +54,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="sp in products" :key="sp.id">
+              <tr v-for="sp in paginatedProducts" :key="sp.id">
                 <td>{{ sp.id }}</td>
                 <td>
                   <img class="table-img" :src="firstImage(sp)" :alt="sp.name" @error="onImgError" />
@@ -41,11 +67,31 @@
                   <button class="btn btn-sm btn-danger" @click="deleteProduct(sp.id)">Xoá</button>
                 </td>
               </tr>
-              <tr v-if="products.length === 0">
-                <td colspan="6" class="text-center py-4">Chưa có sản phẩm.</td>
+              <tr v-if="paginatedProducts.length === 0">
+                <td colspan="6" class="text-center py-4">Không tìm thấy sản phẩm.</td>
               </tr>
             </tbody>
           </table>
+
+          <!-- PHÂN TRANG -->
+          <nav v-if="totalPages > 1" class="mt-3">
+            <ul class="pagination justify-content-center">
+              <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)">«</a>
+              </li>
+              <li
+                v-for="page in totalPages"
+                :key="page"
+                class="page-item"
+                :class="{ active: currentPage === page }"
+              >
+                <a class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
+              </li>
+              <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)">»</a>
+              </li>
+            </ul>
+          </nav>
         </div>
 
         <!-- FORM -->
@@ -97,11 +143,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
-
-const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/deiqvfmm0/image/upload';
-const CLOUDINARY_UPLOAD_PRESET = 'kaijun_upload';
 
 const CATEGORY_API = "http://localhost:8080/api/category";
 const PRODUCT_API = "http://localhost:8080/api/product";
@@ -109,6 +152,44 @@ const PRODUCT_API = "http://localhost:8080/api/product";
 const categories = ref([]);
 const products = ref([]);
 
+// Dữ liệu tìm kiếm
+const searchNameInput = ref("");
+const searchCategoryInput = ref("");
+const searchName = ref("");
+const searchCategory = ref("");
+
+// Phân trang
+const currentPage = ref(1);
+const itemsPerPage = ref(5);
+
+const filteredProducts = computed(() => {
+  return products.value.filter(sp => {
+    const matchName = !searchName.value || sp.name.toLowerCase().includes(searchName.value.toLowerCase());
+    const matchCategory = !searchCategory.value || sp.categoryId == searchCategory.value;
+    return matchName && matchCategory;
+  });
+});
+
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage.value));
+
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  return filteredProducts.value.slice(start, start + itemsPerPage.value);
+});
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+const doSearch = () => {
+  searchName.value = searchNameInput.value.trim();
+  searchCategory.value = searchCategoryInput.value;
+  currentPage.value = 1; // về trang 1 khi tìm kiếm
+};
+
+// Form sản phẩm
 const form = ref({
   id: null,
   name: "",
@@ -120,15 +201,6 @@ const form = ref({
 
 const imagePreview = ref(null);
 const submitting = ref(false);
-
-const placeholderDataUrl =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'>
-      <rect width='100%' height='100%' fill='#eee'/>
-      <text x='50%' y='50%' font-size='10' fill='#888' text-anchor='middle' dominant-baseline='central'>No Image</text>
-    </svg>`
-  );
 
 const fetchCategories = async () => {
   const res = await axios.get(CATEGORY_API);
@@ -143,7 +215,6 @@ const fetchProducts = async () => {
 const handleImageFile = (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-
   form.value.imageFile = file;
   const reader = new FileReader();
   reader.onload = () => {
@@ -152,23 +223,17 @@ const handleImageFile = (e) => {
   reader.readAsDataURL(file);
 };
 
-const uploadToCloudinary = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-  const res = await axios.post(CLOUDINARY_URL, formData);
-  return res.data.secure_url;
-};
-
 const addOrUpdateProduct = async () => {
   try {
     submitting.value = true;
 
     let imageUrl = form.value.imageUrl;
-
     if (form.value.imageFile) {
-      imageUrl = await uploadToCloudinary(form.value.imageFile);
+      const formData = new FormData();
+      formData.append("file", form.value.imageFile);
+      formData.append("upload_preset", "kaijun_upload");
+      const res = await axios.post("https://api.cloudinary.com/v1_1/deiqvfmm0/image/upload", formData);
+      imageUrl = res.data.secure_url;
     }
 
     const payload = {
@@ -197,38 +262,18 @@ const addOrUpdateProduct = async () => {
 };
 
 const resetForm = () => {
-  form.value = {
-    id: null,
-    name: "",
-    brand: "Apple",
-    categoryId: "",
-    imageFile: null,
-    imageUrl: null
-  };
+  form.value = { id: null, name: "", brand: "Apple", categoryId: "", imageFile: null, imageUrl: null };
   imagePreview.value = null;
 };
 
 const editProduct = (sp) => {
-  form.value = {
-    id: sp.id,
-    name: sp.name,
-    brand: sp.brand,
-    categoryId: sp.categoryId,
-    imageFile: null,
-    imageUrl: sp.image || null
-  };
+  form.value = { id: sp.id, name: sp.name, brand: sp.brand, categoryId: sp.categoryId, imageFile: null, imageUrl: sp.image || null };
   imagePreview.value = sp.image || null;
-
-  // Chuyển tab sang form
-  setTimeout(() => {
-    const tab = document.querySelector('[href="#form"]');
-    if (tab) tab.click();
-  }, 100);
+  setTimeout(() => document.querySelector('[href="#form"]')?.click(), 100);
 };
 
 const deleteProduct = async (id) => {
   if (!confirm("Bạn có chắc chắn muốn xoá sản phẩm này?")) return;
-
   try {
     await axios.delete(`${PRODUCT_API}/${id}`);
     await fetchProducts();
@@ -239,18 +284,18 @@ const deleteProduct = async (id) => {
   }
 };
 
-const firstImage = (sp) => {
-  return sp?.image || placeholderDataUrl;
-};
+const placeholderDataUrl =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'>
+      <rect width='100%' height='100%' fill='#eee'/>
+      <text x='50%' y='50%' font-size='10' fill='#888' text-anchor='middle' dominant-baseline='central'>No Image</text>
+    </svg>`
+  );
 
-const getCategoryName = (id) => {
-  return categories.value.find((cat) => cat.id === id)?.name || "Không rõ";
-};
-
-const onImgError = (e) => {
-  e.target.onerror = null;
-  e.target.src = placeholderDataUrl;
-};
+const firstImage = (sp) => sp?.image || placeholderDataUrl;
+const getCategoryName = (id) => categories.value.find(cat => cat.id === id)?.name || "Không rõ";
+const onImgError = (e) => { e.target.src = placeholderDataUrl; };
 
 onMounted(() => {
   fetchCategories();
@@ -272,5 +317,8 @@ onMounted(() => {
   object-fit: cover;
   border-radius: .75rem;
   border: 1px solid #e9ecef;
+}
+.pagination .page-link {
+  cursor: pointer;
 }
 </style>
