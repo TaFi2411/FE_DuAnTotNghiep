@@ -57,7 +57,6 @@ const API_URL = 'http://localhost:8080/api/account'
 const accounts = ref([])
 const searchKeyword = ref('')
 
-// Lấy danh sách tài khoản
 const fetchAccount = async () => {
   try {
     const response = await axios.get(API_URL)
@@ -67,7 +66,7 @@ const fetchAccount = async () => {
   }
 }
 
-// Thay đổi trạng thái tài khoản
+
 const ChangeStatus = async (id) => {
   try {
     await axios.put(`${API_URL}/${id}/capnhattrangthai`)
@@ -80,11 +79,16 @@ const ChangeStatus = async (id) => {
 
 const filteredAccounts = computed(() => {
   const keyword = searchKeyword.value.toLowerCase()
-  return accounts.value.filter(account =>
+
+  const filtered = accounts.value.filter(account =>
     account.fullname.toLowerCase().includes(keyword) ||
     account.email.toLowerCase().includes(keyword)
   )
+  return filtered.sort((a, b) => {
+    return (b.role === true ? 1 : 0) - (a.role === true ? 1 : 0)
+  })
 })
+
 
 onMounted(() => {
   fetchAccount()

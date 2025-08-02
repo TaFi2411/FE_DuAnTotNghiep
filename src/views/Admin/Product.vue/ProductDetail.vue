@@ -103,27 +103,25 @@
 </template>
 
 <script setup>
-// Import thư viện và component cần thiết
+
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import CustomTextArea from "@/components/CustomTextArea/CustomTextArea.vue";
 const API_URL = 'http://localhost:8080/api/sku'
 
-// Khai báo hằng số cấu hình Cloudinary
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/deiqvfmm0/image/upload';
 const CLOUDINARY_UPLOAD_PRESET = 'kaijun_upload';
 
-// Trạng thái và biến toàn cục
 const isEditing = ref(false);
 const editingId = ref(null);
 const imagePreview = ref(null);
 const searchKeyword = ref("");
 
-// Danh sách sản phẩm và SKU
+
 const Products = ref([]);
 const skuList = ref([]);
 
-// Model form SKU
+
 const SkuRequest = ref({
   name: '',
   discriptione: '',
@@ -134,12 +132,12 @@ const SkuRequest = ref({
    imageFile: null,
 });
 
-// Hàm upload ảnh lên Cloudinary
+
 const handleImageFile = async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
-  // Hiển thị preview ảnh
+
   const reader = new FileReader();
   reader.onload = () => {
     imagePreview.value = reader.result;
@@ -157,7 +155,6 @@ const handleImageFile = async (e) => {
   }
 };
 
-// Lấy danh sách sản phẩm
 const fetchProduct = async () => {
   try {
     const response = await axios.get('http://localhost:8080/api/product');
@@ -167,7 +164,7 @@ const fetchProduct = async () => {
   }
 };
 
-// Lấy danh sách SKU
+
 const fetchSkuList = async () => {
   try {
     const res = await axios.get("http://localhost:8080/api/sku");
@@ -177,7 +174,7 @@ const fetchSkuList = async () => {
   }
 };
 
-// Thêm
+
 const addSku = async () => {
   let imageUrl = SkuRequest.value.image;
     if (SkuRequest.value.imageFile) {
@@ -202,7 +199,6 @@ const addSku = async () => {
 };
 
 
-// Chỉnh sửa SKU
 
 const editSku = (sku) => {
   isEditing.value = true;
@@ -241,7 +237,7 @@ const updateSku    = async () => {
 
 }
 
-// Xoá SKU
+
 const deleteSku = async (id) => {
   if (!confirm("Bạn có chắc chắn muốn xoá SKU này không?")) return;
   try {
@@ -254,7 +250,6 @@ const deleteSku = async (id) => {
   }
 };
 
-// Lọc kết quả tìm kiếm
 const filteredSkus = computed(() => {
   return skuList.value.filter(sku =>
     sku.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
@@ -274,7 +269,7 @@ const ResetForm = () => {
 };
 
 
-// Khi component mount
+
 onMounted(() => {
   fetchProduct();
   fetchSkuList();
