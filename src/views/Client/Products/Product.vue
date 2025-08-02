@@ -1,22 +1,18 @@
 <template>
   <div class="container mt-4">
     <!-- BỘ LỌC DANH MỤC -->
-   <div class="filter-buttons">
+    <div class="filter-buttons">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="btn-filter"
+        :class="{ active: selectedCategory === cat }"
+        @click="filterByCategory(cat)"
+      >
+        {{ cat }}
+      </button>
+    </div>
 
-  <button
-    v-for="cat in categories"
-    :key="cat"
-    class="btn-filter"
-    :class="{ active: selectedCategory === cat }"
-    @click="filterByCategory(cat)"
-  >
-    {{ cat }}
-  </button>
-</div>
-
-
-  
-    
     <div class="row">
       <div
         v-for="product in displayedProducts"
@@ -48,12 +44,8 @@
     </div>
 
     <!-- NÚT XEM THÊM -->
-   <div class="text-center mt-4" v-if="displayedProducts.length < filteredProducts.length">
-
-  <button class="btn xemthem" @click="visibleCount += 8">
-  Xem thêm
-</button>
-
+    <div class="text-center mt-4" v-if="displayedProducts.length < filteredProducts.length">
+      <button class="btn xemthem" @click="visibleCount += 8">Xem thêm</button>
     </div>
   </div>
 </template>
@@ -63,10 +55,11 @@ import { ref, onMounted, computed } from 'vue'
 import axios from '@/utils/axios'
 
 const products = ref([])
-const selectedCategory = ref('Điện thoại')
+const selectedCategory = ref('Tất cả') // Mặc định chọn "Tất cả"
 const visibleCount = ref(8)
 
-const categories = ['Điện thoại', 'iPad', 'Mac', 'AirPods', 'Smartwatch']
+// Thêm "Tất cả" vào danh sách
+const categories = ['Tất cả', 'Điện thoại', 'iPad', 'Mac', 'AirPods', 'Smartwatch']
 
 const getImageUrl = (path) => {
   if (!path) return 'https://via.placeholder.com/200x200?text=No+Image'
@@ -78,8 +71,7 @@ const getProducts = async () => {
   try {
     const res = await axios.get('/product')
     products.value = res.data
-   
-visibleCount.value = 8 
+    visibleCount.value = 8
   } catch (err) {
     console.error('Lỗi gọi API:', err)
   }
@@ -91,7 +83,7 @@ const filterByCategory = (category) => {
 }
 
 const filteredProducts = computed(() => {
-  if (!selectedCategory.value) return products.value
+  if (selectedCategory.value === 'Tất cả') return products.value
   return products.value.filter((p) => {
     const productCategory = p.categoryName?.trim().toLowerCase()
     const selected = selectedCategory.value.trim().toLowerCase()
@@ -198,29 +190,15 @@ onMounted(() => {
 
 .filter-buttons .btn-filter {
   padding: 10px 20px;
- 
   background-color: white;
   color: #000000;
-
- border:none;
+  border: none;
 }
-
-
 
 .filter-buttons .btn-filter.active {
-
   text-decoration: underline;
+}
 
- 
-}
-.xemthem:hover {
-  flex: 7;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  transition: background-color 0.3s ease;
-}
 .xemthem {
   flex: 7;
   background-color: #007bff;
@@ -228,5 +206,8 @@ onMounted(() => {
   border: none;
   border-radius: 25px;
   transition: background-color 0.3s ease;
+}
+.xemthem:hover {
+  background-color: #0056b3;
 }
 </style>
