@@ -9,6 +9,11 @@
         <div class="banner-center">
           <div class="formto">
             <h3 class="text-center font-bold">Đăng nhập</h3>
+             
+                 <h5 class="text-danger text-center fw-bold" v-if="erroremailormatkhau">Tài khoản hoặc mặt khẩu sai</h5>
+                <h5 class="text-danger text-center fw-bold" v-if="errorMessage">{{ errorMessage }}</h5>
+
+               
             <br />
             <form @submit.prevent="login">
               <div class="mb-3">
@@ -20,6 +25,7 @@
                   id="email"
                   placeholder="Nhập email"
                 />
+                <small class="text-danger">{{ errors.email }}</small>
               </div>
 
               <div class="mb-3">
@@ -38,6 +44,7 @@
                     @click="showPassword = !showPassword"
                   ></i>
                 </div>
+                <small class="text-danger">{{ errors.password }}</small>
               </div>
 
               <div class="nhomatkhau mt-2">
@@ -78,13 +85,15 @@ import { ref } from 'vue'
 import axios from 'axios'
 import Swal from 'sweetalert2'
 import { useRouter } from 'vue-router'
+import validator from 'validator'
 
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const router = useRouter()
-
-
+const errors = ref({})
+const erroremailormatkhau = ref(false);
+const errorMessage = ref('')
 axios.interceptors.response.use(
   response => response,
   error => {
@@ -95,10 +104,21 @@ axios.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+const validateForm = () => {
+  errors.value = {}
+  if (validator.isEmpty(email.value.trim())) {
+    errors.value.email = 'Vui lòng nhập email'
+  } else if (!validator.isEmail(email.value)) {
+    errors.value.email = 'Email không đúng định dạng'
+  }
+    if (validator.isEmpty(password.value.trim())) {
+    errors.value.password = 'Vui lòng nhập mật khẩu'
+  } 
 
+  return Object.keys(errors.value).length === 0
+}
 const login = async () => {
-  if (!email.value || !password.value) {
-    alert('Vui lòng nhập đầy đủ email và mật khẩu!')
+  if (!validateForm()) {
     return
   }
 
@@ -121,9 +141,16 @@ const login = async () => {
       showConfirmButton: false,
       timer: 1000
     })
-    
+     
     setTimeout(() => {
+      
       router.push('/')
+      
+    }, 1000)
+    setTimeout(() => {
+      
+      location.reload(); 
+      
     }, 1000)
 
 
@@ -131,19 +158,18 @@ const login = async () => {
       alert('Đăng nhập không thành công, token không hợp lệ!')
     }
   } catch (error) {
-    console.error('Lỗi đăng nhập:', error)
-    alert('Email hoặc mật khẩu không đúng!')
+     if (error.response && error.response.status === 403) {
+    errorMessage.value = 'Tài khoản bị khóa, không thể đăng nhập'
+    erroremailormatkhau.value = false;
+  } else {
+    erroremailormatkhau.value = true;
+  }
+    
   }
 }
 
 
-const dangNhapFacebook = () => {
-  alert('Chức năng đăng nhập Facebook chưa được hỗ trợ.')
-}
 
-const dangNhapGoogle = () => {
-  alert('Chức năng đăng nhập Google chưa được hỗ trợ.')
-}
 </script>
 
 

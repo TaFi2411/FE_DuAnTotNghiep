@@ -110,6 +110,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import Swal from 'sweetalert2'
 import validator from 'validator'
 import { useRouter } from 'vue-router';
 const router = useRouter();
@@ -190,8 +191,18 @@ const Register = async () => {
     }
 
     const request = await axios.post(API_URL, newAccount)
-    console.log('Đăng ký thành công:', request.data)
+    Swal.fire({
+      icon: 'success',
+      title: 'Đăng ký thành công!',
+      showConfirmButton: false,
+      timer: 1000
+    })
 
+     setTimeout(() => {
+      
+      router.push('/dangnhap')
+      
+    }, 1000)
     email.value = ''
     fullname.value = ''
     gender.value = ''
