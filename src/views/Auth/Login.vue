@@ -130,9 +130,11 @@ const login = async () => {
 
     
 
-    const token = response.data.token
+   const { token, accountId } = response.data;
+
     if (token) {
       sessionStorage.setItem('token', token)
+      sessionStorage.setItem('accountId', accountId)
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
        Swal.fire({

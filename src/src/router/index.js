@@ -7,7 +7,7 @@ import Home from '@/views/Client/Home.vue'
 
 //Admin
 import Dashboard from '@/views/Admin/Dashboard.vue';
-import ProductList from '@/views/Admin/Product.vue/ProductList.vue';
+import ProductList from '@/views/Admin/Product.vue/Product.vue';
 import ProductType from '@/views/Admin/Product.vue/ProductType.vue';
 import ProductDetailAd from '@/views/Admin/Product.vue/ProductDetail.vue';
 import City from '@/views/Admin/Address/City.vue';

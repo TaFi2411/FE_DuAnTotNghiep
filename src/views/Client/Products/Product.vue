@@ -1,213 +1,195 @@
 <template>
-  <div class="container mt-4">
-    <!-- BỘ LỌC DANH MỤC -->
-    <div class="filter-buttons">
-      <button
-        v-for="cat in categories"
-        :key="cat"
-        class="btn-filter"
-        :class="{ active: selectedCategory === cat }"
-        @click="filterByCategory(cat)"
-      >
-        {{ cat }}
-      </button>
-    </div>
+  <div class="container py-4">
+    <ul class="nav nav-tabs mb-4 justify-content-center">
+      <li class="nav-item" v-for="tab in tabs" :key="tab">
+        <button
+          class="nav-link"
+          :class="{ active: currentTab === tab }"
+          @click="currentTab = tab"
+        >
+          {{ tab }}
+        </button>
+      </li>
+    </ul>
 
-    <div class="row">
+    <div class="row g-4">
       <div
-        v-for="product in displayedProducts"
-        :key="product.id"
-        class="col-md-3 mb-4"
+        class="col-12 col-sm-6 col-md-4 col-lg-3"
+        v-for="item in filteredSkus"
+        :key="item.id"
       >
         <div class="card h-100">
-          <router-link :to="`/sanpham/chitietsanpham/${product.id}`" class="image-wrapper">
-            <img
-              :src="getImageUrl(product.image)"
-              class="card-img-top"
-              alt="Ảnh sản phẩm"
-            />
-          </router-link>
-          <div class="card-body d-flex flex-column">
-            <h5 class="card-title">{{ product.name }}</h5>
-            <div class="button-row mt-auto">
-              <router-link
-                :to="`/sanpham/chitietsanpham/${product.id}`"
-                class="btn btn-outline-primary btn-find"
-              >
-                Tìm hiểu thêm
-              </router-link>
-              <button class="btn btn-primary btn-buy">Mua ></button>
+          <img
+            class="table-img"
+            :src="firstImage(item)"
+            :alt="item.productName"
+            @error="onImgError"
+          />
+          <div class="card-body">
+            <h5 class="card-title text-center">{{ item.productName }}</h5>
+
+            <ul class="text-center" style="list-style: none; padding: 0; margin: 0;">
+              <li v-for="(attr, index) in item.attributes" :key="index">
+                {{ attr.optionAttributeName }}: {{ attr.attributeValue }}
+              </li>
+            </ul>
+
+            <h5 class="text-center text-danger">
+              {{ item.price.toLocaleString() }} VNĐ
+            </h5>
+
+            <div class="text-center">
+              <button class="btn btn-primary" @click="goToProductDetail(item.id)">
+                Mua hàng
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- NÚT XEM THÊM -->
-    <div class="text-center mt-4" v-if="displayedProducts.length < filteredProducts.length">
-      <button class="btn xemthem" @click="visibleCount += 8">Xem thêm</button>
-    </div>
   </div>
 </template>
 
+
+
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import axios from '@/utils/axios'
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
 
-const products = ref([])
-const selectedCategory = ref('Tất cả') // Mặc định chọn "Tất cả"
-const visibleCount = ref(8)
+const router = useRouter();
+const SKU_API = "http://localhost:8080/api/sku";
 
-// Thêm "Tất cả" vào danh sách
-const categories = ['Tất cả', 'Điện thoại', 'iPad', 'Mac', 'AirPods', 'Smartwatch']
+const skus = ref([]);
 
-const getImageUrl = (path) => {
-  if (!path) return 'https://via.placeholder.com/200x200?text=No+Image'
-  if (path.startsWith('http')) return path
-  return `http://localhost:8080/images/${path}`
-}
+const tabs = ["Tất cả", "iPhone", "Macbook", "iPad", "Tai Nghe", "Apple Watch"];
+const currentTab = ref("Tất cả");
 
-const getProducts = async () => {
+const placeholderDataUrl =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'>
+      <rect width='100%' height='100%' fill='#eee'/>
+      <text x='50%' y='50%' font-size='10' fill='#888' text-anchor='middle' dominant-baseline='central'>No Image</text>
+    </svg>`
+  );
+
+const onImgError = (e) => {
+  e.target.src = placeholderDataUrl;
+};
+
+const firstImage = (sku) => sku?.image || placeholderDataUrl;
+
+const fetchSkus = async () => {
   try {
-    const res = await axios.get('/product')
-    products.value = res.data
-    visibleCount.value = 8
+    const res = await axios.get(SKU_API);
+    skus.value = (res.data || []).sort((a, b) => b.id - a.id);
   } catch (err) {
-    console.error('Lỗi gọi API:', err)
+    console.error("Lỗi khi fetch danh sách SKU", err);
   }
-}
+};
 
-const filterByCategory = (category) => {
-  selectedCategory.value = category
-  visibleCount.value = 4
-}
+const goToProductDetail = (skuId) => {
+  router.push(`/sanpham/chitietsanpham/${skuId}`);
+};
 
-const filteredProducts = computed(() => {
-  if (selectedCategory.value === 'Tất cả') return products.value
-  return products.value.filter((p) => {
-    const productCategory = p.categoryName?.trim().toLowerCase()
-    const selected = selectedCategory.value.trim().toLowerCase()
-    return productCategory === selected
-  })
-})
+// Lọc sản phẩm theo tab
+const filteredSkus = computed(() => {
+  if (currentTab.value === "Tất cả") return skus.value;
+  return skus.value.filter((item) =>
+    item.productName?.toLowerCase()?.includes(currentTab.value.toLowerCase())
+  );
+});
 
-const displayedProducts = computed(() => {
-  return filteredProducts.value.slice(0, visibleCount.value)
-})
-
-onMounted(() => {
-  getProducts()
-})
+onMounted(fetchSkus);
 </script>
 
 <style scoped>
-.card {
+/* TAB NAVIGATION */
+.nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.nav-tabs .nav-link {
+  color: #495057;
+  font-weight: 500;
   border: none;
+  padding: 10px 20px;
+  margin-right: 5px;
+  transition: all 0.3s ease;
+  border-radius: 5px 5px 0 0;
 }
-.btn-outline-dark.active {
-  background-color: #000;
+
+.nav-tabs .nav-link.active {
+  background-color: #007bff;
   color: white;
-  border-color: #000;
+  font-weight: 600;
 }
 
-.image-wrapper {
+/* PRODUCT CARD */
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
   overflow: hidden;
-  height: 300px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-decoration: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card-img-top {
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.4s ease;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
-.card:hover .card-img-top {
-  transform: translateY(-4px) scale(1.0);
+.card .card-body {
+  padding: 15px;
 }
 
 .card-title {
   font-size: 1.1rem;
-  min-height: 50px;
-  text-align: center;
-  color: #333;
+  font-weight: 600;
+  margin-bottom: 10px;
 }
 
-.button-row {
-  display: flex;
-  gap: 10px;
+.table-img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+/* ATTRIBUTE LIST */
+.card ul {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* PRICE */
+.card .text-danger {
+  font-size: 1.1rem;
+  font-weight: bold;
   margin-top: 10px;
 }
 
-.btn-find {
-  flex: 7;
+/* BUTTON */
+.btn-primary {
   background-color: #007bff;
-  color: white;
   border: none;
-  border-radius: 25px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
   transition: background-color 0.3s ease;
 }
 
-.btn-buy {
-  flex: 3;
-  background-color: transparent;
-  color: #007bff;
-  border: none;
-  border-radius: 25px;
-  transition: color 0.3s ease, text-decoration 0.3s ease;
-  padding: 0.375rem 0.75rem;
-}
-
-.btn-buy:hover {
-  text-decoration: underline;
-  color: #0056b3;
-  background-color: transparent;
-}
-
-@media (max-width: 768px) {
-  .col-md-3 {
-    flex: 0 0 50%;
-    max-width: 50%;
-  }
-}
-@media (max-width: 576px) {
-  .col-md-3 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-}
-
-.filter-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
-}
-
-.filter-buttons .btn-filter {
-  padding: 10px 20px;
-  background-color: white;
-  color: #000000;
-  border: none;
-}
-
-.filter-buttons .btn-filter.active {
-  text-decoration: underline;
-}
-
-.xemthem {
-  flex: 7;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  transition: background-color 0.3s ease;
-}
-.xemthem:hover {
+.btn-primary:hover {
   background-color: #0056b3;
 }
+
+/* RESPONSIVE FIX */
+@media (max-width: 576px) {
+  .card .table-img {
+    height: 150px;
+  }
+}
 </style>
+
+

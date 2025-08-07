@@ -1,7 +1,7 @@
 
 <template>
   <div class="container mt-4">
-    <h2>Chi tiết sản phẩm</h2>
+    <h2>Biến thể sản phẩm</h2>
     <hr />
 
     <!-- Tabs -->
@@ -30,20 +30,26 @@
               <th>Tên</th>
               <th>Giá</th>
               <th>Số lượng</th>
-              <th>Mô tả</th>
+              <th>Thuộc tính</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(sku) in filteredSkus" :key="sku.id" class="align-middle">
+            <tr v-for="(sku) in skuList" :key="sku.id" class="align-middle">
               <td class="text-center">{{ sku.id }}</td>
               <td class="text-center">
                 <img :src="sku.image" alt="Ảnh" class="table-img rounded" />
               </td>
-              <td>{{ sku.name }}</td>
+              <td>{{ sku.productName }}</td>
               <td class="text-end">{{ sku.price.toLocaleString() }}</td>
               <td class="text-center">{{ sku.quantity }}</td>
-              <td><div v-html="sku.discriptione"></div></td>
+              <td>
+                <ul class="list-unstyled mb-0">
+                  <li v-for="attr in sku.attributes" :key="attr.attributeValueId">
+                    <strong>{{ attr.optionAttributeName }}:</strong> {{ attr.attributeValue }}
+                  </li>
+                </ul>
+              </td>
               <td class="text-center">
                 <button class="btn btn-sm btn-warning me-1" @click="editSku(sku)">Sửa</button>
                 <button class="btn btn-sm btn-danger" @click="deleteSku(sku.id)">Xoá</button>
@@ -66,10 +72,7 @@
             </select>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Tên chi tiết</label>
-            <input type="text" v-model="SkuRequest.name" class="form-control" required />
-          </div>
+        
 
           <div class="row mb-3">
             <div class="col-md-6">
@@ -91,10 +94,47 @@
                 <img :src="imagePreview" class="preview-img" alt="preview" @error="onImgError" width="200px" height="200px"/>
               </div>
 
-          <div class="mb-3">
-            <label class="form-label">Mô tả</label>
-            <CustomTextArea v-model="SkuRequest.discriptione" />
-          </div>
+               <div
+                  v-for="(item, index) in Attributes"
+                  :key="index"
+                  class="row g-2 align-items-center mb-3 border rounded p-2 attribute-row"
+                >
+                  <div class="col-md-5">
+                    <label class="form-label mb-1">Thuộc tính</label>
+                    <select v-model="item.OpptionAttributeId" @change="item.AttributeValueId = ''" class="form-select">
+                      <option disabled value="">-- Chọn thuộc tính --</option>
+                      <option v-for="attr in OpptionAttribute" :key="attr.id" :value="attr.id">
+                        {{ attr.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-5">
+                    <label class="form-label mb-1">Giá trị</label>
+                    <select v-if="item.OpptionAttributeId" v-model="item.AttributeValueId" class="form-select">
+                      <option disabled value="">-- Chọn giá trị --</option>
+                      <option
+                        v-for="val in getValuesByOpptionAttributeId(item.OpptionAttributeId)"
+                        :key="val.id"
+                        :value="val.id"
+                      >
+                        {{ val.value }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-2 d-flex align-items-end">
+                    <button @click="removeAttribute(index)" class="btn btn-outline-danger w-100">Xóa</button>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <button @click="addAttribute" type="button" class="btn btn-outline-primary">
+                    + Thêm thuộc tính
+                  </button>
+                </div>
+
+              
 
           <button type="submit" class="btn btn-success mt-5">Lưu biến thể</button>
         </form>
@@ -107,7 +147,7 @@
 
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
-import CustomTextArea from "@/components/CustomTextArea/CustomTextArea.vue";
+
 const API_URL = 'http://localhost:8080/api/sku'
 
 const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/deiqvfmm0/image/upload';
@@ -124,8 +164,7 @@ const skuList = ref([]);
 
 
 const SkuRequest = ref({
-  name: '',
-  discriptione: '',
+
   imageUrl: null,
   price: 0,
   quantity: 0,
@@ -186,13 +225,16 @@ const addSku = async () => {
       imageUrl = res.data.secure_url;
     }
     const formSkuAdd = {
-      name: SkuRequest.value.name,
-      discriptione: SkuRequest.value.discriptione,
-      image: imageUrl,
-      price: SkuRequest.value.price,
-      quantity: SkuRequest.value.quantity,
-      productId: SkuRequest.value.productId
-    }
+        discriptione: SkuRequest.value.discriptione,
+        image: imageUrl,
+        price: SkuRequest.value.price,
+        quantity: SkuRequest.value.quantity,
+        productId: SkuRequest.value.productId,
+        attributes: Attributes.value.map(item => ({
+          id: item.AttributeValueId  
+        }))
+      }
+      console.log('Payload gửi:', formSkuAdd);
     await axios.post(API_URL, formSkuAdd)
     ResetForm();
     await fetchSkuList()
@@ -206,8 +248,7 @@ const editSku = (sku) => {
   editingId.value = sku.id;
 
   SkuRequest.value = {
-    name: sku.name,
-    discriptione: sku.discriptione,
+    discriptione: sku.discriptione || '',
     image: sku.image || null,
     imageUrl: sku.image || null,
     price: sku.price,
@@ -215,28 +256,47 @@ const editSku = (sku) => {
     productId: sku.productId,
     imageFile: null
   };
+
   imagePreview.value = sku.image || null;
+  Attributes.value = sku.attributes.map(attr => ({
+    OpptionAttributeId: attr.optionAttributeId,
+    AttributeValueId: attr.attributeValueId
+  }));
 
   setTimeout(() => {
     document.querySelector('[href="#add"]')?.click();
   }, 100);
 };
-const updateSku    = async () => {
 
-     const formSkuAdd = {
-      name: SkuRequest.value.name,
-      discriptione: SkuRequest.value.discriptione,
-      image: imageUrl,
-      price: SkuRequest.value.price,
-      quantity: SkuRequest.value.quantity,
-      productId: SkuRequest.value.productId
-    }
-    await axios.put(`${API_URL}/${id.value}`, updateSku)
-    ResetForm()
-    await fetchSkuList()
-    setTimeout(() => { document.querySelector('[href="#list"]').click() }, 100)
+const updateSku = async () => {
+  let imageUrl = SkuRequest.value.image;
 
-}
+  if (SkuRequest.value.imageFile) {
+    const formData = new FormData();
+    formData.append("file", SkuRequest.value.imageFile);
+    formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+    const res = await axios.post(CLOUDINARY_URL, formData);
+    imageUrl = res.data.secure_url;
+  }
+
+  const formSkuUpdate = {
+    discriptione: SkuRequest.value.discriptione,
+    image: imageUrl,
+    price: SkuRequest.value.price,
+    quantity: SkuRequest.value.quantity,
+    productId: SkuRequest.value.productId,
+    attributes: Attributes.value.map(item => ({
+      id: item.AttributeValueId
+    }))
+  };
+
+  await axios.put(`${API_URL}/${editingId.value}`, formSkuUpdate);
+
+  ResetForm();
+  await fetchSkuList();
+  setTimeout(() => { document.querySelector('[href="#list"]').click(); }, 100);
+};
+
 
 
 const deleteSku = async (id) => {
@@ -253,7 +313,7 @@ const deleteSku = async (id) => {
 
 const filteredSkus = computed(() => {
   return skuList.value.filter(sku =>
-    sku.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    sku.productId.toLowerCase().includes(searchKeyword.value.toLowerCase())
   );
 });
 
@@ -271,17 +331,80 @@ const ResetForm = () => {
 
 
 
+
+
+const OpptionAttribute = ref([]);
+const AttributeValue = ref([]);
+const Attributes = ref([
+  { OpptionAttributeId: '', AttributeValueId: '' }
+]);
+
+const fetchOptionAttributes = async () => {
+  try {
+    const res = await axios.get('http://localhost:8080/api/option-attribute')
+    OpptionAttribute.value = res.data
+  } catch (err) {
+    console.error('Lỗi khi tải thuộc tính:', err)
+  }
+}
+
+const fetchAttributeValues = async () => {
+  try {
+    const res = await axios.get('http://localhost:8080/api/attribute-value')
+    AttributeValue.value = res.data
+  } catch (err) {
+    console.error('Lỗi khi tải giá trị thuộc tính:', err)
+  }
+}
+
+
+const getValuesByOpptionAttributeId = (attrId) => {
+  return AttributeValue.value.filter(v => v.optionAttributeId === Number(attrId))
+}
+
+
+
+// Thêm dòng thuộc tính
+const addAttribute = () => {
+ Attributes.value.push({ OpptionAttributeId: '', AttributeValueId: '' })
+
+}
+
+// Xóa dòng thuộc tính
+const removeAttribute = (index) => {
+  Attributes.value.splice(index, 1)
+}
+
+
 onMounted(() => {
-  fetchProduct();
-  fetchSkuList();
-});
+  fetchProduct()
+  fetchSkuList()
+  fetchOptionAttributes()
+  fetchAttributeValues()
+})
+
 </script>
 
 <style scoped>
+.attribute-row {
+  background-color: #f8f9fa;
+  transition: all 0.3s;
+}
+
+.attribute-row:hover {
+  background-color: #f1f1f1;
+}
+
+.preview-img {
+  border: 1px solid #ccc;
+  padding: 4px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
 .table-img {
   width: 50px;
   height: 50px;
   object-fit: cover;
 }
 </style>
-Đang hiển thị 149812384754486176.

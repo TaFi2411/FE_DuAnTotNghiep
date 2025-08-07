@@ -1,149 +1,225 @@
 <template>
   <div class="container mt-5" v-if="sku">
     <div class="row">
-      <div class="col-md-5">
-        <img :src="getImageUrl(sku.image)" class="img-fluid rounded shadow" />
+      <div class="col-md-6 ">
+        <img :src="sku.image" class="img-fluid border rounded" @error="onImgError" />
       </div>
+      
+      <div class="col-md-6">
+        
+        <h2>{{ sku.productName }}</h2>
+        <p class="price">Giá: {{ sku.price.toLocaleString() }} VNĐ</p>
+        <ul>
+          <li v-for="(attr, index) in sku.attributes" :key="index">
+            {{ attr.optionAttributeName }}: {{ attr.attributeValue }}
+          </li>
+        </ul>
 
-      <div class="col-md-7">
-        <h2>{{ sku.name }}</h2>
 
-        <p>Mô tả: <span v-html="sku.discriptione"></span></p>
 
-        <p>Giá: <strong class="text-danger">{{ formatCurrency(sku.price) }}</strong></p>
-
-        <p>Số lượng còn: {{ sku.quantity }}</p>
-
-        <!-- Hiển thị các thuộc tính -->
-        <div v-if="sku.attributes && sku.attributes.length">
-          <div v-for="(attr, index) in sku.attributes" :key="index">
-            <p>{{ attr.attributeName }}: <strong>{{ attr.attributeValue }}</strong></p>
+     
+          <div class="mt-3">
+            <label class="form-label">Số lượng:</label>
+            <div class="quantity-input">
+              <button class="btn-qty" @click="decreaseQuantity">−</button>
+              <input
+                type="text"
+                v-model="quantity"
+                min="1"
+                class="form-control text-center"
+                disabled
+              />
+              <button class="btn-qty" @click="increaseQuantity">+</button>
+            </div>
+            <div class="mt-1 text-danger" v-if="errorMessage">{{ errorMessage }}</div>
           </div>
+
+
+
+
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-success w-50" @click="addToCart(sku)">
+            <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+          </button>
+          <button class="btn btn-primary w-50" @click="goToCheckout()">
+            <i class="bi bi-credit-card"></i> Mua hàng
+          </button>
         </div>
       </div>
+
     </div>
+    <!-- Mô tả sản phẩm -->
+    <div class="mt-3">
+      <p class="description" v-if="sku.discriptione" v-html="sku.discriptione"></p>
+    </div>
+
   </div>
-  <div v-else class="text-center mt-5">Đang tải dữ liệu...</div>
 </template>
 
+
+
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import axios from '@/utils/axios'
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import axios from "axios";
 
-const sku = ref(null)
-const route = useRoute()
+const route = useRoute();
+const router = useRouter();
+const errorMessage = ref("");
+const sku = ref(null);
+const skuId = route.params.skuId;
+const quantity = ref(1);
 
-// Xử lý ảnh
-const getImageUrl = (path) => {
-  return path || 'https://via.placeholder.com/400x400?text=No+Image'
-}
-
-// Định dạng tiền
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-  }).format(value)
-}
-
-// Gọi API khi trang tải
-onMounted(async () => {
-  try {
-    const { id } = route.params
-    const res = await axios.get(`/skuAttribute/${id}`)
-
-    if (res.data) {
-      const data = res.data
-      sku.value = {
-        name: data.skuName,
-        discriptione: data.skuDiscriptione,
-        price: data.skuPrice,
-        quantity: data.skuQuantity,
-        image: data.skuImage,
-        attributes: [
-          {
-            attributeName: data.optionAttributeName, // Ví dụ: Màu sắc
-            attributeValue: data.attributeName       // Ví dụ: Đỏ
-          }
-        ]
-      }
-    }
-  } catch (err) {
-    console.error('Lỗi khi lấy chi tiết sản phẩm:', err)
+const increaseQuantity = () => {
+ 
+  if(quantity.value < sku.value.quantity){
+    quantity.value++;
+     errorMessage.value = "";
+  }else{
+    console.log(sku.value.quantity)
+     errorMessage.value = "Số lượng vượt quá số lượng trong kho!";
   }
-})
+
+};
+
+const decreaseQuantity = () => {
+  if (quantity.value > 1){
+   quantity.value-- ;
+   errorMessage.value = "";
+  }
+};
+
+const onImgError = (e) => {
+  e.target.src = "data:image/svg+xml;utf8,<svg ... />";
+};
+
+const fetchSku = async () => {
+  const res = await axios.get(`http://localhost:8080/api/sku/${skuId}`);
+  sku.value = res.data;
+};
+
+onMounted(fetchSku);
+
+
+const addToCart = async (sku) => {
+  const accountId = sessionStorage.getItem('accountId');
+
+  const payload = {
+    accountId: accountId,
+    skuId: sku.id,
+    quantity: quantity.value
+  };
+
+  try {
+    const res = await axios.post("http://localhost:8080/api/cart", payload);
+    alert("Đã thêm vào giỏ hàng!");
+  } catch (error) {
+    console.error("Lỗi khi thêm vào giỏ hàng:", error);
+    alert("Thêm giỏ hàng thất bại!");
+  }
+};
+
+const goToCheckout = () => {
+  addToCart(sku.value);
+  router.push("/thanhtoan");
+};
 </script>
 
 <style scoped>
-.container {
-  background: #fff;
-  border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+.quantity-input {
+  display: flex;
+  align-items: center;
+  width: 150px;
+  
+}
+
+.quantity-input input {
+  width: 60px;
+  text-align: center;
+  border-radius: 0;
+   border: 1px #ccc solid;
+  border-left: none;
+  border-right: none;
+  background-color: white;
+ 
+}
+
+.quantity-input .btn-qty {
+  background-color: #eee;
+  border: 1px solid #ccc;
+  width: 36px;
+  height: 38px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.quantity-input .btn-qty:hover {
+  background-color: #ddd;
+}
+
+.description {
+  background-color: #fefefe;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #c9c9c9;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+img {
+  max-height: 400px;
+  object-fit: contain;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  width: 100%;
 }
 
 h2 {
-  font-size: 28px;
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
-p {
-  font-size: 16px;
-  margin-bottom: 12px;
+ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1rem;
 }
 
-strong {
-  font-weight: 600;
-}
-
-.text-danger {
-  font-size: 20px;
-}
-
-img {
-  max-height: 400px;
-  width: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-  border: 1px solid #eee;
-  background-color: #f9f9f9;
-  transition: transform 0.3s ease;
-}
-
-img:hover {
-  transform: scale(1.02);
-}
-
-.attribute-label {
-  font-weight: 500;
+ul li {
+  padding: 6px 0;
+  font-size: 1rem;
   color: #444;
+  border-bottom: 1px dashed #ccc;
 }
 
-.attribute-value {
-  color: #2c3e50;
-  font-weight: 600;
+.price {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #e74c3c;
+  margin-bottom: 1rem;
 }
 
-/* Responsive cải thiện hiển thị trên thiết bị nhỏ */
-@media (max-width: 768px) {
-  .container {
-    padding: 20px 15px;
-  }
 
-  h2 {
-    font-size: 24px;
-  }
+button i {
+  margin-right: 5px;
+}
 
-  .text-danger {
-    font-size: 18px;
-  }
-
-  img {
-    max-height: 300px;
-  }
+.btn {
+  font-size: 1rem;
+  padding: 10px;
 }
 </style>
 

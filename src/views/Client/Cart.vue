@@ -1,66 +1,68 @@
 <template>
-  <div class="container py-5">
-    <h2 class="mb-4 text-dark">GIỎ HÀNG</h2>
-    <hr />
-    <div class="table-responsive">
-      <table class="table table-borderless table-hover align-middle bg-transparent">
-        <thead class="bg-light text-dark">
+  <div class="container mt-5">
+    <h2>Giỏ hàng</h2>
+    <div v-if="cart.length === 0">
+      <p>Giỏ hàng của bạn đang trống.</p>
+    </div>
+    <div v-else>
+      <table class="table table-bordered">
+        <thead>
           <tr>
-            <th>Sản phẩm</th>
+            <th><input type="checkbox" @change="toggleAll" :checked="allSelected" /></th>
+            <th>Ảnh</th>
+            <th>Tên sản phẩm</th>
+            <th>Thuộc tính</th>
             <th>Giá</th>
             <th>Số lượng</th>
             <th>Tổng</th>
-            <th>Xoá</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(item, index) in cart" :key="item.id">
             <td>
-              <div class="d-flex align-items-center gap-3">
-                <img :src="item.image" alt="..." width="60" height="60" class="rounded-2 border" />
-                <div>
-                  <h6 class="mb-0 text-dark">{{ item.name }}</h6>
-                  <small class="text-muted">{{ item.description }}</small>
-                </div>
-              </div>
+              <input
+                type="checkbox"
+                v-model="selectedItems"
+                :value="item"
+              />
             </td>
-            <td class="text-dark">{{ formatPrice(item.price) }}</td>
             <td>
-              <div class="input-group input-group-sm" style="max-width: 120px">
-                <button class="btn btn-outline-dark" @click="decreaseQty(index)">−</button>
-                <input
-                  type="number"
-                  class="form-control text-center text-dark border-dark"
-                  v-model.number="item.quantity"
-                  min="1"
-                />
-                <button class="btn btn-outline-dark" @click="increaseQty(index)">+</button>
-              </div>
+              <img :src="item.image" alt="image" style="height: 60px" />
             </td>
-            <td class="text-dark">{{ formatPrice(item.price * item.quantity) }}</td>
+            <td>{{ item.productName }}</td>
             <td>
-              <button class="btn btn-sm btn-danger" @click="removeItem(index)">
-                <i class="bi bi-trash"></i>
-              </button>
+              <ul class="m-0 p-0" style="list-style: none;">
+                <li v-for="(attr, i) in item.attributes || []" :key="i">
+                  {{ attr.optionAttributeName }}: {{ attr.attributeValue }}
+                </li>
+              </ul>
             </td>
-          </tr>
-          <tr v-if="cart.length === 0">
-            <td colspan="5" class="text-center text-muted py-4">🛒 Giỏ hàng trống</td>
+            <td>{{ item.price.toLocaleString() }} VNĐ</td>
+            <td>
+              <input
+                type="number"
+                v-model.number="item.quantity"
+                @change="updateCart(item)"
+                min="1"
+                class="form-control"
+                style="width: 80px"
+              />
+            </td>
+            <td>{{ (item.price * item.quantity).toLocaleString() }} VNĐ</td>
+            <td>
+              <button class="btn btn-danger btn-sm" @click="removeItem(index)">Xóa</button>
+            </td>
           </tr>
         </tbody>
       </table>
-    </div>
 
-    <hr />
+      <h4 class="text-end">
+        Tổng cộng: {{ selectedTotal.toLocaleString() }} đ
+      </h4>
 
-    <div class="d-flex justify-content-end mt-4">
-      <div class="p-4 text-dark" style="min-width: 300px">
-        <h5 class="mb-3">Tạm tính:</h5>
-        <h4 class="text-danger fw-bold">{{ formatPrice(totalPrice) }}</h4>
-
-       
-
-        <button class="btn btn-dark w-100 mt-2" @click="checkout">
+      <div class="text-end mt-3">
+        <button class="btn btn-primary" @click="goToCheckout" :disabled="selectedItems.length === 0">
           Tiến hành thanh toán
         </button>
       </div>
@@ -68,71 +70,86 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      cart: [
-        {
-          id: 1,
-          name: "iPhone 15 Pro",
-          description: "128GB - Titan",
-          image: "/images/Ip16prm-1tb.png",
-          price: 25990000,
-          quantity: 1,
-        },
-        {
-          id: 2,
-          name: "MacBook Air M2",
-          description: "256GB SSD - 8GB RAM",
-          image: "/images/Ip16prm-1tb.png",
-          price: 28990000,
-          quantity: 1,
-        },
-      ],
-      note: "",
-    };
-  },
-  computed: {
-    totalPrice() {
-      return this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    },
-  },
-  methods: {
-    formatPrice(value) {
-      return value.toLocaleString("vi-VN", {
-        style: "currency",
-        currency: "VND",
+<script setup>
+import { ref, onMounted, computed } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+
+const cart = ref([]);
+const selectedItems = ref([]);
+const router = useRouter();
+
+onMounted(async () => {
+  const accountId = sessionStorage.getItem("accountId");
+  if (!accountId) {
+    alert("Bạn chưa đăng nhập. Vui lòng đăng nhập trước khi xem giỏ hàng.");
+    router.push("/dangnhap");
+    return;
+  }
+
+  try {
+    const res = await axios.get(`http://localhost:8080/api/cart/account/${accountId}`);
+    cart.value = res.data;
+    console.log("Dữ liệu giỏ hàng từ API:", res.data);
+  } catch (error) {
+    console.error("Không thể lấy giỏ hàng từ CSDL:", error);
+  }
+});
+
+const updateCart = async (item) => {
+  try {
+    if (item.id) {
+      await axios.put(`http://localhost:8080/api/cart/${item.id}`, {
+        quantity: item.quantity,
       });
-    },
-    increaseQty(index) {
-      this.cart[index].quantity++;
-    },
-    decreaseQty(index) {
-      if (this.cart[index].quantity > 1) {
-        this.cart[index].quantity--;
-      }
-    },
-    removeItem(index) {
-      this.cart.splice(index, 1);
-    },
-    checkout() {
-      // Chuyển sang trang checkout
-      this.$router.push("/thanhtoan");
-    },
-  },
+    }
+    localStorage.setItem("cart", JSON.stringify(cart.value));
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giỏ hàng:", error);
+    alert("Cập nhật giỏ hàng thất bại!");
+  }
+};
+
+const removeItem = async (index) => {
+  const item = cart.value[index];
+
+  if (!item.id) {
+    alert("Không tìm thấy cartId để xóa!");
+    console.error("Không có cartId:", item);
+    return;
+  }
+
+  try {
+    await axios.delete(`http://localhost:8080/api/cart/${item.id}`);
+    cart.value.splice(index, 1);
+
+    localStorage.setItem("cart", JSON.stringify(cart.value));
+
+    selectedItems.value = selectedItems.value.filter((i) => i.id !== item.id);
+  } catch (error) {
+    console.error("Lỗi khi xóa khỏi CSDL:", error);
+    alert("Không thể xóa khỏi CSDL!");
+  }
+};
+
+const selectedTotal = computed(() =>
+  selectedItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+);
+
+const allSelected = computed(() =>
+  cart.value.length > 0 && selectedItems.value.length === cart.value.length
+);
+
+const toggleAll = () => {
+  if (allSelected.value) {
+    selectedItems.value = [];
+  } else {
+    selectedItems.value = [...cart.value];
+  }
+};
+
+const goToCheckout = () => {
+  sessionStorage.setItem("selectedCartItems", JSON.stringify(selectedItems.value));
+  router.push("/thanhtoan");
 };
 </script>
-
-<style scoped>
-body {
-  background-color: #121212;
-}
-.table th,
-.table td {
-  vertical-align: middle;
-}
-.table td img {
-  object-fit: cover;
-}
-</style>

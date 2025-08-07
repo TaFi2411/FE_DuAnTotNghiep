@@ -96,7 +96,7 @@
                 <!-- Nếu đã đăng nhập -->
                 <div class="hasLogin" v-else>
                   <li>
-                    <router-link class="dropdown-item" to="">Thông tin tài khoản</router-link>
+                    <router-link class="dropdown-item" to="/donhangcuatoi">Đơn hàng của tôi</router-link>
                   </li>
                    
                   <li v-if="isAdmin">

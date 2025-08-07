@@ -12,6 +12,7 @@ import ProductDetail from '@/views/Client/Products/ProductDetail.vue'
 import Product from '@/views/Client/Products/Product.vue'
 import Cart from '@/views/Client/Cart.vue'
 import Checkout from '@/views/Client/Checkout.vue'
+import MyOrder from '@/views/Client/MyOrder.vue'
 
 // Auth
 import Login from '@/views/Auth/Login.vue'
@@ -19,7 +20,7 @@ import Register from '@/views/Auth/Register.vue'
 
 // Admin Views
 import Dashboard from '@/views/Admin/Dashboard.vue'
-import ProductList from '@/views/Admin/Product.vue/ProductList.vue'
+import ProductList from '@/views/Admin/Product.vue/Product.vue'
 import ProductType from '@/views/Admin/Product.vue/ProductType.vue'
 import ProductDetailAd from '@/views/Admin/Product.vue/ProductDetail.vue'
 import ProductAttribute from '@/views/Admin/Product.vue/ProductAttribute.vue'
@@ -28,14 +29,16 @@ import City from '@/views/Admin/Address/City.vue'
 import Ward from '@/views/Admin/Address/Ward.vue'
 import Voucher from '@/views/Admin/Voucher/Voucher.vue'
 import AuthAdmin from '@/views/Admin/Auth.vue'
+import OrderAdmin from '@/views/Admin/Order.vue'
 
 // Client routes
 const clientRouter = [
   { path: '', component: Home },
   { path: '/sanpham', component: Product },
-  { path: '/sanpham/chitietsanpham/:id', component: ProductDetail },
+  { path: '/sanpham/chitietsanpham/:skuId', component: ProductDetail },
   { path: '/giohang', component: Cart },
   { path: '/thanhtoan', component: Checkout },
+  { path: '/donhangcuatoi', component: MyOrder },
   { path: '/gioithieu', component: Introduce },
   { path: '/hotro', component: Support },
   { path: '/dangnhap', component: Login },
@@ -54,6 +57,7 @@ const adminRouter = [
   { path: '/quanly/diachi/xa-phuong', component: Ward },
   { path: '/quanly/voucher', component: Voucher },
   { path: '/quanly/taikhoan', component: AuthAdmin },
+  { path: '/quanly/donhang', component: OrderAdmin },
 ]
 
 // Create router

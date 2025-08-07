@@ -128,6 +128,11 @@
                 <img :src="imagePreview" class="preview-img" alt="preview" @error="onImgError" />
               </div>
 
+               <div class="mb-3">
+                <label class="form-label">Mô tả</label>
+                <CustomTextArea v-model="form.discriptione" />
+              </div>
+
               <div class="col-12 d-flex gap-2">
                 <button type="submit" class="btn btn-primary" :disabled="submitting">
                   {{ form.id ? 'Cập nhật' : submitting ? 'Đang lưu...' : 'Thêm sản phẩm' }}
@@ -144,6 +149,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import CustomTextArea from "@/components/CustomTextArea/CustomTextArea.vue";
 import axios from "axios";
 
 const CATEGORY_API = "http://localhost:8080/api/category";
@@ -192,6 +198,7 @@ const doSearch = () => {
 // Form sản phẩm
 const form = ref({
   id: null,
+  discriptione: '',
   name: "",
   brand: "Apple",
   categoryId: "",
@@ -239,6 +246,7 @@ const addOrUpdateProduct = async () => {
     const payload = {
       name: form.value.name,
       brand: form.value.brand,
+      discriptione: form.value.discriptione,
       categoryId: form.value.categoryId,
       image: imageUrl
     };

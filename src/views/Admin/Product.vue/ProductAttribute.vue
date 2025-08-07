@@ -2,106 +2,152 @@
   <div class="container mt-3">
     <h2 class="text-center mb-4">Quản lý Thuộc tính Sản phẩm</h2>
 
-    <!-- NAV TABS -->
-    <ul class="nav nav-tabs" role="tablist">
-      <li class="nav-item">
-        <a class="nav-link active text-black" data-bs-toggle="tab" href="#list">Danh sách</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link text-black" data-bs-toggle="tab" href="#form">Thêm thuộc tính</a>
-      </li>
-    </ul>
-
-    <div class="tab-content mt-3">
-      <!-- DANH SÁCH -->
-      <div id="list" class="tab-pane fade show active">
-        
-        <!-- Thanh tìm kiếm -->
-        <form class="row g-2 mb-3" @submit.prevent="searchAttributes">
-          <div class="col-md-4">
-            <input 
-              v-model="search" 
-              type="text" 
-              class="form-control" 
-              placeholder="Nhập tên thuộc tính..." 
-            />
+    <div class="row">
+      <!-- Form thuộc tính -->
+      <div class="col-lg-4">
+        <form @submit.prevent="isEditingAttr ? updateAttribute() : addAttribute()">
+          <div class="mb-3">
+            <label class="form-label">Tên thuộc tính</label>
+            <input v-model="attrName" type="text" class="form-control" placeholder="Nhập tên thuộc tính" required />
           </div>
-          <div class="col-auto">
-            <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+          <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              {{ isEditingAttr ? "Cập nhật" : "Thêm mới" }}
+            </button>
+            <button v-if="isEditingAttr" type="button" class="btn btn-secondary" @click="resetAttrForm">Huỷ</button>
           </div>
+          
         </form>
+        <button class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#exampleModal">Quản lý Giá trị</button>
 
-        <span class="text-muted">Tìm thấy {{ filteredAttributes.length }} kết quả</span>
+        
+      </div>
 
+      <!-- Danh sách thuộc tính -->
+      <div class="col-lg-8">
         <table class="table table-striped table-hover align-middle mt-2">
           <thead class="table-light">
             <tr>
               <th style="width: 70px;">ID</th>
               <th>Tên thuộc tính</th>
-              <th style="width: 180px;">Hành động</th>
+              <th>Giá trị</th>
+              <th style="width: 20px;"></th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in paginatedAttributes" :key="item.id">
+            <tr v-for="item in attributes" :key="item.id">
               <td>{{ item.id }}</td>
               <td>{{ item.name }}</td>
               <td>
-                <button @click="editAttribute(item)" class="btn btn-sm btn-warning me-2">Sửa</button>
-                <button @click="deleteAttribute(item.id)" class="btn btn-sm btn-danger">Xoá</button>
+                <span v-if="getValuesByAttrId(item.id).length">
+                  {{ getValuesByAttrId(item.id).join(', ') }}
+                </span>
+                <span v-else class="text-muted fst-italic">Không có</span>
               </td>
-            </tr>
-            <tr v-if="paginatedAttributes.length === 0">
-              <td colspan="3" class="text-center py-4">Không có thuộc tính nào.</td>
+              <td>
+                    <div class="btn-group dropstart d-flex justify-content-center">
+                      <button type="button" class="btn btn-light icon-btn " data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                      </button>
+                      <ul class="dropdown-menu p-3">
+                        <li>
+                          <button @click="editAttribute(item)" class="btn btn-sm btn-warning w-100 mb-2">Sửa</button>
+                        </li>
+                        <li>
+                          <button @click="deleteAttribute(item.id)" class="btn btn-sm btn-danger w-100">Xoá</button>
+                        </li>
+                      </ul>
+                    </div>
+
+                   
+                   
+                
+              </td>
             </tr>
           </tbody>
         </table>
-
-        <!-- PHÂN TRANG -->
-        <nav v-if="totalPages > 1" class="mt-3">
-          <ul class="pagination justify-content-center">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-              <a class="page-link" href="#" @click.prevent="goToPage(currentPage - 1)">«</a>
-            </li>
-            <li 
-              class="page-item" 
-              v-for="page in totalPages" 
-              :key="page" 
-              :class="{ active: currentPage === page }"
-            >
-              <a class="page-link" href="#" @click.prevent="goToPage(page)">
-                {{ page }}
-              </a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-              <a class="page-link" href="#" @click.prevent="goToPage(currentPage + 1)">»</a>
-            </li>
-          </ul>
-        </nav>
+        
       </div>
+    </div>
 
-      <!-- FORM -->
-      <div id="form" class="tab-pane fade">
-        <form @submit.prevent="isEditing ? updateAttribute() : addAttribute()">
-          <div class="mb-3">
-            <label class="form-label">Tên thuộc tính</label>
-            <input
-              v-model="name"
-              type="text"
-              class="form-control"
-              placeholder="Nhập tên thuộc tính"
-              required
-            />
+    <!-- Modal giá trị thuộc tính -->
+    <div class="modal fade" id="exampleModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Giá trị thuộc tính</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
+          <div class="modal-body">
+            <!-- Form -->
+            <form @submit.prevent="isEditingValue ? updateValue() : addValue()" class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Chọn thuộc tính</label>
+                <select v-model="selectedAttrId" class="form-select" required>
+                  <option disabled value="">-- Chọn thuộc tính --</option>
+                  <option v-for="a in attributes" :key="a.id" :value="a.id">{{ a.name }}</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Giá trị</label>
+                <input v-model="valueText" type="text" class="form-control" placeholder="Nhập giá trị" required />
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="btn btn-primary" type="submit">
+                  {{ isEditingValue ? 'Cập nhật' : 'Thêm giá trị' }}
+                </button>
+                <button v-if="isEditingValue" class="btn btn-secondary" type="button" @click="resetValueForm">Huỷ</button>
+              </div>
+            </form>
 
-          <div class="mt-3 d-flex gap-2">
-            <button type="submit" class="btn btn-primary">
-              {{ isEditing ? "Cập nhật" : "Thêm mới" }}
-            </button>
-            <button v-if="isEditing" type="button" class="btn btn-secondary" @click="resetForm">
-              Huỷ
-            </button>
+            <!-- Danh sách giá trị -->
+            <hr />
+            <div class="mb-3">
+              <input v-model="searchValue" class="form-control" placeholder="Tìm giá trị..." />
+            </div>
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th>Giá trị</th>
+                  <th>Thuộc tính</th>
+                  <th style="width: 20px;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="v in filteredValues" :key="v.id">
+                  <td>{{ v.id }}</td>
+                  <td>{{ v.value }}</td>
+                  <td>{{ getAttributeName(v.optionAttributeId) }}</td>
+                  <td>
+                    
+                    <div class="btn-group dropstart d-flex justify-content-center">
+                      <button type="button" class="btn btn-light icon-btn " data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots-vertical"></i>
+                      </button>
+                      <ul class="dropdown-menu p-3">
+                        <li>
+                         <button class="btn btn-sm btn-warning me-2 mb-2" @click="editValue(v)">Sửa</button>
+                        </li>
+                        <li>
+                          <button class="btn btn-sm btn-danger" @click="deleteValue(v.id)">Xoá</button>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    
+                  </td>
+                </tr>
+                <tr v-if="filteredValues.length === 0">
+                  <td colspan="4" class="text-center py-4">Không tìm thấy giá trị nào.</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </form>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -111,124 +157,176 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
-const API_URL = 'http://localhost:8080/api/option-attribute'
+const ATTR_API = 'http://localhost:8080/api/option-attribute'
+const VALUE_API = 'http://localhost:8080/api/attribute-value'
 
+// Thuộc tính
 const attributes = ref([])
-const id = ref(null)
-const name = ref('')
-const isEditing = ref(false)
+const attrId = ref(null)
+const attrName = ref('')
+const isEditingAttr = ref(false)
 
-const search = ref('')
-const searchKeyword = ref('')
+// Giá trị thuộc tính
+const values = ref([])
+const valueId = ref(null)
+const valueText = ref('')
+const selectedAttrId = ref('')
+const isEditingValue = ref(false)
+const searchValue = ref('')
 
-// phân trang
-const currentPage = ref(1)
-const itemsPerPage = ref(5) // số item mỗi trang
-
-// Lọc danh sách theo từ khoá
-const filteredAttributes = computed(() => {
-  if (!searchKeyword.value) return attributes.value
-  return attributes.value.filter(attr =>
-    attr.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-  )
-})
-
-// Tổng số trang
-const totalPages = computed(() => {
-  return Math.ceil(filteredAttributes.value.length / itemsPerPage.value)
-})
-
-// Lấy danh sách hiển thị trong trang hiện tại
-const paginatedAttributes = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return filteredAttributes.value.slice(start, end)
-})
-
-const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page
-  }
-}
-
-const searchAttributes = () => {
-  searchKeyword.value = search.value.trim()
-  currentPage.value = 1 // reset về trang 1 khi tìm kiếm
-}
-
+// --- CRUD thuộc tính ---
 const fetchAttributes = async () => {
-  try {
-    const res = await axios.get(API_URL)
-    attributes.value = res.data
-  } catch (err) {
-    console.error('Lỗi khi tải danh sách thuộc tính:', err)
-  }
+  const res = await axios.get(ATTR_API)
+  attributes.value = res.data
 }
-
 const addAttribute = async () => {
-  try {
-    const newAttr = { name: name.value }
-    await axios.post(API_URL, newAttr)
-    resetForm()
-    await fetchAttributes()
-  } catch (err) {
-    console.error('Lỗi khi thêm thuộc tính:', err)
-  }
+  await axios.post(ATTR_API, { name: attrName.value })
+  await fetchAttributes()
+  resetAttrForm()
 }
-
 const editAttribute = (attr) => {
-  id.value = attr.id
-  name.value = attr.name
-  isEditing.value = true
-  setTimeout(() => {
-    const tab = document.querySelector('[href="#form"]')
-    if (tab) tab.click()
-  }, 100)
+  attrId.value = attr.id
+  attrName.value = attr.name
+  isEditingAttr.value = true
 }
-
 const updateAttribute = async () => {
-  try {
-    const updatedAttr = { id: id.value, name: name.value }
-    await axios.put(`${API_URL}/${id.value}`, updatedAttr)
-    resetForm()
+  await axios.put(`${ATTR_API}/${attrId.value}`, { name: attrName.value })
+  await fetchAttributes()
+  resetAttrForm()
+}
+const deleteAttribute = async (id) => {
+  if (confirm('Xoá thuộc tính này?')) {
+    await axios.delete(`${ATTR_API}/${id}`)
     await fetchAttributes()
-  } catch (err) {
-    console.error('Lỗi khi cập nhật thuộc tính:', err)
   }
 }
+const resetAttrForm = () => {
+  attrId.value = null
+  attrName.value = ''
+  isEditingAttr.value = false
+}
 
-const deleteAttribute = async (attrId) => {
-  if (confirm('Bạn có chắc chắn muốn xoá không?')) {
-    try {
-      await axios.delete(`${API_URL}/${attrId}`)
-      await fetchAttributes()
-    } catch (err) {
-      console.error('Lỗi khi xoá thuộc tính:', err)
-    }
+// --- CRUD giá trị thuộc tính ---
+const fetchValues = async () => {
+  const res = await axios.get(VALUE_API)
+  values.value = res.data
+}
+const addValue = async () => {
+  await axios.post(VALUE_API, {
+    value: valueText.value,
+    optionAttributeId: parseInt(selectedAttrId.value),
+  })
+  await fetchValues()
+  resetValueForm()
+}
+const editValue = (v) => {
+  valueId.value = v.id
+  valueText.value = v.value
+  selectedAttrId.value = v.optionAttributeId
+  isEditingValue.value = true
+}
+const updateValue = async () => {
+  await axios.put(`${VALUE_API}/${valueId.value}`, {
+    value: valueText.value,
+    optionAttributeId: parseInt(selectedAttrId.value),
+  })
+  await fetchValues()
+  resetValueForm()
+}
+const deleteValue = async (id) => {
+  if (confirm('Xoá giá trị này?')) {
+    await axios.delete(`${VALUE_API}/${id}`)
+    await fetchValues()
   }
 }
-
-const resetForm = () => {
-  id.value = null
-  name.value = ''
-  isEditing.value = false
+const resetValueForm = () => {
+  valueId.value = null
+  valueText.value = ''
+  selectedAttrId.value = ''
+  isEditingValue.value = false
 }
 
-onMounted(fetchAttributes)
+// --- Tìm kiếm giá trị ---
+const filteredValues = computed(() =>
+  values.value.filter((v) =>
+    v.value.toLowerCase().includes(searchValue.value.trim().toLowerCase())
+  )
+)
+
+// --- Hiển thị ---
+const getAttributeName = (id) => {
+  const attr = attributes.value.find((a) => a.id === id)
+  return attr ? attr.name : ''
+}
+const getValuesByAttrId = (attrId) => {
+  return values.value
+    .filter((v) => v.optionAttributeId === attrId)
+    .map((v) => v.value)
+}
+
+onMounted(() => {
+  fetchAttributes()
+  fetchValues()
+})
 </script>
 
 <style scoped>
+.icon-btn {
+  border: none;
+  background: transparent;
+  padding: 5px 10px;
+}
+.icon-btn:hover {
+  background-color: #f0f0f0;
+}
+
 .container {
   max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
 }
+h2 {
+  font-weight: 600;
+  color: #333;
+}
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 
+}
 .table {
   font-size: 15px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
 }
-
-.pagination .page-link {
-  cursor: pointer;
+.table th {
+  background-color: #f1f1f1;
+  font-weight: 600;
+  color: #555;
+}
+.table td {
+  vertical-align: middle;
+}
+.btn {
+  width: 100%;
+  font-size: 14px;
+  padding: 6px 12px;
+}
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+}
+.btn-danger {
+  background-color: #dc3545;
+  border-color: #dc3545;
 }
 </style>
