@@ -20,8 +20,7 @@ import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
 import Product from '@/views/products/Product.vue';
 import Category from '@/views/products/Category.vue';
-import ValueAttribute from '@/views/products/ValueAttribute.vue';
-import OptionAttribute from '@/views/products/OptionAttribute.vue';
+import Attribute from '@/views/products/Attribute.vue';
 
 const clientRouter =[
   { path: '/auth/register', 
@@ -68,12 +67,10 @@ const adminRouter =[
    { path: '/admin/category', 
     component: Category 
   },
-   { path: '/admin/value-attribute', 
-    component: ValueAttribute 
+   { path: '/admin/attribute', 
+    component: Attribute 
   },
-   { path: '/admin/option-attribute', 
-    component: OptionAttribute 
-  },
+   
 
 ];
 
