@@ -12,7 +12,12 @@
       </div>
       <button type="submit">Đăng nhập</button>
     </form>
-
+<a href="http://localhost:8080/oauth2/authorization/google">
+  <button>Đăng nhập bằng Google</button>
+</a>
+<a href="http://localhost:8080/oauth2/authorization/facebook">
+  <button>Đăng nhập bằng Facebook</button>
+</a>
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 </template>
