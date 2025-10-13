@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h2>Quản lý Thuộc Tính & Giá Trị</h2>
+    <h2>Quản lý Thuộc Tính Và Giá Trị</h2>
 
     <!-- Tabs -->
     <div class="tabs">
