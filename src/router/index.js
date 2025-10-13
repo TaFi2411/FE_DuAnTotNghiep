@@ -18,8 +18,9 @@ import Checkout from '@/views/client/Checkout.vue';
 //admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
+import CategoryAdd from '@/views/admin/CategoryAdd.vue';
+import CategoryList from '@/views/admin/CategoryList.vue';
 import Product from '@/views/products/Product.vue';
-import Category from '@/views/products/Category.vue';
 import ValueAttribute from '@/views/products/ValueAttribute.vue';
 import OptionAttribute from '@/views/products/OptionAttribute.vue';
 
@@ -50,7 +51,7 @@ const clientRouter =[
   },
   { path: '/checkout', 
     component: Checkout
-  },
+  }
   
 
 ];
@@ -66,13 +67,19 @@ const adminRouter =[
     component: Product 
   },
    { path: '/admin/category', 
-    component: Category 
+    component: CategoryList 
   },
    { path: '/admin/value-attribute', 
     component: ValueAttribute 
   },
    { path: '/admin/option-attribute', 
     component: OptionAttribute 
+  },
+  { path: "/admin/categories/add", 
+    component: CategoryAdd 
+  },
+  { path: "/admin/categories/edit/:id"
+    , component: CategoryAdd 
   },
 
 ];
