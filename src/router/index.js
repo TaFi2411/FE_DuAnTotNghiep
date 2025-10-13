@@ -69,8 +69,8 @@ const adminRouter = [
    { path: '/admin/category', 
     component: CategoryList 
   },
-   { path: '/admin/value-attribute', 
-    component: ValueAttribute 
+   { path: '/admin/attribute', 
+    component: Attribute 
   },
    { path: '/admin/option-attribute', 
     component: OptionAttribute 
