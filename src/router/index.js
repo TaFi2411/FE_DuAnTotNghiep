@@ -19,9 +19,10 @@ import Checkout from '@/views/client/Checkout.vue';
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
-import AuthAdmin from '@/views/admin/Auth.vue'; // Đổi tên để tránh trùng lặp
-import CreateProduct from '@/views/products/CreateProduct.vue';
-import Category from '@/views/products/Category.vue';
+import Auth from '@/views/admin/Auth.vue';
+import CategoryAdd from '@/views/admin/CategoryAdd.vue';
+import CategoryList from '@/views/admin/CategoryList.vue';
+import Product from '@/views/products/Product.vue';
 import ValueAttribute from '@/views/products/ValueAttribute.vue';
 import OptionAttribute from '@/views/products/OptionAttribute.vue';
 import ListProduct from '@/views/products/ListProduct.vue';
@@ -42,8 +43,14 @@ const clientRouter = [
     component: ProductDetail,
     props: true // Tự động truyền id vào làm prop
   },
-  { path: 'cart', name: 'Cart', component: Cart },
-  { path: 'checkout', name: 'Checkout', component: Checkout },
+  { path: '/cart', 
+    component: Cart
+  },
+  { path: '/checkout', 
+    component: Checkout
+  }
+  
+
 ];
 
 const adminRouter = [
@@ -59,10 +66,22 @@ const adminRouter = [
     component: UpdateProduct,
     props: true                  // Tự động truyền id vào làm prop
   },
-  
-  { path: 'categories', name: 'Category', component: Category },
-  { path: 'attributes/values', name: 'ValueAttribute', component: ValueAttribute },
-  { path: 'attributes/options', name: 'OptionAttribute', component: OptionAttribute },
+   { path: '/admin/category', 
+    component: CategoryList 
+  },
+   { path: '/admin/value-attribute', 
+    component: ValueAttribute 
+  },
+   { path: '/admin/option-attribute', 
+    component: OptionAttribute 
+  },
+  { path: "/admin/categories/add", 
+    component: CategoryAdd 
+  },
+  { path: "/admin/categories/edit/:id"
+    , component: CategoryAdd 
+  },
+
 ];
 
 // --- Cấu hình router chính ---
