@@ -143,13 +143,13 @@ const changePage = (page) => {
 }
 
 // ➕ Thêm, ✏️ Sửa, ❌ Xóa
-const goAdd = () => router.push('/admin/categories/add')
-const goEdit = (id) => router.push(`/admin/categories/edit/${id}`)
+const goAdd = () => router.push('/categories/add')
+const goEdit = (id) => router.push(`/categories/edit/${id}`)
 
 const confirmDelete = async (id) => {
   if (!confirm('Bạn có chắc muốn xóa danh mục này không?')) return
   try {
-    await axios.delete(`/api/category/${id}`)
+    await axios.delete(`/category/${id}`)
     await fetchCategories(currentPage.value)
     alert('✅ Xóa thành công!')
   } catch (err) {

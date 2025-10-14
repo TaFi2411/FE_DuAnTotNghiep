@@ -20,6 +20,12 @@ import Checkout from '@/views/client/Checkout.vue';
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
+import PaymentMethodAdd from '@/views/admin/PaymentMethodAdd.vue';
+import PaymentMethodList from '@/views/admin/PaymentMethodList.vue';
+import StatusAdd from '@/views/admin/StatusAdd.vue';
+import StatusList from '@/views/admin/StatusList.vue';
+import ReviewDetail from '@/views/admin/ReviewDetail.vue';
+import ReviewList from '@/views/admin/ReviewList.vue';
 
 //Admin Product
 import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
@@ -34,7 +40,7 @@ const clientRouter = [
     path: '',
     name: 'Home',
     component: Home
-  }, 
+  },
   {
     path: 'auth/register',
     name: 'Register',
@@ -61,8 +67,14 @@ const clientRouter = [
     component: Support
   },
 
+  // {
+  //   path: 'product/:id', // URL sẽ có dạng /product/123
+  //   name: 'ProductDetail',
+  //   component: ProductDetail,
+  //   props: true // Tự động truyền id vào làm prop
+  // },
   {
-    path: 'product/:id', // URL sẽ có dạng /product/123
+    path: 'product-details', // URL sẽ có dạng /product/123
     name: 'ProductDetail',
     component: ProductDetail,
     props: true // Tự động truyền id vào làm prop
@@ -112,9 +124,44 @@ const adminRouter = [
     component: CategoryAdd
   },
   {
-    path: "/categories/edit/:id"
-    , component: CategoryAdd
+    path: "/categories/edit/:id", 
+    component: CategoryAdd
   },
+  {
+    path: '/status',
+    component:StatusList,
+  },
+  {
+    path: '/status/add',
+    component: StatusAdd,
+  },
+  {
+    path: '/status/edit/:id',
+    component: StatusAdd,
+  },
+{
+  path: '/payment-method',
+  name: 'PaymentMethodList',
+  component: PaymentMethodList,
+},
+{
+  path: '/payment-method/add',
+  name: 'PaymentMethodAdd',
+  component: PaymentMethodAdd,
+},
+{
+  path: '/payment-method/edit/:id',
+  name: 'PaymentMethodEdit',
+  component: PaymentMethodAdd,
+},
+{
+  path: "/review",
+  component: ReviewList,
+},
+{
+  path: "/review/detail/:id",
+  component: ReviewDetail,
+},
 
 ];
 
