@@ -65,7 +65,7 @@
       <!-- Đánh giá -->
       <h4 class="fw-bold mb-3">Đánh giá của khách hàng (2)</h4>
 
-      <div class="review-item border-bottom pb-3 mb-3">
+      <div class="review-item border`-bottom pb-3 mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="fw-bold mb-0">Minh Anh</h6>
           <small class="text-muted">2 ngày trước</small>
@@ -91,7 +91,6 @@
         <p class="text-secondary mb-0">Thiết kế đẹp, chụp hình cực kỳ chi tiết.</p>
       </div>
     </div>
-
   </div>
 </template>
 

@@ -19,7 +19,6 @@
             v-model="form.name"
             type="text"
             class="form-control"
-            required
             @input="onNameInput"
           />
         </div>
@@ -50,13 +49,12 @@ const router = useRouter();
 const form = ref({ id: null, slug: '', name: '', status: true });
 const isEdit = computed(() => !!route.params.id);
 
-// helper tạo slug
 function toSlug(str) {
   return (str || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd') 
+    .replace(/đ/g, 'd')
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-');
@@ -65,44 +63,59 @@ function toSlug(str) {
 const loadCategory = async (id) => {
   try {
     const res = await axios.get(`/api/category/${id}`);
-    // nếu backend không trả id, gán id thủ công
     form.value = { ...res.data, id: res.data.id ?? id };
   } catch (err) {
     console.error('Không tải được danh mục:', err);
     alert('Không tìm thấy danh mục, quay về danh sách.');
-    router.push('/admin/category');
+    router.push('/category');
   }
 };
 
 onMounted(() => {
-  if (isEdit.value) {
-    loadCategory(route.params.id);
-  } else {
-    // khởi tạo form rỗng
-    form.value = { id: null, slug: '', name: '', status: true };
-  }
+  if (isEdit.value) loadCategory(route.params.id);
+  else form.value = { id: null, slug: '', name: '', status: true };
 });
 
-// khi gõ name thì tự động sinh slug
 const onNameInput = () => {
   form.value.slug = toSlug(form.value.name);
 };
 
-// Kiểm tra slug trùng (nếu backend có endpoint)
 const checkSlugExists = async (slug) => {
   try {
     const res = await axios.get(`/api/category/check-slug/${slug}`);
-    // mong backend trả { exists: true/false }
     return res.data?.exists === true;
   } catch {
-    // nếu lỗi, không block (backend có thể không có endpoint)
     return false;
   }
 };
 
+// 🔍 Hàm validate form
+function validateForm() {
+  const name = form.value.name?.trim() || '';
+
+  if (!name) {
+    alert('Tên danh mục không được để trống!');
+    return false;
+  }
+
+  if (/^\d+$/.test(name)) {
+    alert('Tên danh mục không được chỉ gồm số!');
+    return false;
+  }
+
+  if (/[^a-zA-Z0-9À-ỹ\s]/.test(name)) {
+    alert('Tên danh mục không được chứa ký tự đặc biệt!');
+    return false;
+  }
+
+  return true;
+}
+
 const saveCategory = async () => {
   try {
-    // nếu thêm mới thì check trùng slug
+    // ✅ Kiểm tra trước khi gửi
+    if (!validateForm()) return;
+
     if (!isEdit.value) {
       const exists = await checkSlugExists(form.value.slug);
       if (exists) {
@@ -111,31 +124,26 @@ const saveCategory = async () => {
       }
     }
 
+    const payload = {
+      slug: form.value.slug,
+      name: form.value.name.trim(),
+      status: form.value.status,
+    };
+
     if (isEdit.value) {
-      await axios.put(`/api/category/${form.value.id}`, {
-        slug: form.value.slug,
-        name: form.value.name,
-        status: form.value.status,
-      });
+      await axios.put(`/api/category/${form.value.id}`, payload);
       alert('Cập nhật thành công!');
     } else {
-      await axios.post('/api/category', {
-        slug: form.value.slug,
-        name: form.value.name,
-        status: form.value.status,
-      });
+      await axios.post('/api/category', payload);
       alert('Thêm mới thành công!');
     }
-    router.push('/admin/category');
+
+    router.push('/category');
   } catch (err) {
     console.error('Lỗi khi lưu category:', err);
     alert('Lưu thất bại, xem console để biết chi tiết.');
   }
 };
 
-const goBack = () => router.push('/admin/category');
+const goBack = () => router.push('/category');
 </script>
-
-<style scoped>
-.card { border-radius: 10px; max-width: 700px; margin: 0 auto; }
-</style>
