@@ -1,27 +1,73 @@
 <template>
   <div class="login-container">
     <h2>Đăng nhập</h2>
+
     <form @submit.prevent="login">
       <div>
         <label>Email:</label>
         <input v-model="email" type="text" required />
       </div>
+
       <div>
         <label>Mật khẩu:</label>
         <input v-model="password" type="password" required />
       </div>
+
       <button type="submit">Đăng nhập</button>
     </form>
 
-    <button @click="loginWithGoogle">Login with Google</button>
-    <button @click="loginWithFacebook">Login with Facebook</button>
+    <button @click="loginWithGoogle">Đăng nhập với Google</button>
+    <button @click="loginWithFacebook">Đăng nhập với Facebook</button>
 
     <p v-if="error" class="error">{{ error }}</p>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
+import axios from "axios";
 
+const email = ref("");
+const password = ref("");
+const error = ref("");
+
+
+const login = async () => {
+  try {
+    const res = await axios.post("http://localhost:8080/auth/login", {
+      email: email.value,
+      password: password.value,
+    });
+
+    const token = res.data.token;
+    if (token) {
+      sessionStorage.setItem("token", token);
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const roles = payload.roles || [];
+      const role = roles[0]; 
+      sessionStorage.setItem("role", role);
+
+      console.log(role);
+      window.location.href = "/"; 
+    } else {
+      error.value = "Không nhận được token từ server!";
+    }
+  } catch (err) {
+    console.error(err);
+    error.value = "Sai tài khoản hoặc mật khẩu!";
+  }
+};
+
+// 🧠 Login với Google
+const loginWithGoogle = () => {
+  window.location.href = "http://localhost:8080/oauth2/authorization/google";
+};
+
+// 🧠 Login với Facebook
+const loginWithFacebook = () => {
+  window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
+};
 </script>
 
 <style scoped>

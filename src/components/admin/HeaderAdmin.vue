@@ -13,24 +13,29 @@
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                <i class="bi bi-person-circle fs-2 me-1"></i>
-                <span>Lương Thế Tài</span>
+               <i class="bi bi-person-circle fs-2 me-1"></i>
+                <span>{{ accountName }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="userDropdown">
-                <li>
-                  <router-link class="dropdown-item" to="/profile">Tài khoản của tôi</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/auth/register">Đăng ký</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/auth/login">Đăng nhập</router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/orders">Đơn hàng</router-link>
-                </li>
-                <li><hr class="dropdown-divider" /></li>
-                <li><a class="dropdown-item" href="#" @click="logout">Đăng xuất</a></li>
+                <!-- Chưa đăng nhập -->
+                <template v-if="!isLoggedIn">
+                  <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><router-link class="dropdown-item" to="/auth/register">Đăng ký</router-link></li>
+                  <li><router-link class="dropdown-item" to="/auth/login">Đăng nhập</router-link></li>
+                  <li><router-link class="dropdown-item" to="/auth/login">Quên mật khẩu</router-link></li>
+                </template>
+
+                <!-- Đã đăng nhập -->
+                <template v-else>
+                  <li class="dropdown-item"><strong>Thông tin cá nhân</strong></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><router-link class="dropdown-item" to="/orders">Đơn hàng của tôi</router-link></li>
+                  <li v-if="isAdmin"><router-link class="dropdown-item" to="/admin">Quản lý hệ thống</router-link></li>
+                  <li><router-link class="dropdown-item" to="/change-password">Đổi mật khẩu</router-link></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li><a class="dropdown-item" href="#" @click.prevent="logoutHandler">Đăng xuất</a></li>
+                </template>
               </ul>
             </div>
 
@@ -40,6 +45,49 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
+// Biến reactive
+const isLoggedIn = ref(false);
+const accountName = ref("Khách");
+const isAdmin = ref(false);
+
+// Khi component được mount, kiểm tra token
+onMounted(() => {
+  const token = sessionStorage.getItem("token");
+  
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const roles = payload.roles || [];
+      const role = roles[0];
+      const email = payload.sub; 
+      
+      // Gán giá trị reactive
+      isLoggedIn.value = true;
+      accountName.value = email;
+      isAdmin.value = roles.includes("ROLE_ADMIN");
+
+      console.log("✅ Đăng nhập với role:", role);
+    } catch (e) {
+      console.error("❌ Token không hợp lệ:", e);
+      sessionStorage.removeItem("token");
+    }
+  }
+});
+
+// Hàm đăng xuất
+function logoutHandler() {
+  sessionStorage.removeItem("token");
+  sessionStorage.removeItem("role");
+  isLoggedIn.value = false;
+  isAdmin.value = false;
+  accountName.value = "Khách";
+  router.push("/auth/login");
+}
 </script>
 
 <style scoped>

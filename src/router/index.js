@@ -16,6 +16,8 @@ import Support from '@/views/client/Support.vue';
 import ProductDetail from '@/views/client/ProductDetail.vue';
 import Cart from '@/views/client/Cart.vue';
 import Checkout from '@/views/client/Checkout.vue';
+import Violate from '@/views/403.vue'
+import OAuth2Success from '@/views/auth/OAuth2Success.vue';
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
@@ -39,6 +41,11 @@ const clientRouter = [
     component: Home
   }, 
   {
+    path: '',
+    name: 'Violate',
+    component: Violate
+  }, 
+  {
     path: 'auth/register',
     name: 'Register',
     component: Register
@@ -47,6 +54,11 @@ const clientRouter = [
     path: 'auth/login',
     name: 'Login',
     component: Login
+  },
+  {
+    path: '/oauth2/success',
+    name: 'OAuth2Success',
+    component: OAuth2Success
   },
   {
     path: 'store',
@@ -100,7 +112,7 @@ const adminRouter = [
     path: 'products/update/:id',
     name: 'UpdateProduct',
     component: UpdateProduct,
-    props: true                  // Tự động truyền id vào làm prop
+    props: true                 
   },
     {
     path: 'products/create',
@@ -108,19 +120,19 @@ const adminRouter = [
     component: ProductAdd
   },
   {
-    path: '/category',
+    path: 'category',
     component: CategoryList
   },
   {
-    path: '/attribute',
+    path: 'attribute',
     component: Attribute
   },
   {
-    path: "/categories/add",
+    path: "categories/add",
     component: CategoryAdd
   },
   {
-    path: "/categories/edit/:id"
+    path: "categories/edit/:id"
     , component: CategoryAdd
   },
    {
@@ -155,10 +167,35 @@ const router = createRouter({
       path: '/admin',
       component: LayoutAdmin,
       children: adminRouter,
+      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     }
   ]
 })
 
+
+
+
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token");
+//   const role = localStorage.getItem("role");
+
+//   // Nếu route cần đăng nhập
+//   if (to.meta.requiresAuth) {
+//     if (!token) {
+//       // Chưa đăng nhập
+//       return next({ name: "Login" });
+//     }
+
+//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
+//     if (to.meta.role && to.meta.role !== role) {
+//       // Không đủ quyền → về trang chủ
+//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
+//       return next({ name: "Violate" });
+//     }
+//   }
+
+//   next();
+// });
 
 
 export default router
