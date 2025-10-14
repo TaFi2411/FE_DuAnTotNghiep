@@ -25,7 +25,7 @@
           v-model="attributeForm.name"
           type="text"
           placeholder="Nhập tên thuộc tính (VD: Màu sắc, RAM...)"
-          required
+          
         />
         <button type="submit">
           {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
@@ -79,7 +79,7 @@
     <!-- 🔹 Giá Trị Thuộc Tính -->
     <div v-if="activeTab === 'value'">
       <form @submit.prevent="handleValueSubmit" class="form-box">
-        <select v-model="valueForm.optionAttributeId" required>
+        <select v-model="valueForm.optionAttributeId" >
           <option value="">-- Chọn thuộc tính --</option>
           <option
             v-for="opt in listAttributes"
@@ -94,7 +94,7 @@
           v-model="valueForm.name"
           type="text"
           placeholder="Nhập giá trị (VD: Đỏ, 8GB, 256GB)"
-          required
+          
         />
 
         <button type="submit">
@@ -293,7 +293,7 @@ const resetSearch = async () => {
 const handleValueSubmit = async () => {
   const name = valueForm.value.name.trim();
   if (!valueForm.value.optionAttributeId) {
-    errorValue.value = "Vui lòng chọn thuộc tính cha.";
+    errorValue.value = "Vui lòng chọn thuộc tính .";
     return;
   }
   if (!name) {
