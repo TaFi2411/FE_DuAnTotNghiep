@@ -32,6 +32,8 @@ import CategoryList from '@/views/admin/products/CategoryList.vue';
 import ListProduct from '@/views/admin/products/ListProduct.vue';
 import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
 import Attribute from '@/views/admin/products/Attribute.vue';
+import FlashSale from '@/views/admin/FlashSale.vue';
+
 import ProductAdd from '@/views/admin/products/ProductAdd.vue';
 // --- Định nghĩa các route con ---
 const clientRouter = [
@@ -121,17 +123,31 @@ const adminRouter = [
   },
   {
     path: 'category',
+    path: 'category',
     component: CategoryList
   },
   {
     path: 'attribute',
+    path: 'attribute',
     component: Attribute
   },
+
   {
+    path: '/admin/flashsale',
+    component: FlashSale
+  },
+  {
+  path: '/flash-sale/:id?',
+  name: 'FlashSale',
+  component: FlashSale
+  },
+  {
+    path: "categories/add",
     path: "categories/add",
     component: CategoryAdd
   },
   {
+    path: "categories/edit/:id"
     path: "categories/edit/:id"
     , component: CategoryAdd
   },
