@@ -1,4 +1,8 @@
 <template>
+  <br>
+  <br>
+  <br>
+  <br>
   <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-center">
     <h1 class="text-6xl font-bold text-red-600 mb-4">403</h1>
     <h2 class="text-2xl font-semibold text-gray-800 mb-2">Bạn không có quyền truy cập trang này</h2>
@@ -8,10 +12,15 @@
       Quay về trang chủ
     </router-link>
   </div>
+    <br>
+  <br>
+  <br>
+  <br>
 </template>
 
 <script setup>
 </script>
 
 <style scoped>
+
 </style>
