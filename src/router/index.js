@@ -20,14 +20,17 @@ import Checkout from '@/views/client/Checkout.vue';
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
-
+// Admin Voucher
+import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
+import VoucherAdd from '@/views/admin/voucher/VoucherAdd.vue';
+import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
 //Admin Product
 import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
 import CategoryList from '@/views/admin/products/CategoryList.vue';
 import ListProduct from '@/views/admin/products/ListProduct.vue';
 import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
 import Attribute from '@/views/admin/products/Attribute.vue';
-
+import ProductAdd from '@/views/admin/products/ProductAdd.vue';
 // --- Định nghĩa các route con ---
 const clientRouter = [
   {
@@ -99,6 +102,11 @@ const adminRouter = [
     component: UpdateProduct,
     props: true                  // Tự động truyền id vào làm prop
   },
+    {
+    path: 'products/create',
+    name: 'AddProduct',
+    component: ProductAdd
+  },
   {
     path: '/category',
     component: CategoryList
@@ -114,6 +122,22 @@ const adminRouter = [
   {
     path: "/categories/edit/:id"
     , component: CategoryAdd
+  },
+   {
+    path: 'list-voucher',
+    name: 'ListVoucher',
+    component: ListVoucher
+  },
+  {
+    path: 'add-voucher',
+    name: 'VoucherAdd',
+    component: VoucherAdd
+  },
+  {
+    path: 'update-voucher/:id',
+    name: 'VoucherUpdate',
+    component: VoucherUpdate,
+    props: true                  // Tự động truyền id vào làm prop
   },
 
 ];

@@ -126,11 +126,13 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import apiClient from "@/axios.js";
-
+import {useRouter } from "vue-router";
 const isLoading = ref(false);
 const errorMessage = ref(null);
 const categories = ref([]);
 const imagePreview = ref(null);
+
+const router =useRouter();
 
 const getInitialProductState = () => ({
   name: "",
@@ -177,6 +179,7 @@ const handleSubmit = async () => {
     const response = await apiClient.post("/api/product", product.value);
     console.log("Sản phẩm đã được tạo:", response.data);
     alert("Tạo sản phẩm thành công!");
+    router.push("/admin/list-product");
     resetForm();
   } catch (error) {
     console.error("Lỗi khi tạo sản phẩmdđ:", error.response?.data || error.message);

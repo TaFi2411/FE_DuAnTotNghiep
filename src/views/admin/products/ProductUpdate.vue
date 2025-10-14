@@ -172,7 +172,7 @@ const handleSubmit = async () => {
     // Gọi API PUT, chỉ gửi đi đối tượng payload đã được làm sạch
     const response = await apiClient.put(`/api/product/${productId.value}`, payload);
     successMessage.value = `Sản phẩm "${response.data.name}" đã được cập nhật thành công!`;
-    
+     router.push("/admin/list-product");
     // Cập nhật lại dữ liệu trên form sau khi thành công để đồng bộ
     product.value = response.data;
     imagePreview.value = response.data.image;
