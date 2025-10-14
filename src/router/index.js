@@ -20,87 +20,121 @@ import Checkout from '@/views/client/Checkout.vue';
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
-import CategoryAdd from '@/views/admin/CategoryAdd.vue';
-import CategoryList from '@/views/admin/CategoryList.vue';
-import Product from '@/views/products/Product.vue';
-import ValueAttribute from '@/views/products/ValueAttribute.vue';
-import OptionAttribute from '@/views/products/OptionAttribute.vue';
-import ListProduct from '@/views/products/ListProduct.vue';
-import UpdateProduct from '@/views/products/UpdateProduct.vue';
+
+//Admin Product
+import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
+import CategoryList from '@/views/admin/products/CategoryList.vue';
+import ListProduct from '@/views/admin/products/ListProduct.vue';
+import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
+import Attribute from '@/views/admin/products/Attribute.vue';
 
 // --- Định nghĩa các route con ---
 const clientRouter = [
-  { path: '', name: 'Home', component: Home }, // Đường dẫn rỗng sẽ khớp với '/' của layout cha
-  { path: 'auth/register', name: 'Register', component: Register },
-  { path: 'auth/login', name: 'Login', component: Login },
-  { path: 'store', name: 'Store', component: Store },
-  { path: 'introduce', name: 'Introduce', component: Introduce },
-  { path: 'support', name: 'Support', component: Support },
-  // ✅ THÊM ID (HOẶC SLUG) VÀO TRANG CHI TIẾT SẢN PHẨM
-  { 
+  {
+    path: '',
+    name: 'Home',
+    component: Home
+  }, 
+  {
+    path: 'auth/register',
+    name: 'Register',
+    component: Register
+  },
+  {
+    path: 'auth/login',
+    name: 'Login',
+    component: Login
+  },
+  {
+    path: 'store',
+    name: 'Store',
+    component: Store
+  },
+  {
+    path: 'introduce',
+    name: 'Introduce',
+    component: Introduce
+  },
+  {
+    path: 'support',
+    name: 'Support',
+    component: Support
+  },
+
+  {
     path: 'product/:id', // URL sẽ có dạng /product/123
-    name: 'ProductDetail', 
+    name: 'ProductDetail',
     component: ProductDetail,
     props: true // Tự động truyền id vào làm prop
   },
-  { path: '/cart', 
+  {
+    path: '/cart',
     component: Cart
   },
-  { path: '/checkout', 
+  {
+    path: '/checkout',
     component: Checkout
   }
-  
-
 ];
 
 const adminRouter = [
-  { path: '', name: 'Dashboard', component: Dashboard }, // Khớp với '/admin'
-  { path: 'auth', name: 'AuthAdmin', component: AuthAdmin },
-  { path: 'list-product', name: 'ListProduct', component: ListProduct },
-  { path: 'create-product', name: 'CreateProduct', component: CreateProduct },
-  
-  // ✅ THÊM ID VÀO TRANG SỬA SẢN PHẨM
   {
-    path: 'products/update/:id', // URL sẽ có dạng /admin/products/update/123
-    name: 'UpdateProduct',       // Tên route để điều hướng
+    path: '',
+    name: 'Dashboard',
+    component: Dashboard
+  },
+  {
+    path: 'auth',
+    name: 'AuthAdmin',
+    component: Auth
+  },
+  {
+    path: 'list-product',
+    name: 'ListProduct',
+    component: ListProduct
+  },
+  {
+    path: 'products/update/:id',
+    name: 'UpdateProduct',
     component: UpdateProduct,
     props: true                  // Tự động truyền id vào làm prop
   },
-   { path: '/admin/category', 
-    component: CategoryList 
+  {
+    path: '/category',
+    component: CategoryList
   },
-   { path: '/admin/attribute', 
-    component: Attribute 
+  {
+    path: '/attribute',
+    component: Attribute
   },
-   { path: '/admin/option-attribute', 
-    component: OptionAttribute 
+  {
+    path: "/categories/add",
+    component: CategoryAdd
   },
-  { path: "/admin/categories/add", 
-    component: CategoryAdd 
-  },
-  { path: "/admin/categories/edit/:id"
-    , component: CategoryAdd 
+  {
+    path: "/categories/edit/:id"
+    , component: CategoryAdd
   },
 
 ];
 
-// --- Cấu hình router chính ---
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      // ✅ Layout Client nằm ở gốc
       path: '/',
       component: LayoutClient,
       children: clientRouter
     },
     {
-      // ✅ Layout Admin có tiền tố riêng, giải quyết xung đột
       path: '/admin',
       component: LayoutAdmin,
-      children: adminRouter
+      children: adminRouter,
     }
   ]
 })
+
+
 
 export default router
