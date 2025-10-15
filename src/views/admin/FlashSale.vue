@@ -143,16 +143,21 @@ const errors = reactive({});
 const route = useRoute();
 const router = useRouter();
 
-// --- Format hiển thị giờ VN ---
+
+// 🕒 Format datetime cho hiển thị bảng
 function formatDateTime(date) {
   if (!date) return "";
   const d = new Date(date);
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  return d.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+}
+
+// 🧩 Format datetime khi gửi BE (chuẩn "yyyy-MM-dd HH:mm:ss")
+function formatDateToServer(dateString) {
+  if (!dateString) return null;
+  const localDate = new Date(dateString);
+  // Cộng offset để thành giờ VN
+  const vnDate = new Date(localDate.getTime() + 7 * 60 * 60 * 1000);
+  return vnDate.toISOString().slice(0, 19).replace("T", " ");
 }
 
 // --- API ---
@@ -179,10 +184,16 @@ async function createFlashSale() {
   if (!validateForm()) return;
 
   try {
+    const body = {
+      ...form,
+      started_date: formatDateToServer(form.started_date),
+      ended_date: formatDateToServer(form.ended_date)
+    };
+
     const res = await fetch("http://localhost:8080/api/flash-sale", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form) // gửi trực tiếp
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const errData = await res.json();
@@ -202,10 +213,16 @@ async function updateFlashSale() {
   if (!validateForm()) return;
 
   try {
+    const body = {
+      ...form,
+      started_date: formatDateToServer(form.started_date),
+      ended_date: formatDateToServer(form.ended_date)
+    };
+
     const res = await fetch(`http://localhost:8080/api/flash-sale/${editId.value}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form) // gửi trực tiếp
+      body: JSON.stringify(body)
     });
     if (!res.ok) {
       const errData = await res.json();
@@ -279,8 +296,9 @@ watch(() => route.params.id, async (id) => {
       const sale = await res.json();
       form.title = sale.title;
       form.discount = sale.discount;
-      form.started_date = sale.started_date ? sale.started_date.replace(" ", "T").slice(0,16) : '';
-      form.ended_date = sale.ended_date ? sale.ended_date.replace(" ", "T").slice(0,16) : '';
+      // convert "yyyy-MM-dd HH:mm:ss" => "yyyy-MM-ddTHH:mm"
+      form.started_date = sale.started_date ? sale.started_date.replace(" ", "T").slice(0, 16) : "";
+      form.ended_date = sale.ended_date ? sale.ended_date.replace(" ", "T").slice(0, 16) : "";
       form.active = sale.active;
     } catch (err) {
       console.error(err);
@@ -295,6 +313,7 @@ onMounted(() => {
   fetchSales();
 });
 </script>
+
 
 <style scoped>
 .card { box-shadow: 0 0 8px rgba(0,0,0,0.05); }
