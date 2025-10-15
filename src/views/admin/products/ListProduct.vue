@@ -1,11 +1,12 @@
 <template>
   <div class="container my-5">
     <h2 class="mb-4">Danh sách Sản phẩm</h2>
+
     <div class="d-flex justify-content-end align-items-center mb-3">
-      <input 
-        v-model="keyword" 
-        type="text" 
-        class="form-control w-50" 
+      <input
+        v-model="keyword"
+        type="text"
+        class="form-control w-50"
         placeholder="Tìm kiếm sản phẩm..."
         @keyup.enter="applySearch"
       />
@@ -18,7 +19,7 @@
       </div>
       <p class="text-muted mt-2">Đang tải dữ liệu sản phẩm...</p>
     </div>
-    
+
     <div v-else-if="errorMessage" class="alert alert-danger">
       <p><strong>Đã xảy ra lỗi:</strong> {{ errorMessage }}</p>
       <button class="btn btn-primary" @click="fetchProducts">Thử lại</button>
@@ -34,35 +35,45 @@
           <tr>
             <th scope="col">#</th>
             <th scope="col">Hình ảnh</th>
-            
+
             <th scope="col" @click="changeSort('name')" class="sortable-header">
               Tên sản phẩm
-              <span v-if="sortField === 'name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <span v-if="sortField === 'name'">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
             </th>
+
             <th scope="col" @click="changeSort('category.name')" class="sortable-header">
               Danh mục
-              <span v-if="sortField === 'category.name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <span v-if="sortField === 'category.name'">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
             </th>
+
             <th scope="col" @click="changeSort('status')" class="sortable-header">
               Trạng thái
-              <span v-if="sortField === 'status'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <span v-if="sortField === 'status'">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
             </th>
+
             <th scope="col" class="text-end">Hành động</th>
           </tr>
         </thead>
+
         <tbody>
           <tr v-for="(product, index) in products" :key="product.id">
             <td>{{ (page * size) + index + 1 }}</td>
             <td>
-              <img 
-                :src="getImageUrl(product.image)" 
-                alt="Ảnh sản phẩm" 
-                class="product-thumbnail" 
+              <img
+                :src="getImageUrl(product.image)"
+                alt="Ảnh sản phẩm"
+                class="product-thumbnail"
                 @error="setDefaultImage"
               />
             </td>
             <td>
-              <strong>{{ product.name }}</strong><br>
+              <strong>{{ product.name }}</strong><br />
               <small class="text-muted">{{ product.slug }}</small>
             </td>
             <td>{{ product.categoryName }}</td>
@@ -72,24 +83,39 @@
               </span>
             </td>
             <td class="text-end">
-              <button class="btn btn-outline-primary btn-sm me-2" @click="editProduct(product.id)">Sửa</button>
-              <button class="btn btn-outline-danger btn-sm" @click="deleteProduct(product.id)">Xóa</button>
+              <button
+                class="btn btn-outline-primary btn-sm me-2"
+                @click="editProduct(product.id)"
+                title="Sửa sản phẩm"
+              >
+                <i class="bi bi-pencil-square"></i>
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                @click="deleteProduct(product.id)"
+                title="Xóa sản phẩm"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
+
       <div class="d-flex justify-content-between align-items-center mt-3">
-        <button 
-          class="btn btn-outline-secondary" 
-          :disabled="page === 0" 
+        <button
+          class="btn btn-outline-secondary"
+          :disabled="page === 0"
           @click="changePage(page - 1)"
         >
           ← Trang trước
         </button>
+
         <span>Trang {{ page + 1 }} / {{ totalPages }}</span>
-        <button 
-          class="btn btn-outline-secondary" 
-          :disabled="page >= totalPages - 1" 
+
+        <button
+          class="btn btn-outline-secondary"
+          :disabled="page >= totalPages - 1"
           @click="changePage(page + 1)"
         >
           Trang sau →
@@ -116,10 +142,9 @@ const page = ref(0);
 const size = ref(5);
 const totalPages = ref(0);
 
-// START: THÊM CÁC BIẾN TRẠNG THÁI CHO SẮP XẾP
-const sortField = ref('id'); // Mặc định sắp xếp theo ID
-const sortDirection = ref('asc'); // Mặc định là tăng dần
-// END: THÊM CÁC BIẾN TRẠNG THÁI
+// SẮP XẾP
+const sortField = ref('id');
+const sortDirection = ref('asc');
 
 const fetchProducts = async () => {
   isLoading.value = true;
@@ -131,41 +156,31 @@ const fetchProducts = async () => {
         page: page.value,
         size: size.value,
         keyword: keyword.value || '',
-        // START: GỬI THAM SỐ SẮP XẾP LÊN API
-        // Backend Spring Boot thường nhận tham số dạng: sort=fieldName,direction
-        sort: `${sortField.value},${sortDirection.value}`
-        // END: GỬI THAM SỐ SẮP XẾP
-      }
+        sort: `${sortField.value},${sortDirection.value}`,
+      },
     });
 
     const data = response.data;
     products.value = data.data;
     totalPages.value = data.totalPages;
-   
   } catch (error) {
-    console.error("Lỗi khi fetch dữ liệu sản phẩm:", error);
-    errorMessage.value = "Không thể tải danh sách sản phẩm.";
+    console.error('Lỗi khi fetch dữ liệu sản phẩm:', error);
+    errorMessage.value = 'Không thể tải danh sách sản phẩm.';
   } finally {
     isLoading.value = false;
   }
 };
 
-// START: HÀM XỬ LÝ KHI CLICK VÀO TIÊU ĐỀ CỘT
 const changeSort = (field) => {
   if (sortField.value === field) {
-    // Nếu đang click vào cột đã sắp xếp, đảo chiều
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
   } else {
-    // Nếu click vào cột mới, đặt làm cột sắp xếp và mặc định chiều tăng dần
     sortField.value = field;
     sortDirection.value = 'asc';
   }
-  // Sau khi thay đổi, gọi lại API để lấy dữ liệu đã được sắp xếp
   fetchProducts();
 };
-// END: HÀM XỬ LÝ
 
-// Hàm để reset trang khi tìm kiếm
 const applySearch = () => {
   page.value = 0;
   fetchProducts();
@@ -196,7 +211,7 @@ const deleteProduct = async (id) => {
       alert('Xóa sản phẩm thành công!');
       fetchProducts();
     } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
+      console.error('Lỗi khi xóa sản phẩm:', error);
       errorMessage.value = `Xóa thất bại: ${error.message}`;
     }
   }
@@ -213,7 +228,7 @@ onMounted(fetchProducts);
 .product-thumbnail {
   width: 80px;
   height: 80px;
-  object-fit: cover; /* cover thường cho ảnh đẹp hơn */
+  object-fit: cover;
   border-radius: 10px;
   border: 1px solid #dee2e6;
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -224,16 +239,12 @@ onMounted(fetchProducts);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* START: THÊM STYLE CHO TIÊU ĐỀ CỘT SẮP XẾP */
 .sortable-header {
   cursor: pointer;
-  user-select: none; /* Tránh bôi đen chữ khi click */
+  user-select: none;
 }
 
 .sortable-header:hover {
-  background-color: #e9ecef; /* Hiệu ứng khi di chuột qua */
+  background-color: #e9ecef;
 }
-/* END: THÊM STYLE */
 </style>
-
-
