@@ -238,6 +238,9 @@ const handleSubmit = async () => {
     payload.started_date = formatDateToVN(payload.started_date);
     payload.ended_date = formatDateToVN(payload.ended_date);
 
+    payload.started_date = formatDateToVN(payload.started_date);
+    payload.ended_date = formatDateToVN(payload.ended_date);
+
     await apiClient.post('/api/voucher', payload);
     alert('🎉 Tạo voucher mới thành công!');
     router.push('/admin/list-voucher');
@@ -263,3 +266,4 @@ h2 {
   border-color: #0d6efd;
 }
 </style>
+

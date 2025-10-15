@@ -117,7 +117,7 @@ const handleRegister = async () => {
     await axios.post(API_URL, form.value)
 
     alert('🎉 Đăng ký thành công! Hãy đăng nhập.')
-    router.push('/login') // chuyển sang trang đăng nhập
+    router.push('/auth/login') // chuyển sang trang đăng nhập
 
     // reset form
     form.value = {
