@@ -49,7 +49,7 @@ const clientRouter = [
     name: 'Home',
     component: Home
   },
-  }, 
+
   {
     path: '',
     name: 'Violate',
@@ -137,17 +137,15 @@ const adminRouter = [
   },
   {
     path: 'category',
-    path: 'category',
     component: CategoryList
   },
   {
-    path: 'attribute',
     path: 'attribute',
     component: Attribute
   },
 
   {
-    path: '/admin/flashsale',
+    path: 'flashsale',
     component: FlashSale
   },
   {
@@ -156,7 +154,6 @@ const adminRouter = [
   component: FlashSale
   },
   {
-    path: "categories/add",
     path: "categories/add",
     component: CategoryAdd
   },
@@ -199,9 +196,9 @@ const adminRouter = [
   path: "/review/detail/:id",
   component: ReviewDetail,
 },
-    path: "categories/edit/:id"
-    path: "categories/edit/:id"
-    , component: CategoryAdd
+{
+    path: "categories/edit/:id", 
+    component: CategoryAdd
   },
    {
     path: 'list-voucher',
@@ -217,7 +214,7 @@ const adminRouter = [
     path: 'update-voucher/:id',
     name: 'VoucherUpdate',
     component: VoucherUpdate,
-    props: true                  // Tự động truyền id vào làm prop
+    props: true                 
   },
 
 ];
@@ -235,7 +232,7 @@ const router = createRouter({
       path: '/admin',
       component: LayoutAdmin,
       children: adminRouter,
-      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     }
   ]
 })

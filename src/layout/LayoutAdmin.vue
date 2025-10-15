@@ -24,8 +24,19 @@ const toggleSidebar = () => {
 }
 
 const menu = [
-  { name: 'Dashboard', path: '/admin/dashboard', icon: 'bi bi-speedometer2' },
-  { name: 'Sản phẩm', path: '/admin/products', icon: 'bi bi-box-seam' },
+  { name: 'Dashboard', path: '/admin', icon: 'bi bi-speedometer2' },
+ {
+    name: 'Sản phẩm',
+    icon: 'bi bi-box-seam',
+    children: [
+      { name: 'Danh sách sản phẩm', path: '/admin/list-product' },
+      { name: 'Thêm sản phẩm', path: '/admin/products/create' },
+      { name: 'Loại sản phẩm', path: '/admin/category' },
+      { name: 'Thêm thuộc tính', path: '/admin/attribute' },
+    ]
+  },
+  { name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-box-seam' },
+  { name: 'FlashSale', path: '/admin/flashsale', icon: 'bi bi-box-seam' },
   { name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
   { name: 'Người dùng', path: '/admin/users', icon: 'bi bi-people' },
 ]

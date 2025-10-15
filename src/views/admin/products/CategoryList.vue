@@ -143,7 +143,7 @@ const changePage = (page) => {
 }
 
 // ➕ Thêm, ✏️ Sửa, ❌ Xóa
-const goAdd = () => router.push('/categories/add')
+const goAdd = () => router.push('categories/add')
 const goEdit = (id) => router.push(`/categories/edit/${id}`)
 
 const confirmDelete = async (id) => {
