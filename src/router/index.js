@@ -230,7 +230,7 @@ const router = createRouter({
       path: '/admin',
       component: LayoutAdmin,
       children: adminRouter,
-      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     }
   ]
 })
@@ -238,27 +238,27 @@ const router = createRouter({
 
 
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token");
+//   const role = localStorage.getItem("role");
 
-  // Nếu route cần đăng nhập
-  if (to.meta.requiresAuth) {
-    if (!token) {
-      // Chưa đăng nhập
-      return next({ name: "Login" });
-    }
+//   // Nếu route cần đăng nhập
+//   if (to.meta.requiresAuth) {
+//     if (!token) {
+//       // Chưa đăng nhập
+//       return next({ name: "Login" });
+//     }
 
-    // Nếu route yêu cầu quyền ADMIN mà user không phải admin
-    if (to.meta.role && to.meta.role !== role) {
-      // Không đủ quyền → về trang chủ
-      console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
-      return next({ name: "Violate" });
-    }
-  }
+//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
+//     if (to.meta.role && to.meta.role !== role) {
+//       // Không đủ quyền → về trang chủ
+//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
+//       return next({ name: "Violate" });
+//     }
+//   }
 
-  next();
-});
+//   next();
+// });
 
 
 export default router
