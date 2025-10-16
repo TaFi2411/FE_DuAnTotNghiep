@@ -166,7 +166,7 @@ const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = 5; // ⚠️ sau này lấy từ login
+const accountId = 7; // ⚠️ sau này lấy từ login
 const storeDistrictId = 1451; // Quận shop GHN
 
 const shippingFee = ref(0);
