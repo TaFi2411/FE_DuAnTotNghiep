@@ -78,6 +78,10 @@
               @change="handleImageUpload"
               accept="image/*"
             />
+            <div v-if="isUploading" class="mt-2 text-center">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="text-muted mt-2 mb-0">Đang tải ảnh lên...</p>
+            </div>
             <div v-if="imagePreview" class="mt-3 text-center border rounded p-2">
               <img :src="imagePreview" class="img-fluid rounded" alt="Xem trước ảnh" />
             </div>
@@ -110,7 +114,7 @@
         <button type="button" class="btn btn-outline-secondary" @click="resetForm">
           Hủy
         </button>
-        <button type="submit" class="btn btn-primary" :disabled="isLoading">
+        <button type="submit" class="btn btn-primary" :disabled="isLoading || isUploading">
           <span
             v-if="isLoading"
             class="spinner-border spinner-border-sm"
@@ -126,26 +130,27 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import apiClient from "@/axios.js";
-import {useRouter } from "vue-router";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 const isLoading = ref(false);
+const isUploading = ref(false);
 const errorMessage = ref(null);
 const categories = ref([]);
 const imagePreview = ref(null);
-
-const router =useRouter();
 
 const getInitialProductState = () => ({
   name: "",
   slug: "",
   description: "",
-  image: "", // base64 string
+  image: "", // URL ảnh S3
   status: true,
   categoryId: "",
 });
 
 const product = ref(getInitialProductState());
 
-// ✅ Lấy danh mục từ API
+// ✅ Lấy danh mục
 const fetchCategories = async () => {
   try {
     const res = await apiClient.get("/api/category");
@@ -157,20 +162,35 @@ const fetchCategories = async () => {
 };
 onMounted(fetchCategories);
 
-// ✅ Chuyển ảnh sang base64
-const handleImageUpload = (event) => {
+// ✅ Upload ảnh lên S3 qua backend
+const handleImageUpload = async (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    product.value.image = e.target.result; // base64 string
-    imagePreview.value = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  isUploading.value = true;
+  errorMessage.value = null;
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await apiClient.post("/api/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // URL trả về từ backend
+    product.value.image = res.data;
+    imagePreview.value = res.data;
+  } catch (error) {
+    console.error("Lỗi upload ảnh:", error);
+    errorMessage.value =
+      error.response?.data?.message || "Upload ảnh thất bại. Vui lòng thử lại.";
+  } finally {
+    isUploading.value = false;
+  }
 };
 
-// ✅ Gửi JSON chứ không dùng FormData
+// ✅ Gửi JSON sản phẩm (chỉ chứa URL ảnh)
 const handleSubmit = async () => {
   isLoading.value = true;
   errorMessage.value = null;
@@ -182,7 +202,7 @@ const handleSubmit = async () => {
     router.push("/admin/list-product");
     resetForm();
   } catch (error) {
-    console.error("Lỗi khi tạo sản phẩmdđ:", error.response?.data || error.message);
+    console.error("Lỗi khi tạo sản phẩm:", error.response?.data || error.message);
     errorMessage.value =
       error.response?.data?.message || "Tạo sản phẩm thất bại. Vui lòng thử lại.";
   } finally {
@@ -190,6 +210,7 @@ const handleSubmit = async () => {
   }
 };
 
+// ✅ Reset form
 const resetForm = () => {
   product.value = getInitialProductState();
   imagePreview.value = null;
