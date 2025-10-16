@@ -42,7 +42,7 @@ import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
 
 import ProductAdd from '@/views/admin/products/ProductAdd.vue';
-import FlashSaleSku from '@/views/admin/FlashSaleSku.vue';
+
 // --- Định nghĩa các route con ---
 const clientRouter = [
   {
@@ -55,7 +55,7 @@ const clientRouter = [
     path: '',
     name: 'Violate',
     component: Violate
-  }, 
+  },
   {
     path: 'auth/register',
     name: 'Register',
@@ -86,13 +86,6 @@ const clientRouter = [
     name: 'Support',
     component: Support
   },
-
-  // {
-  //   path: 'product/:id', // URL sẽ có dạng /product/123
-  //   name: 'ProductDetail',
-  //   component: ProductDetail,
-  //   props: true // Tự động truyền id vào làm prop
-  // },
   {
     path: 'product-details', // URL sẽ có dạng /product/123
     name: 'ProductDetail',
@@ -129,9 +122,9 @@ const adminRouter = [
     path: 'products/update/:id',
     name: 'UpdateProduct',
     component: UpdateProduct,
-    props: true                 
+    props: true
   },
-    {
+  {
     path: 'products/create',
     name: 'AddProduct',
     component: ProductAdd
@@ -143,19 +136,19 @@ const adminRouter = [
 
 
   {
-  path: 'attribute',
-  name: 'Attribute',
-  component: Attribute
-},
-{
-  path: 'flashsale',
-  name: 'FlashSale',
-  component: FlashSale
+    path: 'attribute',
+    name: 'Attribute',
+    component: Attribute
   },
   {
-  path: 'flashsale/:id?',
-  name: 'FlashSale',
-  component: FlashSale
+    path: 'flashsale',
+    name: 'FlashSale',
+    component: FlashSale
+  },
+  {
+    path: 'flashsale/:id?',
+    name: 'FlashSale',
+    component: FlashSale
   },
 
   {
@@ -163,12 +156,12 @@ const adminRouter = [
     component: CategoryAdd
   },
   {
-    path: "/categories/edit/:id", 
+    path: "/categories/edit/:id",
     component: CategoryAdd
   },
   {
     path: '/status',
-    component:StatusList,
+    component: StatusList,
   },
   {
     path: '/status/add',
@@ -178,34 +171,34 @@ const adminRouter = [
     path: '/status/edit/:id',
     component: StatusAdd,
   },
-{
-  path: '/payment-method',
-  name: 'PaymentMethodList',
-  component: PaymentMethodList,
-},
-{
-  path: '/payment-method/add',
-  name: 'PaymentMethodAdd',
-  component: PaymentMethodAdd,
-},
-{
-  path: '/payment-method/edit/:id',
-  name: 'PaymentMethodEdit',
-  component: PaymentMethodAdd,
-},
-{
-  path: "/review",
-  component: ReviewList,
-},
-{
-  path: "/review/detail/:id",
-  component: ReviewDetail,
-},
-{
-    path: "categories/edit/:id", 
+  {
+    path: '/payment-method',
+    name: 'PaymentMethodList',
+    component: PaymentMethodList,
+  },
+  {
+    path: '/payment-method/add',
+    name: 'PaymentMethodAdd',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: '/payment-method/edit/:id',
+    name: 'PaymentMethodEdit',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: "/review",
+    component: ReviewList,
+  },
+  {
+    path: "/review/detail/:id",
+    component: ReviewDetail,
+  },
+  {
+    path: "categories/edit/:id",
     component: CategoryAdd
   },
-   {
+  {
     path: 'list-voucher',
     name: 'ListVoucher',
     component: ListVoucher
@@ -219,7 +212,7 @@ const adminRouter = [
     path: 'update-voucher/:id',
     name: 'VoucherUpdate',
     component: VoucherUpdate,
-    props: true                 
+    props: true
   },
 
 ];
