@@ -1,166 +1,143 @@
 <template>
-  <div class="product-detail container py-5 mt-5">
+  <div v-if="product" class="product-detail container py-4">
+    <!-- Tên sản phẩm -->
+    <h2 class="text-2xl font-bold mb-3">{{ product.name }}</h2>
 
-    <!-- --- PHẦN TRÊN: ẢNH & THÔNG TIN --- -->
-    <div class="row align-items-start g-5">
-      <!-- Ảnh chính -->
-      <div class="col-lg-6 col-md-12 text-center">
-        <div class="main-image-wrapper p-4 bg-white rounded-4 shadow-sm">
-          <img src="/images/crs-ip17-air.png" alt="iPhone 17 Pro Max" class="img-fluid rounded-3 main-image" />
-        </div>
-        <div class="thumbs d-flex justify-content-center gap-3 mt-3 flex-wrap">
-          <img src="/images/crs-ip17-air.png" class="thumb active" alt="thumb" />
-          <img src="/images/crs-ip17-air.png" class="thumb" alt="thumb" />
-          <img src="/images/crs-ip17-air.png" class="thumb" alt="thumb" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Hình ảnh -->
+      <div>
+        <img
+          :src="currentImage"
+          alt="product image"
+          class="rounded-xl shadow-lg w-full object-cover"
+        />
+        <div class="flex gap-2 mt-3">
+          <img
+            v-for="(img, i) in selectedSku?.skuImages"
+            :key="i"
+            :src="img.path"
+            class="w-20 h-20 rounded-lg cursor-pointer border hover:border-blue-500"
+            @click="currentImage = img.path"
+          />
         </div>
       </div>
 
-      <!-- Thông tin sản phẩm -->
-      <div class="col-lg-6 col-md-12">
-        <h2 class="fw-bold mb-3">iPhone 17 Pro Max</h2>
-        <p class="text-secondary mb-2">Hàng chính hãng (VN/A) - Mới 100%</p>
-        <h3 class="fw-bold text-primary mb-4">Giá: 35.000.000 VNĐ</h3>
+      <!-- Thông tin -->
+      <div>
+        <p class="text-gray-600 mb-2">{{ product.description }}</p>
+        <h3 class="text-xl font-semibold text-red-600">
+          {{ selectedSku?.price?.toLocaleString() }}₫
+        </h3>
+        <p class="text-sm text-gray-500 mb-3">
+          Số lượng: {{ selectedSku?.quantity }}
+        </p>
 
-        <!-- Chọn màu sắc -->
-        <div class="mb-4">
-          <h6 class="fw-bold mb-2">Màu sắc</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <button class="option-btn active">Đen Titan</button>
-            <button class="option-btn">Xanh Biển Sâu</button>
-            <button class="option-btn">Vàng Ánh Kim</button>
+        <!-- Thuộc tính (VD: Màu sắc, Dung lượng) -->
+        <div v-for="(values, option) in groupedAttributes" :key="option" class="mb-3">
+          <h4 class="font-semibold">{{ option }}:</h4>
+          <div class="flex gap-2 mt-1">
+            <button
+              v-for="value in values"
+              :key="value"
+              :class="[
+                'px-3 py-1 rounded-lg border',
+                selectedAttributes[option] === value ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
+              ]"
+              @click="selectAttribute(option, value)"
+            >
+              {{ value }}
+            </button>
           </div>
         </div>
 
-        <!-- Chọn dung lượng -->
-        <div class="mb-4">
-          <h6 class="fw-bold mb-2">Dung lượng</h6>
-          <div class="d-flex flex-wrap gap-2">
-            <button class="option-btn active">128GB</button>
-            <button class="option-btn">256GB</button>
-            <button class="option-btn">512GB</button>
-            <button class="option-btn">1TB</button>
-          </div>
-        </div>
-
-        <!-- Nút hành động -->
-        <div class="d-flex flex-wrap gap-3 mt-4">
-          <button class="btn btn-dark px-5 py-2 rounded-pill">Mua ngay</button>
-          <button class="btn btn-outline-dark px-5 py-2 rounded-pill">Thêm vào giỏ</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- --- PHẦN DƯỚI: MÔ TẢ & ĐÁNH GIÁ --- -->
-    <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4">
-      <!-- Mô tả -->
-      <h4 class="fw-bold mb-3">Mô tả sản phẩm</h4>
-      <p class="text-secondary lh-lg">
-        iPhone 17 Pro Max mang đến hiệu năng mạnh mẽ nhờ chip A19 Bionic, màn hình Super Retina
-        XDR ProMotion 120Hz và thiết kế titan cao cấp. Camera được nâng cấp với cảm biến 48MP mới,
-        cho khả năng chụp ảnh sắc nét vượt trội trong mọi điều kiện ánh sáng.
-      </p>
-
-      <hr class="my-4" />
-
-      <!-- Đánh giá -->
-      <h4 class="fw-bold mb-3">Đánh giá của khách hàng (2)</h4>
-
-      <div class="review-item border`-bottom pb-3 mb-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <h6 class="fw-bold mb-0">Minh Anh</h6>
-          <small class="text-muted">2 ngày trước</small>
-        </div>
-        <div class="text-warning my-1">
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          <i class="bi bi-star-fill"></i>
-        </div>
-        <p class="text-secondary mb-0">Sản phẩm rất đáng tiền, hiệu năng cực tốt!</p>
-      </div>
-
-      <div class="review-item">
-        <div class="d-flex justify-content-between align-items-center">
-          <h6 class="fw-bold mb-0">Hải Đăng</h6>
-          <small class="text-muted">1 tuần trước</small>
-        </div>
-        <div class="text-warning my-1">
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          <i class="bi bi-star"></i>
-        </div>
-        <p class="text-secondary mb-0">Thiết kế đẹp, chụp hình cực kỳ chi tiết.</p>
+        <!-- Nút thêm giỏ hàng -->
+        <button
+          class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          :disabled="!selectedSku"
+        >
+          Thêm vào giỏ hàng
+        </button>
       </div>
     </div>
   </div>
+
+  <div v-else class="text-center py-10">Đang tải sản phẩm...</div>
 </template>
 
-<style scoped>
-.product-detail {
-  color: #1d1d1f;
-}
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import axios from 'axios'
 
-.main-image {
-  max-height: 420px;
-  object-fit: contain;
-}
+const route = useRoute()
+const slug = route.params.slug
 
-.thumb {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
-  border: 1px solid #ddd;
-  object-fit: contain;
-  cursor: pointer;
-  transition: 0.3s;
-}
+const product = ref(null)
+const selectedSku = ref(null)
+const selectedAttributes = ref({})
+const currentImage = ref('')
 
-.thumb:hover,
-.thumb.active {
-  border-color: #0d6efd;
-  box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
-}
+// ✅ Lấy dữ liệu sản phẩm theo slug
+onMounted(async () => {
+  const res = await axios.get(`http://localhost:8080/api/products/${id}`)
+  product.value = res.data
 
-/* Nút chọn màu / dung lượng */
-.option-btn {
-  background-color: #f8f9fa;
-  border: 1px solid #ccc;
-  padding: 8px 16px;
-  border-radius: 25px;
-  font-weight: 500;
-  transition: all 0.2s;
-}
+  // Chọn SKU có giá thấp nhất làm mặc định
+  selectedSku.value = product.value.skus.reduce((min, s) =>
+    s.price < min.price ? s : min
+  )
+  currentImage.value = selectedSku.value.skuImages[0]?.path
 
-.option-btn:hover {
-  background-color: #0d6efd;
-  color: #fff;
-}
+  // Gán thuộc tính mặc định tương ứng SKU
+  selectedSku.value.skuAttributes.forEach(attr => {
+    selectedAttributes.value[attr.optionAttributeName] = attr.valueAttributeName
+  })
+})
 
-.option-btn.active {
-  background-color: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
-}
-
-/* Phần mô tả & đánh giá */
-.product-info {
-  line-height: 1.7;
-}
-
-.review-item {
-  background-color: #fafafa;
-  padding: 15px;
-  border-radius: 12px;
-  transition: 0.2s;
-}
-
-.review-item:hover {
-  background-color: #f1f5ff;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .main-image {
-    max-height: 320px;
+// ✅ Gom các thuộc tính (Màu sắc, Dung lượng, ...)
+const groupedAttributes = computed(() => {
+  if (!product.value) return {}
+  const groups = {}
+  product.value.skus.forEach(sku => {
+    sku.skuAttributes.forEach(attr => {
+      if (!groups[attr.optionAttributeName]) groups[attr.optionAttributeName] = new Set()
+      groups[attr.optionAttributeName].add(attr.valueAttributeName)
+    })
+  })
+  // Chuyển từ Set → Array để dễ v-for
+  for (let key in groups) {
+    groups[key] = Array.from(groups[key])
   }
+  return groups
+})
+
+// ✅ Khi chọn thuộc tính
+function selectAttribute(option, value) {
+  selectedAttributes.value[option] = value
+  updateSelectedSku()
+}
+
+// ✅ Cập nhật SKU tương ứng khi chọn thuộc tính
+function updateSelectedSku() {
+  if (!product.value) return
+
+  // Tìm SKU khớp tất cả thuộc tính
+  const found = product.value.skus.find(sku => {
+    return sku.skuAttributes.every(attr =>
+      selectedAttributes.value[attr.optionAttributeName] === attr.valueAttributeName
+    )
+  })
+
+  if (found) {
+    selectedSku.value = found
+    currentImage.value = found.skuImages[0]?.path
+  }
+}
+</script>
+
+<style scoped>
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

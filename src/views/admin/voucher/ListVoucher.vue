@@ -124,7 +124,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import apiClient from '@/axios.js';
+import apiClient from '@/composables/axios.js';
 import VoucherDetailModal from '@/components/admin/VoucherDetailModal.vue'; 
 
 const router = useRouter();

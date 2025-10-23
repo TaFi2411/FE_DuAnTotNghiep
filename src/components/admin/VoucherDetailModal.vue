@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, onMounted, defineProps, defineEmits, watch } from 'vue';
-import apiClient from '@/axios.js';
+import apiClient from '@/composables/axios.js';
 
 // Props để nhận voucherId từ component cha
 const props = defineProps({

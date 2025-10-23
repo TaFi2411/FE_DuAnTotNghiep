@@ -765,6 +765,11 @@ onMounted(async () => {
   }
 });
 
+onMounted(async () => {
+  const res = await axios.get("/api/product?category=dienthoai");
+  iPhoneProducts.value = res.data.data;
+  console.log(iPhoneProducts.value);
+});
 </script>
 
 

@@ -195,7 +195,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import apiClient from '@/axios.js';
+import apiClient from '@/composables/axios.js';
 
 const router = useRouter();
 

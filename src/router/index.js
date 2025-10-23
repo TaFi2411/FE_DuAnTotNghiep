@@ -3,7 +3,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LayoutClient from '@/layout/LayoutClient.vue';
 import LayoutAdmin from '@/layout/LayoutAdmin.vue';
 
-// --- Import các component ---
+// --- Import các component ---//
+import SwiperProductHome from '@/components/SwiperProductHome.vue';
+
+
 // Auth
 import Register from '@/views/auth/Register.vue';
 import Login from '@/views/auth/Login.vue';
@@ -36,7 +39,7 @@ import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
 //Admin Product
 import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
 import CategoryList from '@/views/admin/products/CategoryList.vue';
-import ListProduct from '@/views/admin/products/ListProduct.vue';
+import ListProduct from '@/views/admin/products/ProductList.vue';
 import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
 import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
@@ -87,10 +90,10 @@ const clientRouter = [
     component: Support
   },
   {
-    path: 'product-details', // URL sẽ có dạng /product/123
-    name: 'ProductDetail',
-    component: ProductDetail,
-    props: true // Tự động truyền id vào làm prop
+  path: '/product/:id',
+  name: 'ProductDetail',
+  component: ProductDetail,
+  props: true
   },
   {
     path: '/cart',
@@ -99,6 +102,10 @@ const clientRouter = [
   {
     path: '/checkout',
     component: Checkout
+  },
+  {
+    path: '/SwiperProductHome',
+    component: SwiperProductHome
   }
 ];
 
@@ -234,8 +241,6 @@ const router = createRouter({
     }
   ]
 })
-
-
 
 
 // router.beforeEach((to, from, next) => {
