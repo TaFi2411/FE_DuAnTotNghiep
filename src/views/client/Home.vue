@@ -547,53 +547,9 @@
 
 
 <!-- AirPods -->
-<div class="container py-5">
-  <div class="text-center mb-4">
-    <h5 class="text-uppercase text-primary fw-bold">Sản phẩm AirPods</h5>
-    <h2 class="fw-bold">Nghe nhạc theo cách chuyên nghiệp</h2>
-  </div>
-
-<!-- ===== BANNER AIRPODS ===== -->
-<div class="container-fluid category-banner mb-5">
-  <div class="position-relative rounded-4 overflow-hidden">
-    <img src="/images/banner-home-ipod.png" alt="AirPods Banner" class="w-100 rounded-4" />
-    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center overlay-bg">
-      <h2 class="fw-bold mb-2">AirPods</h2>
-      <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
-      <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
-    </div>
-  </div>
-</div>
-  <swiper
-    :modules="[Navigation, Autoplay]"
-    navigation
-    loop
-    :autoplay="{ delay: 3000, disableOnInteraction: false }"
-    :slides-per-view="4"
-    :space-between="20"
-    :breakpoints="{
-      320: { slidesPerView: 1 },
-      576: { slidesPerView: 2 },
-      768: { slidesPerView: 3 },
-      992: { slidesPerView: 4 }
-    }"
-    class="py-3 product-swiper"
-  >
-    <swiper-slide v-for="n in 6" :key="`airpods-${n}`">
-      <div class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3">
-        <img src="/images/ctg-ipod.png" class="m-auto mt-2 card-img-top h-75 w-75" alt="AirPods" />
-        <div class="card-body">
-          <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
-          <p class="text-muted mb-1">Giá chỉ từ</p>
-          <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
-            Mua ngay
-          </router-link>
-        </div>
-      </div>
-    </swiper-slide>
-  </swiper>
-</div>
+  <SwiperProductHome
+    :products="iPhoneProducts"
+    />
 
 
 </template>
@@ -606,12 +562,21 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
 
-import { ref } from "vue";
+import { ref,onMounted  } from "vue";
+import axios from "@/composables/axios";
+
+import SwiperProductHome from "@/components/SwiperProductHome.vue";
 
 const sold = ref(6);
 const total = ref(10);
 
+const iPhoneProducts = ref([]);
 
+onMounted(async () => {
+  const res = await axios.get("/api/product?category=dienthoai");
+  iPhoneProducts.value = res.data.data;
+  console.log(iPhoneProducts.value);
+});
 </script>
 
 <style scoped>

@@ -81,7 +81,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from 'vue-router'; // Import hook của router
-import apiClient from "@/axios.js";
+import apiClient from "@/composables/axios.js";
 
 const route = useRoute(); // Để lấy thông tin từ URL (params, query,...)
 const router = useRouter(); // Để điều hướng trang (push, back,...)

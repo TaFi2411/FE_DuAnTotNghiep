@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref } from "vue";
-import api from '@/axios.js'
+import api from '@/composables/axios.js'
 
 const email = ref("");
 const password = ref("");

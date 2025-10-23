@@ -103,7 +103,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "@/axios";
+import axios from "@/composables/axios";
 
 // 🧩 Biến dữ liệu
 const reviews = ref([]);

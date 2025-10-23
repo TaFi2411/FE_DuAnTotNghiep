@@ -3,7 +3,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LayoutClient from '@/layout/LayoutClient.vue';
 import LayoutAdmin from '@/layout/LayoutAdmin.vue';
 
-// --- Import các component ---
+// --- Import các component ---//
+import SwiperProductHome from '@/components/SwiperProductHome.vue';
+
+
 // Auth
 import Register from '@/views/auth/Register.vue';
 import Login from '@/views/auth/Login.vue';
@@ -36,7 +39,7 @@ import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
 //Admin Product
 import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
 import CategoryList from '@/views/admin/products/CategoryList.vue';
-import ListProduct from '@/views/admin/products/ListProduct.vue';
+import ListProduct from '@/views/admin/products/ProductList.vue';
 import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
 import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
@@ -87,10 +90,10 @@ const clientRouter = [
     component: Support
   },
   {
-    path: 'product-details', // URL sẽ có dạng /product/123
-    name: 'ProductDetail',
-    component: ProductDetail,
-    props: true // Tự động truyền id vào làm prop
+  path: '/product/:id',
+  name: 'ProductDetail',
+  component: ProductDetail,
+  props: true
   },
   {
     path: '/cart',
@@ -99,6 +102,10 @@ const clientRouter = [
   {
     path: '/checkout',
     component: Checkout
+  },
+  {
+    path: '/SwiperProductHome',
+    component: SwiperProductHome
   }
 ];
 
@@ -230,35 +237,33 @@ const router = createRouter({
       path: '/admin',
       component: LayoutAdmin,
       children: adminRouter,
-      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     }
   ]
 })
 
 
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token");
+//   const role = localStorage.getItem("role");
 
+//   // Nếu route cần đăng nhập
+//   if (to.meta.requiresAuth) {
+//     if (!token) {
+//       // Chưa đăng nhập
+//       return next({ name: "Login" });
+//     }
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
+//     if (to.meta.role && to.meta.role !== role) {
+//       // Không đủ quyền → về trang chủ
+//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
+//       return next({ name: "Violate" });
+//     }
+//   }
 
-  // Nếu route cần đăng nhập
-  if (to.meta.requiresAuth) {
-    if (!token) {
-      // Chưa đăng nhập
-      return next({ name: "Login" });
-    }
-
-    // Nếu route yêu cầu quyền ADMIN mà user không phải admin
-    if (to.meta.role && to.meta.role !== role) {
-      // Không đủ quyền → về trang chủ
-      console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
-      return next({ name: "Violate" });
-    }
-  }
-
-  next();
-});
+//   next();
+// });
 
 
 export default router

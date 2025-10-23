@@ -159,7 +159,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import api from "@/axios";
+import api from "@/composables/axios";
 
 const BASE_ATTR = "/api/option-attribute";
 const BASE_VAL = "/api/value-attribute";
