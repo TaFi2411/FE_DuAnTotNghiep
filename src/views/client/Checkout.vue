@@ -37,21 +37,26 @@
               ></i>
             </div>
           </div>
-          <div v-else class="text-muted fst-italic">Chưa có địa chỉ nào được lưu.</div>
+          <div v-else class="text-muted fst-italic">
+            Chưa có địa chỉ nào được lưu.
+          </div>
         </div>
       </div>
 
-      <!-- CỘT PHẢI (Tóm tắt đơn hàng) -->
+      <!-- CỘT PHẢI -->
       <div class="col-lg-4">
         <div class="summary-box bg-white rounded-4 shadow-sm p-4">
           <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
 
           <div class="d-flex justify-content-between mb-2">
             <span>Phí vận chuyển</span>
-            <strong>{{ formatShippingFee( shippingFee.toLocaleString() )}} đ</strong>
+            <strong>{{ formatShippingFee(shippingFee) }} đ</strong>
           </div>
 
-          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold">
+          <button
+            class="btn btn-dark w-100 rounded-pill py-2 fw-semibold"
+            @click="handleVnpayPayment"
+          >
             Xác nhận thanh toán
           </button>
         </div>
@@ -166,10 +171,15 @@ const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = 2; // ⚠️ sau này lấy từ login
-const storeDistrictId = 1451; // Quận shop GHN
+const accountId = 2;
+const storeDistrictId = 1451;
 
 const shippingFee = ref(0);
+
+// ✅ Format tiền
+const formatShippingFee = (fee) => {
+  return fee ? fee.toLocaleString("vi-VN") : "0";
+};
 
 // ✅ Gọi API GHN
 const fetchProvinces = async () => {
@@ -197,7 +207,7 @@ const fetchWards = async () => {
   selectedWard.value = "";
 };
 
-// ✅ Gọi API lấy danh sách địa chỉ từ DB
+// ✅ Lấy danh sách địa chỉ từ DB
 const fetchAddresses = async () => {
   try {
     const res = await axios.get(`http://localhost:8080/api/address?account=${accountId}`);
@@ -266,19 +276,14 @@ const fetchShippingFee = async () => {
         fromDistrictId: storeDistrictId,
         toDistrictId,
         toWardCode,
-        weight: 1000, // thay bằng tổng khối lượng giỏ hàng
+        weight: 1000,
       },
     });
     shippingFee.value = res.data?.total || res.data?.data?.total || 0;
-    console.log("Phí ship:", shippingFee.value);
   } catch (err) {
-    console.error("Lỗi khi tính phí ship:", err.response?.data || err.message);
+    console.error("Lỗi khi tính phí ship:", err);
     shippingFee.value = 0;
   }
-};
-const formatShippingFee = (fee) => {
-  if (!shippingFee.value) return 0;
-  return Math.ceil(shippingFee.value / 1000) * 1000; // làm tròn lên đơn vị nghìn
 };
 
 watch(selectedAddress, (newVal) => {
@@ -291,6 +296,27 @@ const closeModal = () => {
   selectedDistrict.value = "";
   selectedWard.value = "";
   specificAddress.value = "";
+};
+
+// ✅ Thanh toán qua VNPAY
+const handleVnpayPayment = async () => {
+  try {
+    const orderData = {
+      amount: 1000,
+      orderInfo: "Thanh toán đơn hàng Apple Store",
+    };
+
+    const res = await axios.post("http://localhost:8080/api/vnpay/create", orderData);
+
+    if (res.data && res.data.paymentUrl) {
+      window.location.href = res.data.paymentUrl;
+    } else {
+      alert("Không thể tạo liên kết thanh toán!");
+    }
+  } catch (error) {
+    console.error("Lỗi khi tạo thanh toán:", error);
+    alert("Có lỗi xảy ra khi kết nối VNPAY!");
+  }
 };
 
 onMounted(() => {
