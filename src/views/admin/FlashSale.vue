@@ -1,10 +1,11 @@
 <template>
   <div class="container mt-4">
-    <!-- Form thêm / sửa -->
-    <div class="card mb-4">
-      <div class="card-header">
+    <!-- 🧾 Form thêm / sửa -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header fw-bold">
         {{ editMode ? `Cập nhật Flash Sale #${editId}` : "Tạo Flash Sale mới" }}
       </div>
+
       <div class="card-body">
         <form @submit.prevent="editMode ? updateFlashSale() : createFlashSale()">
           <div class="row">
@@ -17,7 +18,7 @@
 
             <!-- Giảm giá -->
             <div class="col-md-2 mb-3">
-              <label class="form-label">Giảm giá (%)</label>
+              <label class="form-label">Giảm (%)</label>
               <input v-model.number="form.discount" type="number" class="form-control" />
               <small class="text-danger" v-if="errors.discount">{{ errors.discount }}</small>
             </div>
@@ -43,62 +44,85 @@
             <label class="form-check-label" for="activeCheck">Kích hoạt</label>
           </div>
 
-          <button type="submit" class="btn btn-primary me-2">
-            {{ editMode ? "Cập nhật" : "Tạo mới" }}
-          </button>
-          <button v-if="editMode" @click="cancelEdit" type="button" class="btn btn-secondary">
-            Hủy
-          </button>
+          <div>
+            <button type="submit" class="btn btn-primary me-2">
+              {{ editMode ? "Cập nhật" : "Tạo mới" }}
+            </button>
+            <button
+              v-if="editMode"
+              type="button"
+              @click="cancelEdit"
+              class="btn btn-secondary"
+            >
+              Hủy
+            </button>
+          </div>
         </form>
       </div>
     </div>
 
-    <!-- Bảng danh sách -->
-    <div class="card">
-      <div class="card-header fw-bold">Danh sách Flash Sale</div>
+    <!-- 📋 Danh sách Flash Sale -->
+    <div class="card shadow-sm">
+      <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+        <span>Danh sách Flash Sale</span>
+        <small class="text-muted">Tổng: {{ flashSales.length }}</small>
+      </div>
       <div class="card-body">
-        <table class="table table-bordered table-hover">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Tiêu đề</th>
-              <th>Giảm giá</th>
-              <th>Ngày tạo</th>
-              <th>Ngày bắt đầu</th>
-              <th>Ngày kết thúc</th>
-              <th>Trạng thái</th>
-              <th class="text-center">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="sale in flashSales" :key="sale.id">
-              <td>{{ sale.id }}</td>
-              <td>{{ sale.title }}</td>
-              <td>{{ sale.discount }}%</td>
-              <td>{{ formatDateTime(sale.created_date) }}</td>
-              <td>{{ formatDateTime(sale.started_date) }}</td>
-              <td>{{ formatDateTime(sale.ended_date) }}</td>
-              <td>
-                <span class="badge" :class="sale.active ? 'bg-success' : 'bg-secondary'">
-                  {{ sale.active ? "Đang hoạt động" : "Ngưng" }}
-                </span>
-              </td>
-              <td class="text-center">
-                <button class="btn btn-sm btn-warning me-2" @click="editSale(sale)">Sửa</button>
-                <button class="btn btn-sm btn-danger" @click="deleteSale(sale.id)">Xoá</button>
-              </td>
-            </tr>
-            <tr v-if="flashSales.length === 0">
-              <td colspan="8" class="text-center">Không có Flash Sale nào</td>
-            </tr>
-          </tbody>
-        </table>
+        <Table :columns="columns" :rows="flashSales">
+          <!-- Cột tiêu đề -->
+          <template #title="{ row }">
+            <strong>{{ row.title }}</strong>
+          </template>
 
-        <!-- Phân trang -->
-        <nav class="mt-3">
+          <!-- Cột giảm giá -->
+          <template #discount="{ row }">
+            <span class="text-danger fw-bold">{{ row.discount }}%</span>
+          </template>
+
+          <!-- Cột ngày bắt đầu -->
+          <template #started_date="{ row }">
+            {{ formatDateTime(row.started_date) }}
+          </template>
+
+          <!-- Cột ngày kết thúc -->
+          <template #ended_date="{ row }">
+            {{ formatDateTime(row.ended_date) }}
+          </template>
+
+          <!-- Cột trạng thái -->
+          <template #active="{ row }">
+            <span
+              class="badge"
+              :class="row.active ? 'bg-success' : 'bg-secondary'"
+            >
+              {{ row.active ? "Đang hoạt động" : "Ngưng" }}
+            </span>
+          </template>
+
+          <!-- Cột hành động -->
+          <template #actions="{ row }">
+            <button
+              class="btn btn-outline-warning btn-sm me-2"
+              @click="editSale(row)"
+              title="Sửa"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button
+              class="btn btn-outline-danger btn-sm"
+              @click="deleteSale(row.id)"
+              title="Xoá"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </template>
+        </Table>
+
+        <!-- 📄 Phân trang -->
+        <nav class="mt-3" v-if="totalPages > 1">
           <ul class="pagination justify-content-center">
             <li class="page-item" :class="{ disabled: currentPage === 0 }">
-              <button class="page-link" @click="changePage(currentPage - 1)">« Trước</button>
+              <button class="page-link" @click="changePage(currentPage - 1)">«</button>
             </li>
             <li
               v-for="page in totalPages"
@@ -106,10 +130,12 @@
               class="page-item"
               :class="{ active: currentPage === page - 1 }"
             >
-              <button class="page-link" @click="changePage(page - 1)">{{ page }}</button>
+              <button class="page-link" @click="changePage(page - 1)">
+                {{ page }}
+              </button>
             </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages - 1 }">
-              <button class="page-link" @click="changePage(currentPage + 1)">Sau »</button>
+            <li class="page-item" :class="{ disabled: currentPage >= totalPages - 1 }">
+              <button class="page-link" @click="changePage(currentPage + 1)">»</button>
             </li>
           </ul>
         </nav>
@@ -121,13 +147,13 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import Table from "@/components/Table.vue";
 
-// State
+// --- State ---
 const flashSales = ref([]);
 const currentPage = ref(0);
 const totalPages = ref(1);
 const pageSize = ref(5);
-
 const editMode = ref(false);
 const editId = ref(null);
 
@@ -136,27 +162,33 @@ const form = reactive({
   discount: 0,
   started_date: "",
   ended_date: "",
-  active: false
+  active: false,
 });
-
 const errors = reactive({});
+
 const route = useRoute();
 const router = useRouter();
 
+// 🧱 Cấu hình cột bảng
+const columns = [
+  { label: "Tiêu đề", field: "title", slot: "title" },
+  { label: "Giảm (%)", field: "discount", slot: "discount" },
+  { label: "Ngày bắt đầu", field: "started_date", slot: "started_date" },
+  { label: "Ngày kết thúc", field: "ended_date", slot: "ended_date" },
+  { label: "Trạng thái", field: "active", slot: "active" },
+];
 
-// 🕒 Format datetime cho hiển thị bảng
+// 🕒 Format hiển thị thời gian
 function formatDateTime(date) {
   if (!date) return "";
-  const d = new Date(date);
-  return d.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+  return new Date(date).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 }
 
-// 🧩 Format datetime khi gửi BE (chuẩn "yyyy-MM-dd HH:mm:ss")
+// 🧩 Format datetime gửi lên server
 function formatDateToServer(dateString) {
   if (!dateString) return null;
-  const localDate = new Date(dateString);
-  // Cộng offset để thành giờ VN
-  const vnDate = new Date(localDate.getTime() + 7 * 60 * 60 * 1000);
+  const d = new Date(dateString);
+  const vnDate = new Date(d.getTime() + 7 * 60 * 60 * 1000);
   return vnDate.toISOString().slice(0, 19).replace("T", " ");
 }
 
@@ -169,7 +201,7 @@ async function fetchSales(page = 0) {
     totalPages.value = data.totalPages || 1;
     currentPage.value = data.number || 0;
   } catch (err) {
-    console.error("Lỗi tải danh sách:", err);
+    console.error("❌ Lỗi tải danh sách:", err);
   }
 }
 
@@ -187,22 +219,19 @@ async function createFlashSale() {
     const body = {
       ...form,
       started_date: formatDateToServer(form.started_date),
-      ended_date: formatDateToServer(form.ended_date)
+      ended_date: formatDateToServer(form.ended_date),
     };
 
     const res = await fetch("http://localhost:8080/api/flash-sale", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    if (!res.ok) {
-      const errData = await res.json();
-      Object.assign(errors, errData);
-      throw new Error("Tạo mới thất bại");
-    }
-    alert("Tạo Flash Sale thành công!");
-    fetchSales(currentPage.value);
+
+    if (!res.ok) throw new Error("Tạo mới thất bại");
+    alert("✅ Tạo Flash Sale thành công!");
     resetForm();
+    fetchSales(currentPage.value);
   } catch (err) {
     console.error(err.message);
   }
@@ -216,34 +245,30 @@ async function updateFlashSale() {
     const body = {
       ...form,
       started_date: formatDateToServer(form.started_date),
-      ended_date: formatDateToServer(form.ended_date)
+      ended_date: formatDateToServer(form.ended_date),
     };
 
     const res = await fetch(`http://localhost:8080/api/flash-sale/${editId.value}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    if (!res.ok) {
-      const errData = await res.json();
-      Object.assign(errors, errData);
-      throw new Error("Cập nhật thất bại");
-    }
-    alert("Cập nhật Flash Sale thành công!");
-    fetchSales(currentPage.value);
+
+    if (!res.ok) throw new Error("Cập nhật thất bại");
+    alert("✅ Cập nhật Flash Sale thành công!");
     resetForm();
+    fetchSales(currentPage.value);
   } catch (err) {
     console.error(err.message);
   }
 }
 
 async function deleteSale(id) {
-  if (!confirm("Bạn có chắc chắn muốn xoá flash sale này?")) return;
-
+  if (!confirm("Bạn có chắc chắn muốn xoá Flash Sale này?")) return;
   try {
     const res = await fetch(`http://localhost:8080/api/flash-sale/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Xoá thất bại");
-    alert("Xoá thành công!");
+    alert("🗑️ Xoá thành công!");
     fetchSales(currentPage.value);
   } catch (err) {
     console.error(err.message);
@@ -263,30 +288,28 @@ function resetForm() {
 }
 
 function clearErrors() {
-  for (let key in errors) errors[key] = "";
+  for (let k in errors) errors[k] = "";
 }
 
 function validateForm() {
   let valid = true;
   if (!form.title) { errors.title = "Tiêu đề không được để trống"; valid = false; }
-  if (form.discount < 0 || form.discount > 100) { errors.discount = "Giảm giá phải từ 0-100"; valid = false; }
+  if (form.discount < 0 || form.discount > 100) { errors.discount = "Giảm giá phải từ 0–100"; valid = false; }
   if (!form.started_date) { errors.started_date = "Ngày bắt đầu không được để trống"; valid = false; }
   if (!form.ended_date) { errors.ended_date = "Ngày kết thúc không được để trống"; valid = false; }
   return valid;
 }
 
-// --- Khi nhấn sửa, push URL ---
+// --- Router logic ---
 function editSale(sale) {
-  router.push({ name: 'FlashSale', params: { id: sale.id } });
+  router.push({ name: "FlashSale", params: { id: sale.id } });
 }
 
-// --- Hủy sửa ---
 function cancelEdit() {
-  router.push({ name: 'FlashSale' });
+  router.push({ name: "FlashSale" });
   resetForm();
 }
 
-// --- Watch URL param ---
 watch(() => route.params.id, async (id) => {
   if (id) {
     editMode.value = true;
@@ -296,9 +319,8 @@ watch(() => route.params.id, async (id) => {
       const sale = await res.json();
       form.title = sale.title;
       form.discount = sale.discount;
-      // convert "yyyy-MM-dd HH:mm:ss" => "yyyy-MM-ddTHH:mm"
-      form.started_date = sale.started_date ? sale.started_date.replace(" ", "T").slice(0, 16) : "";
-      form.ended_date = sale.ended_date ? sale.ended_date.replace(" ", "T").slice(0, 16) : "";
+      form.started_date = sale.started_date?.replace(" ", "T").slice(0, 16) || "";
+      form.ended_date = sale.ended_date?.replace(" ", "T").slice(0, 16) || "";
       form.active = sale.active;
     } catch (err) {
       console.error(err);
@@ -308,16 +330,10 @@ watch(() => route.params.id, async (id) => {
   }
 });
 
-// --- Mounted ---
-onMounted(() => {
-  fetchSales();
-});
+onMounted(fetchSales);
 </script>
 
-
 <style scoped>
-.card { box-shadow: 0 0 8px rgba(0,0,0,0.05); }
 .text-danger { font-size: 0.875rem; }
-.page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
 .page-link { cursor: pointer; }
 </style>

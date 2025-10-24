@@ -5,7 +5,7 @@
     <div v-if="loading" class="text-center py-5">Đang tải dữ liệu...</div>
 
     <div v-else>
-      <BaseTable :columns="columns" :rows="products">
+      <Table :columns="columns" :rows="products">
 
         <!-- Ảnh sản phẩm -->
         <template #image="{ row }">
@@ -37,7 +37,7 @@
           </button>
         </template>
 
-      </BaseTable>
+      </Table>
 
       <!-- Phân trang -->
       <nav class="mt-3">
@@ -65,7 +65,7 @@
 import { ref, onMounted } from "vue";
 import Swal from "sweetalert2";
 import axios from "@/composables/axios.js";
-import BaseTable from "@/components/Table.vue";
+import Table from "@/components/Table.vue";
 
 const products = ref([]);
 const loading = ref(true);

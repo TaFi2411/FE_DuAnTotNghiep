@@ -1,169 +1,176 @@
 <template>
-  <div class="container">
-    <h2>Quản lý Thuộc Tính Và Giá Trị</h2>
+  <div class="container mt-4">
+    <h3>Quản lý Thuộc Tính & Giá Trị</h3>
 
     <!-- Tabs -->
-    <div class="tabs">
-      <button
-        :class="{ active: activeTab === 'attribute' }"
-        @click="activeTab = 'attribute'"
-      >
-        Thuộc Tính
-      </button>
-      <button
-        :class="{ active: activeTab === 'value' }"
-        @click="activeTab = 'value'"
-      >
-        Giá Trị Thuộc Tính
-      </button>
-    </div>
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'attribute' }"
+          @click="activeTab = 'attribute'"
+        >
+          Thuộc tính
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'value' }"
+          @click="activeTab = 'value'"
+        >
+          Giá trị thuộc tính
+        </button>
+      </li>
+    </ul>
 
-    <!-- 🔹 Thuộc Tính -->
+    <!-- 🔹 Thuộc tính -->
     <div v-if="activeTab === 'attribute'">
-      <form @submit.prevent="handleAttributeSubmit" class="form-box">
-        <input
-          v-model="attributeForm.name"
-          type="text"
-          placeholder="Nhập tên thuộc tính (VD: Màu sắc, RAM...)"
-          
-        />
-        <button type="submit">
-          {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
-        </button>
-        <button
-          v-if="isEditAttribute"
-          type="button"
-          @click="cancelEditAttribute"
-          class="cancel"
-        >
-          Hủy
-        </button>
-      </form>
+     <form @submit.prevent="handleAttributeSubmit" class="d-flex flex-wrap gap-2 mb-3">
+  <input
+    v-model="attributeForm.name"
+    type="text"
+    class="form-control flex-grow-1"
+    placeholder="Nhập tên thuộc tính (VD: Màu sắc, RAM...)"
+  />
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" type="submit">
+      {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
+    </button>
+    <button
+      v-if="isEditAttribute"
+      type="button"
+      @click="cancelEditAttribute"
+      class="btn btn-secondary"
+    >
+      Hủy
+    </button>
+  </div>
+</form>
 
-      <p v-if="errorAttribute" class="error">{{ errorAttribute }}</p>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên thuộc tính</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in paginatedAttributes" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>
-              <button @click="editAttribute(item)" class="edit">Sửa</button>
-              <button @click="deleteAttribute(item.id)" class="delete">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination" v-if="totalPagesAttr > 1">
-        <button :disabled="currentPageAttr === 1" @click="prevPageAttr">« Trước</button>
-        <button
-          v-for="page in totalPagesAttr"
-          :key="page"
-          :class="{ active: currentPageAttr === page }"
-          @click="goToPageAttr(page)"
-        >
-          {{ page }}
-        </button>
-        <button :disabled="currentPageAttr === totalPagesAttr" @click="nextPageAttr">Sau »</button>
+      <div v-if="errorAttribute" class="alert alert-danger py-2">
+        {{ errorAttribute }}
       </div>
+
+      <Table :columns="attrColumns" :rows="paginatedAttributes">
+        <template #actions="{ row }">
+          <button class="btn btn-warning btn-sm me-2" @click="editAttribute(row)">
+            Sửa
+          </button>
+          <button class="btn btn-danger btn-sm" @click="deleteAttribute(row.id)">
+            Xóa
+          </button>
+        </template>
+      </Table>
+
+      <!-- 📄 Phân trang -->
+      <nav class="mt-3" v-if="totalPagesAttr > 1">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: currentPageAttr === 1 }">
+            <button class="page-link" @click="prevPageAttr">«</button>
+          </li>
+          <li
+            class="page-item"
+            v-for="page in totalPagesAttr"
+            :key="page"
+            :class="{ active: currentPageAttr === page }"
+          >
+            <button class="page-link" @click="goToPageAttr(page)">{{ page }}</button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPageAttr === totalPagesAttr }">
+            <button class="page-link" @click="nextPageAttr">»</button>
+          </li>
+        </ul>
+      </nav>
     </div>
 
-    <!-- 🔹 Giá Trị Thuộc Tính -->
-    <div v-if="activeTab === 'value'">
-      <form @submit.prevent="handleValueSubmit" class="form-box">
-        <select v-model="valueForm.optionAttributeId" >
+    <!-- 🔹 Giá trị -->
+    <div v-else>
+      <form @submit.prevent="handleValueSubmit" class="d-flex gap-2 mb-3 flex-wrap">
+        <select v-model="valueForm.optionAttributeId" class="form-select w-auto">
           <option value="">-- Chọn thuộc tính --</option>
-          <option
-            v-for="opt in listAttributes"
-            :key="opt.id"
-            :value="opt.id"
-          >
+          <option v-for="opt in listAttributes" :key="opt.id" :value="opt.id">
             {{ opt.name }}
           </option>
         </select>
-
         <input
           v-model="valueForm.name"
           type="text"
+          class="form-control"
           placeholder="Nhập giá trị (VD: Đỏ, 8GB, 256GB)"
-          
         />
-
-        <button type="submit">
+        <button class="btn btn-primary" type="submit">
           {{ isEditValue ? "Cập nhật" : "Thêm mới" }}
         </button>
-
-        <button v-if="isEditValue" type="button" @click="cancelEditValue" class="cancel">
+        <button
+          v-if="isEditValue"
+          type="button"
+          @click="cancelEditValue"
+          class="btn btn-secondary"
+        >
           Hủy
         </button>
       </form>
 
-      <p v-if="errorValue" class="error">{{ errorValue }}</p>
+      <div v-if="errorValue" class="alert alert-danger py-2">
+        {{ errorValue }}
+      </div>
 
-      <div class="search-box">
-        <select v-model="searchOptionId">
+      <!-- 🔍 Tìm kiếm -->
+      <div class="d-flex gap-2 mb-3">
+        <select v-model="searchOptionId" class="form-select w-auto">
           <option value="">-- Tất cả thuộc tính --</option>
           <option v-for="opt in listAttributes" :key="opt.id" :value="opt.id">
             {{ opt.name }}
           </option>
         </select>
-        <button @click="handleSearch">Tìm kiếm</button>
-        <button @click="resetSearch" class="cancel">Hiển thị tất cả</button>
+        <button class="btn btn-outline-primary" @click="handleSearch">Tìm kiếm</button>
+        <button class="btn btn-outline-secondary" @click="resetSearch">Hiển thị tất cả</button>
       </div>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Thuộc tính</th>
-            <th>Giá trị</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in paginatedValues" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ getAttributeName(item.optionAttributeId) }}</td>
-            <td>{{ item.name }}</td>
-            <td>
-              <button @click="editValue(item)" class="edit">Sửa</button>
-              <button @click="deleteValue(item.id)" class="delete">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <Table :columns="valColumns" :rows="paginatedValues">
+        <template #actions="{ row }">
+          <button class="btn btn-warning btn-sm me-2" @click="editValue(row)">
+            Sửa
+          </button>
+          <button class="btn btn-danger btn-sm" @click="deleteValue(row.id)">
+            Xóa
+          </button>
+        </template>
+      </Table>
 
-      <div class="pagination" v-if="totalPagesVal > 1">
-        <button :disabled="currentPageVal === 1" @click="prevPageVal">« Trước</button>
-        <button
-          v-for="page in totalPagesVal"
-          :key="page"
-          @click="goToPageVal(page)"
-          :class="{ active: currentPageVal === page }"
-        >
-          {{ page }}
-        </button>
-        <button :disabled="currentPageVal === totalPagesVal" @click="nextPageVal">Sau »</button>
-      </div>
+      <!-- 📄 Phân trang -->
+      <nav class="mt-3" v-if="totalPagesVal > 1">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" :class="{ disabled: currentPageVal === 1 }">
+            <button class="page-link" @click="prevPageVal">«</button>
+          </li>
+          <li
+            class="page-item"
+            v-for="page in totalPagesVal"
+            :key="page"
+            :class="{ active: currentPageVal === page }"
+          >
+            <button class="page-link" @click="goToPageVal(page)">{{ page }}</button>
+          </li>
+          <li class="page-item" :class="{ disabled: currentPageVal === totalPagesVal }">
+            <button class="page-link" @click="nextPageVal">»</button>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import Swal from "sweetalert2";
 import api from "@/composables/axios";
+import Table from "@/components/Table.vue";
 
 const BASE_ATTR = "/api/option-attribute";
 const BASE_VAL = "/api/value-attribute";
-
 const activeTab = ref("attribute");
 
 /* ------------------ THUỘC TÍNH ------------------ */
@@ -172,9 +179,13 @@ const valueList = ref([]);
 const attributeForm = ref({ id: null, name: "" });
 const isEditAttribute = ref(false);
 const errorAttribute = ref("");
-
 const currentPageAttr = ref(1);
 const pageSizeAttr = 5;
+
+const attrColumns = [
+  { label: "ID", field: "id" },
+  { label: "Tên thuộc tính", field: "name" }
+];
 
 const totalPagesAttr = computed(() =>
   Math.ceil(attributeList.value.length / pageSizeAttr)
@@ -183,12 +194,10 @@ const paginatedAttributes = computed(() => {
   const start = (currentPageAttr.value - 1) * pageSizeAttr;
   return attributeList.value.slice(start, start + pageSizeAttr);
 });
-
 const goToPageAttr = (p) => (currentPageAttr.value = p);
 const nextPageAttr = () => currentPageAttr.value++;
 const prevPageAttr = () => currentPageAttr.value--;
 
-// Fetch attributes
 const fetchAttributes = async () => {
   const res = await api.get(BASE_ATTR);
   attributeList.value = res.data.data || res.data;
@@ -200,27 +209,20 @@ const fetchValues = async () => {
 
 const handleAttributeSubmit = async () => {
   const name = attributeForm.value.name.trim();
-  if (!name) {
-    errorAttribute.value = "Tên thuộc tính không được để trống.";
-    return;
-  }
+  if (!name) return (errorAttribute.value = "Tên thuộc tính không được để trống.");
 
   const dup = attributeList.value.some(
     (a) =>
       a.name.trim().toLowerCase() === name.toLowerCase() &&
       a.id !== attributeForm.value.id
   );
-  if (dup) {
-    errorAttribute.value = "Thuộc tính này đã tồn tại.";
-    return;
-  }
+  if (dup) return (errorAttribute.value = "Thuộc tính này đã tồn tại.");
 
   const payload = { name };
-  if (isEditAttribute.value) {
+  if (isEditAttribute.value)
     await api.put(`${BASE_ATTR}/${attributeForm.value.id}`, payload);
-  } else {
-    await api.post(BASE_ATTR, payload);
-  }
+  else await api.post(BASE_ATTR, payload);
+
   await fetchAttributes();
   cancelEditAttribute();
 };
@@ -231,14 +233,9 @@ const editAttribute = (item) => {
 };
 
 const deleteAttribute = async (id) => {
-  const used = valueList.value.some(
-    (v) => String(v.optionAttributeId) === String(id)
-  );
-  if (used) {
-    errorAttribute.value =
-      "Không thể xóa thuộc tính vì còn giá trị liên quan.";
-    return;
-  }
+  const used = valueList.value.some((v) => String(v.optionAttributeId) === String(id));
+  if (used)
+    return Swal.fire("Không thể xóa", "Thuộc tính đang được sử dụng!", "warning");
   await api.delete(`${BASE_ATTR}/${id}`);
   await fetchAttributes();
 };
@@ -256,9 +253,14 @@ const valueForm = ref({ id: null, optionAttributeId: "", name: "" });
 const isEditValue = ref(false);
 const errorValue = ref("");
 const searchOptionId = ref("");
-
 const currentPageVal = ref(1);
 const pageSizeVal = 5;
+
+const valColumns = [
+  { label: "ID", field: "id" },
+  { label: "Thuộc tính", field: "optionAttributeId", slot: "attrName" },
+  { label: "Giá trị", field: "name" }
+];
 
 const totalPagesVal = computed(() =>
   Math.ceil(listValues.value.length / pageSizeVal)
@@ -267,12 +269,10 @@ const paginatedValues = computed(() => {
   const start = (currentPageVal.value - 1) * pageSizeVal;
   return listValues.value.slice(start, start + pageSizeVal);
 });
-
 const goToPageVal = (p) => (currentPageVal.value = p);
 const nextPageVal = () => currentPageVal.value++;
 const prevPageVal = () => currentPageVal.value--;
 
-// Fetch values
 const fetchValueList = async (optionId = "") => {
   let url = BASE_VAL;
   if (optionId) url += `?optionAttributeId=${optionId}`;
@@ -280,11 +280,7 @@ const fetchValueList = async (optionId = "") => {
   listValues.value = res.data.data?.content || res.data.data || res.data;
   currentPageVal.value = 1;
 };
-
-// Search
-const handleSearch = async () => {
-  await fetchValueList(searchOptionId.value);
-};
+const handleSearch = async () => await fetchValueList(searchOptionId.value);
 const resetSearch = async () => {
   searchOptionId.value = "";
   await fetchValueList();
@@ -292,14 +288,9 @@ const resetSearch = async () => {
 
 const handleValueSubmit = async () => {
   const name = valueForm.value.name.trim();
-  if (!valueForm.value.optionAttributeId) {
-    errorValue.value = "Vui lòng chọn thuộc tính .";
-    return;
-  }
-  if (!name) {
-    errorValue.value = "Giá trị không được để trống.";
-    return;
-  }
+  if (!valueForm.value.optionAttributeId)
+    return (errorValue.value = "Vui lòng chọn thuộc tính.");
+  if (!name) return (errorValue.value = "Giá trị không được để trống.");
 
   const dup = listValues.value.some(
     (v) =>
@@ -307,21 +298,13 @@ const handleValueSubmit = async () => {
       v.name.trim().toLowerCase() === name.toLowerCase() &&
       v.id !== valueForm.value.id
   );
-  if (dup) {
-    errorValue.value = "Giá trị này đã tồn tại cho thuộc tính đã chọn.";
-    return;
-  }
+  if (dup)
+    return (errorValue.value = "Giá trị này đã tồn tại cho thuộc tính đã chọn.");
 
-  const payload = {
-    optionAttributeId: valueForm.value.optionAttributeId,
-    name,
-  };
-
-  if (isEditValue.value) {
+  const payload = { optionAttributeId: valueForm.value.optionAttributeId, name };
+  if (isEditValue.value)
     await api.put(`${BASE_VAL}/${valueForm.value.id}`, payload);
-  } else {
-    await api.post(BASE_VAL, payload);
-  }
+  else await api.post(BASE_VAL, payload);
 
   await fetchValueList(searchOptionId.value);
   cancelEditValue();
@@ -331,14 +314,22 @@ const editValue = (item) => {
   valueForm.value = {
     id: item.id,
     optionAttributeId: item.optionAttributeId,
-    name: item.name,
+    name: item.name
   };
   isEditValue.value = true;
   errorValue.value = "";
 };
 
 const deleteValue = async (id) => {
-  if (!confirm("Bạn có chắc muốn xóa giá trị này không?")) return;
+  const confirm = await Swal.fire({
+    title: "Xóa giá trị?",
+    text: "Bạn có chắc muốn xóa giá trị này không?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy"
+  });
+  if (!confirm.isConfirmed) return;
   await api.delete(`${BASE_VAL}/${id}`);
   await fetchValueList(searchOptionId.value);
 };
@@ -349,184 +340,7 @@ const cancelEditValue = () => {
   errorValue.value = "";
 };
 
-const getAttributeName = (id) => {
-  const a = listAttributes.value.find((x) => String(x.id) === String(id));
-  return a ? a.name : "Không xác định";
-};
-
-// Mount
 onMounted(async () => {
   await Promise.all([fetchAttributes(), fetchValues(), fetchValueList()]);
 });
 </script>
-
-<style scoped>
-.container {
-  width: 900px;
-  margin: 40px auto;
-  padding: 25px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-.tabs button {
-  padding: 10px 20px;
-  border: none;
-  background: #eee;
-  margin: 0 5px;
-  cursor: pointer;
-  border-radius: 6px;
-}
-.tabs button.active {
-  background: #007bff;
-  color: white;
-}
-.form-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.form-box input,
-.form-box select {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-.form-box button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-.cancel {
-  background: #999;
-}
-.error {
-  color: #f33;
-  text-align: center;
-  margin-bottom: 10px;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th,
-.table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-.edit {
-  background: #4caf50;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  margin-right: 5px;
-  cursor: pointer;
-}
-.delete {
-  background: #f44336;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.search-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 15px;
-}
-.pagination button {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  background: #f8f8f8;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.pagination button.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.search-box {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  margin: 20px 0;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Dropdown */
-.search-box select {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: white;
-  font-size: 14px;
-  transition: 0.2s;
-}
-.search-box select:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
-  outline: none;
-}
-
-/* Buttons */
-.search-box button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.search-box button:first-of-type {
-  background-color: #007bff;
-  color: white;
-}
-
-.search-box button:first-of-type:hover {
-  background-color: #0056b3;
-}
-
-.search-box .cancel {
-  background-color: #6c757d;
-  color: white;
-}
-
-.search-box .cancel:hover {
-  background-color: #5a6268;
-}
-
-</style>
