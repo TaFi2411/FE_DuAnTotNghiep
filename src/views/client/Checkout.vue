@@ -127,9 +127,21 @@ const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = 2;
+const accountId = ref(null);
 const storeDistrictId = 1451;
 const shippingFee = ref(0);
+
+const fetchAccountId = () => {
+   const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      accountId.value = payload.id; // Lấy id từ token backend đã gắn
+    } catch (err) {
+      console.error("Lỗi khi giải mã token:", err);
+    }
+  }
+};
 
 // Giỏ hàng
 const cartItems = ref([]);
@@ -179,13 +191,56 @@ const fetchWards = async () => {
 // Địa chỉ
 const fetchAddresses = async () => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/address?account=${accountId}`);
-    addresses.value = res.data.data || [];
+    const res = await axios.get(`http://localhost:8080/api/address/account/${accountId.value}`);
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
+    addresses.value = res.data || [];
+    console.log(addresses.value);
   } catch (err) {
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
+    console.error("Lỗi khi load danh sách địa chỉ:", err);
     console.error(err);
   }
 };
 
+// ✅ Lưu địa chỉ mới
+const saveAddress = async () => {
+  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
+    alert("Vui lòng nhập đầy đủ thông tin địa chỉ!");
+    return;
+  }
+
+  const provinceName =
+    provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
+  const districtName =
+    districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
+  const wardName =
+    wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
+
+  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
+
+  try {
+    const payload = {
+      province_id: selectedProvince.value,
+      district_id: selectedDistrict.value,
+      ward_code: selectedWard.value,
+      address: specificAddress.value,
+      fulladdress: fullAddress,
+      defaultAddress: false,
+      active: true,
+      accountId: accountId.value,
+    };
+
+    await axios.post("http://localhost:8080/api/address", payload);
+    alert("Lưu địa chỉ thành công!");
+    closeModal();
+    fetchAddresses();
+  } catch (err) {
+    console.error("Lỗi lưu địa chỉ:", err);
+    alert("Không thể lưu địa chỉ. Vui lòng thử lại!");
+  }
+};
+
+const selectAddress = (a) => {
 const selectAddress = a => {
   selectedAddress.value = a;
 };
@@ -263,6 +318,14 @@ const handleVnpayPayment = async () => {
     alert("Lỗi kết nối VNPAY!");
   }
 };
+
+onMounted(() => {
+  fetchAccountId();
+  fetchProvinces();
+  
+  fetchAddresses();
+ 
+});
 </script>
 
 <style scoped>
