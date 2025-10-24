@@ -24,323 +24,290 @@
       </li>
     </ul>
 
-    <!-- 🔹 Thuộc tính -->
+    <!-- ===================== BẢNG THUỘC TÍNH ===================== -->
     <div v-if="activeTab === 'attribute'">
-     <form @submit.prevent="handleAttributeSubmit" class="d-flex flex-wrap gap-2 mb-3">
-  <input
-    v-model="attributeForm.name"
-    type="text"
-    class="form-control flex-grow-1"
-    placeholder="Nhập tên thuộc tính (VD: Màu sắc, RAM...)"
-  />
-  <div class="d-flex gap-2">
-    <button class="btn btn-primary" type="submit">
-      {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
-    </button>
-    <button
-      v-if="isEditAttribute"
-      type="button"
-      @click="cancelEditAttribute"
-      class="btn btn-secondary"
-    >
-      Hủy
-    </button>
-  </div>
-</form>
-
-
-      <div v-if="errorAttribute" class="alert alert-danger py-2">
-        {{ errorAttribute }}
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <input
+          v-model="attributeForm.name"
+          type="text"
+          class="form-control w-auto flex-grow-1"
+          placeholder="Nhập tên thuộc tính..."
+        />
+        <button class="btn btn-primary" @click="saveAttribute">
+          {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
+        </button>
+        <button
+          v-if="isEditAttribute"
+          class="btn btn-secondary"
+          @click="cancelEditAttribute"
+        >
+          Hủy
+        </button>
       </div>
 
-      <Table :columns="attrColumns" :rows="paginatedAttributes">
-        <template #actions="{ row }">
-          <button class="btn btn-warning btn-sm me-2" @click="editAttribute(row)">
-            Sửa
-          </button>
-          <button class="btn btn-danger btn-sm" @click="deleteAttribute(row.id)">
-            Xóa
-          </button>
+      <vue-good-table
+        :columns="attrColumns"
+        :rows="attributes"
+        :pagination-options="paginationOptions"
+        :search-options="{ enabled: true, placeholder: 'Tìm kiếm thuộc tính...' }"
+        theme="polar-bear"
+      >
+        <template #table-row="props">
+          <span v-if="props.column.field === 'actions'">
+            <button
+              class="btn btn-warning btn-sm me-2"
+              @click="editAttribute(props.row)"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              @click="deleteAttribute(props.row.id)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
         </template>
-      </Table>
-
-      <!-- 📄 Phân trang -->
-      <nav class="mt-3" v-if="totalPagesAttr > 1">
-        <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: currentPageAttr === 1 }">
-            <button class="page-link" @click="prevPageAttr">«</button>
-          </li>
-          <li
-            class="page-item"
-            v-for="page in totalPagesAttr"
-            :key="page"
-            :class="{ active: currentPageAttr === page }"
-          >
-            <button class="page-link" @click="goToPageAttr(page)">{{ page }}</button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPageAttr === totalPagesAttr }">
-            <button class="page-link" @click="nextPageAttr">»</button>
-          </li>
-        </ul>
-      </nav>
+      </vue-good-table>
     </div>
 
-    <!-- 🔹 Giá trị -->
+    <!-- ===================== BẢNG GIÁ TRỊ ===================== -->
     <div v-else>
-      <form @submit.prevent="handleValueSubmit" class="d-flex gap-2 mb-3 flex-wrap">
+      <div class="d-flex gap-2 mb-3 flex-wrap">
         <select v-model="valueForm.optionAttributeId" class="form-select w-auto">
           <option value="">-- Chọn thuộc tính --</option>
-          <option v-for="opt in listAttributes" :key="opt.id" :value="opt.id">
-            {{ opt.name }}
+          <option v-for="a in allAttributes" :key="a.id" :value="a.id">
+            {{ a.name }}
           </option>
         </select>
+
         <input
           v-model="valueForm.name"
           type="text"
-          class="form-control"
-          placeholder="Nhập giá trị (VD: Đỏ, 8GB, 256GB)"
+          class="form-control w-auto flex-grow-1"
+          placeholder="Nhập giá trị..."
         />
-        <button class="btn btn-primary" type="submit">
+
+        <button class="btn btn-primary" @click="saveValue">
           {{ isEditValue ? "Cập nhật" : "Thêm mới" }}
         </button>
         <button
           v-if="isEditValue"
-          type="button"
-          @click="cancelEditValue"
           class="btn btn-secondary"
+          @click="cancelEditValue"
         >
           Hủy
         </button>
-      </form>
-
-      <div v-if="errorValue" class="alert alert-danger py-2">
-        {{ errorValue }}
       </div>
 
-      <!-- 🔍 Tìm kiếm -->
-      <div class="d-flex gap-2 mb-3">
-        <select v-model="searchOptionId" class="form-select w-auto">
-          <option value="">-- Tất cả thuộc tính --</option>
-          <option v-for="opt in listAttributes" :key="opt.id" :value="opt.id">
-            {{ opt.name }}
-          </option>
-        </select>
-        <button class="btn btn-outline-primary" @click="handleSearch">Tìm kiếm</button>
-        <button class="btn btn-outline-secondary" @click="resetSearch">Hiển thị tất cả</button>
-      </div>
-
-      <Table :columns="valColumns" :rows="paginatedValues">
-        <template #actions="{ row }">
-          <button class="btn btn-warning btn-sm me-2" @click="editValue(row)">
-            Sửa
-          </button>
-          <button class="btn btn-danger btn-sm" @click="deleteValue(row.id)">
-            Xóa
-          </button>
+      <vue-good-table
+        :columns="valColumns"
+        :rows="values"
+        :pagination-options="paginationOptions"
+        :search-options="{ enabled: true, placeholder: 'Tìm kiếm giá trị...' }"
+        theme="polar-bear"
+      >
+        <template #table-row="props">
+          <span v-if="props.column.field === 'attrName'">
+            {{ findAttrName(props.row.optionAttributeId) }}
+          </span>
+          <span v-else-if="props.column.field === 'actions'">
+            <button
+              class="btn btn-warning btn-sm me-2"
+              @click="editValue(props.row)"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              @click="deleteValue(props.row.id)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
         </template>
-      </Table>
-
-      <!-- 📄 Phân trang -->
-      <nav class="mt-3" v-if="totalPagesVal > 1">
-        <ul class="pagination justify-content-center">
-          <li class="page-item" :class="{ disabled: currentPageVal === 1 }">
-            <button class="page-link" @click="prevPageVal">«</button>
-          </li>
-          <li
-            class="page-item"
-            v-for="page in totalPagesVal"
-            :key="page"
-            :class="{ active: currentPageVal === page }"
-          >
-            <button class="page-link" @click="goToPageVal(page)">{{ page }}</button>
-          </li>
-          <li class="page-item" :class="{ disabled: currentPageVal === totalPagesVal }">
-            <button class="page-link" @click="nextPageVal">»</button>
-          </li>
-        </ul>
-      </nav>
+      </vue-good-table>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import Swal from "sweetalert2";
-import api from "@/composables/axios";
-import Table from "@/components/Table.vue";
+import axios from "@/composables/axios.js";
 
-const BASE_ATTR = "/api/option-attribute";
-const BASE_VAL = "/api/value-attribute";
 const activeTab = ref("attribute");
 
-/* ------------------ THUỘC TÍNH ------------------ */
-const attributeList = ref([]);
-const valueList = ref([]);
+/* =====================================================
+   =============== QUẢN LÝ THUỘC TÍNH ==================
+===================================================== */
+const attributes = ref([]);
+const allAttributes = ref([]);
 const attributeForm = ref({ id: null, name: "" });
 const isEditAttribute = ref(false);
-const errorAttribute = ref("");
-const currentPageAttr = ref(1);
-const pageSizeAttr = 5;
 
 const attrColumns = [
   { label: "ID", field: "id" },
-  { label: "Tên thuộc tính", field: "name" }
+  { label: "Tên thuộc tính", field: "name" },
+  { label: "Hành động", field: "actions" },
 ];
 
-const totalPagesAttr = computed(() =>
-  Math.ceil(attributeList.value.length / pageSizeAttr)
-);
-const paginatedAttributes = computed(() => {
-  const start = (currentPageAttr.value - 1) * pageSizeAttr;
-  return attributeList.value.slice(start, start + pageSizeAttr);
-});
-const goToPageAttr = (p) => (currentPageAttr.value = p);
-const nextPageAttr = () => currentPageAttr.value++;
-const prevPageAttr = () => currentPageAttr.value--;
+// ✅ Phân trang frontend chung cho cả 2 bảng
+const paginationOptions = {
+  enabled: true,
+  perPage: 10,
+  perPageDropdown: [5, 10, 20, 50],
+  dropdownAllowAll: true,
+  nextLabel: "Trang sau",
+  prevLabel: "Trang trước",
+};
 
 const fetchAttributes = async () => {
-  const res = await api.get(BASE_ATTR);
-  attributeList.value = res.data.data || res.data;
-};
-const fetchValues = async () => {
-  const res = await api.get(BASE_VAL);
-  valueList.value = res.data.data?.content || res.data.data || res.data;
+  const res = await axios.get("/api/option-attribute", {
+    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 bản ghi
+  });
+  attributes.value = res.data.data || res.data.content || [];
+  allAttributes.value = attributes.value;
 };
 
-const handleAttributeSubmit = async () => {
+const saveAttribute = async () => {
   const name = attributeForm.value.name.trim();
-  if (!name) return (errorAttribute.value = "Tên thuộc tính không được để trống.");
+  if (!name)
+    return Swal.fire("Lỗi!", "Tên thuộc tính không được để trống", "error");
 
-  const dup = attributeList.value.some(
-    (a) =>
-      a.name.trim().toLowerCase() === name.toLowerCase() &&
-      a.id !== attributeForm.value.id
-  );
-  if (dup) return (errorAttribute.value = "Thuộc tính này đã tồn tại.");
+  if (isEditAttribute.value) {
+    await axios.put(`/api/option-attribute/${attributeForm.value.id}`, { name });
+    Swal.fire("Thành công!", "Cập nhật thuộc tính thành công", "success");
+  } else {
+    await axios.post(`/api/option-attribute`, { name });
+    Swal.fire("Thành công!", "Thêm mới thuộc tính thành công", "success");
+  }
 
-  const payload = { name };
-  if (isEditAttribute.value)
-    await api.put(`${BASE_ATTR}/${attributeForm.value.id}`, payload);
-  else await api.post(BASE_ATTR, payload);
-
-  await fetchAttributes();
-  cancelEditAttribute();
+  attributeForm.value = { id: null, name: "" };
+  isEditAttribute.value = false;
+  fetchAttributes();
 };
 
-const editAttribute = (item) => {
-  attributeForm.value = { id: item.id, name: item.name };
+const editAttribute = (row) => {
+  attributeForm.value = { id: row.id, name: row.name };
   isEditAttribute.value = true;
-};
-
-const deleteAttribute = async (id) => {
-  const used = valueList.value.some((v) => String(v.optionAttributeId) === String(id));
-  if (used)
-    return Swal.fire("Không thể xóa", "Thuộc tính đang được sử dụng!", "warning");
-  await api.delete(`${BASE_ATTR}/${id}`);
-  await fetchAttributes();
 };
 
 const cancelEditAttribute = () => {
   attributeForm.value = { id: null, name: "" };
   isEditAttribute.value = false;
-  errorAttribute.value = "";
 };
 
-/* ------------------ GIÁ TRỊ ------------------ */
-const listValues = ref([]);
-const listAttributes = attributeList;
+const deleteAttribute = async (id) => {
+  const confirm = await Swal.fire({
+    title: "Xóa thuộc tính?",
+    text: "Bạn có chắc muốn xóa thuộc tính này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  });
+
+  if (!confirm.isConfirmed) return;
+  await axios.delete(`/api/option-attribute/${id}`);
+  Swal.fire("Đã xóa!", "Thuộc tính đã được xóa", "success");
+  fetchAttributes();
+};
+
+/* =====================================================
+   =============== QUẢN LÝ GIÁ TRỊ ======================
+===================================================== */
+const values = ref([]);
 const valueForm = ref({ id: null, optionAttributeId: "", name: "" });
 const isEditValue = ref(false);
-const errorValue = ref("");
-const searchOptionId = ref("");
-const currentPageVal = ref(1);
-const pageSizeVal = 5;
 
 const valColumns = [
   { label: "ID", field: "id" },
-  { label: "Thuộc tính", field: "optionAttributeId", slot: "attrName" },
-  { label: "Giá trị", field: "name" }
+  { label: "Thuộc tính", field: "attrName" },
+  { label: "Giá trị", field: "name" },
+  { label: "Hành động", field: "actions" },
 ];
 
-const totalPagesVal = computed(() =>
-  Math.ceil(listValues.value.length / pageSizeVal)
-);
-const paginatedValues = computed(() => {
-  const start = (currentPageVal.value - 1) * pageSizeVal;
-  return listValues.value.slice(start, start + pageSizeVal);
-});
-const goToPageVal = (p) => (currentPageVal.value = p);
-const nextPageVal = () => currentPageVal.value++;
-const prevPageVal = () => currentPageVal.value--;
-
-const fetchValueList = async (optionId = "") => {
-  let url = BASE_VAL;
-  if (optionId) url += `?optionAttributeId=${optionId}`;
-  const res = await api.get(url);
-  listValues.value = res.data.data?.content || res.data.data || res.data;
-  currentPageVal.value = 1;
-};
-const handleSearch = async () => await fetchValueList(searchOptionId.value);
-const resetSearch = async () => {
-  searchOptionId.value = "";
-  await fetchValueList();
+const fetchValues = async () => {
+  const res = await axios.get("/api/value-attribute", {
+    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 giá trị
+  });
+  values.value = res.data.data || res.data.content || [];
 };
 
-const handleValueSubmit = async () => {
-  const name = valueForm.value.name.trim();
-  if (!valueForm.value.optionAttributeId)
-    return (errorValue.value = "Vui lòng chọn thuộc tính.");
-  if (!name) return (errorValue.value = "Giá trị không được để trống.");
-
-  const dup = listValues.value.some(
-    (v) =>
-      String(v.optionAttributeId) === String(valueForm.value.optionAttributeId) &&
-      v.name.trim().toLowerCase() === name.toLowerCase() &&
-      v.id !== valueForm.value.id
-  );
-  if (dup)
-    return (errorValue.value = "Giá trị này đã tồn tại cho thuộc tính đã chọn.");
-
-  const payload = { optionAttributeId: valueForm.value.optionAttributeId, name };
-  if (isEditValue.value)
-    await api.put(`${BASE_VAL}/${valueForm.value.id}`, payload);
-  else await api.post(BASE_VAL, payload);
-
-  await fetchValueList(searchOptionId.value);
-  cancelEditValue();
+const findAttrName = (id) => {
+  const attr = allAttributes.value.find((a) => a.id === id);
+  return attr ? attr.name : "Không xác định";
 };
 
-const editValue = (item) => {
+const saveValue = async () => {
+  const { optionAttributeId, name } = valueForm.value;
+  if (!optionAttributeId || !name.trim())
+    return Swal.fire("Lỗi!", "Vui lòng nhập đầy đủ thông tin", "error");
+
+  if (isEditValue.value) {
+    await axios.put(`/api/value-attribute/${valueForm.value.id}`, {
+      optionAttributeId,
+      name,
+    });
+    Swal.fire("Thành công!", "Cập nhật giá trị thành công", "success");
+  } else {
+    await axios.post(`/api/value-attribute`, { optionAttributeId, name });
+    Swal.fire("Thành công!", "Thêm mới giá trị thành công", "success");
+  }
+
+  valueForm.value = { id: null, optionAttributeId: "", name: "" };
+  isEditValue.value = false;
+  fetchValues();
+};
+
+const editValue = (row) => {
   valueForm.value = {
-    id: item.id,
-    optionAttributeId: item.optionAttributeId,
-    name: item.name
+    id: row.id,
+    optionAttributeId: row.optionAttributeId,
+    name: row.name,
   };
   isEditValue.value = true;
-  errorValue.value = "";
+};
+
+const cancelEditValue = () => {
+  valueForm.value = { id: null, optionAttributeId: "", name: "" };
+  isEditValue.value = false;
 };
 
 const deleteValue = async (id) => {
   const confirm = await Swal.fire({
     title: "Xóa giá trị?",
-    text: "Bạn có chắc muốn xóa giá trị này không?",
+    text: "Bạn có chắc muốn xóa giá trị này?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Xóa",
-    cancelButtonText: "Hủy"
+    cancelButtonText: "Hủy",
   });
   if (!confirm.isConfirmed) return;
-  await api.delete(`${BASE_VAL}/${id}`);
-  await fetchValueList(searchOptionId.value);
+  await axios.delete(`/api/value-attribute/${id}`);
+  Swal.fire("Đã xóa!", "Giá trị đã được xóa", "success");
+  fetchValues();
 };
 
-const cancelEditValue = () => {
-  isEditValue.value = false;
-  valueForm.value = { id: null, optionAttributeId: "", name: "" };
-  errorValue.value = "";
-};
-
-onMounted(async () => {
-  await Promise.all([fetchAttributes(), fetchValues(), fetchValueList()]);
+/* =====================================================
+   =============== KHỞI CHẠY ===========================
+===================================================== */
+onMounted(() => {
+  fetchAttributes();
+  fetchValues();
 });
 </script>
+
+<style scoped>
+.btn-sm {
+  padding: 3px 6px;
+  font-size: 13px;
+}
+</style>
