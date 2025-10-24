@@ -1,143 +1,282 @@
 <template>
-  <div v-if="product" class="product-detail container py-4">
-    <!-- Tên sản phẩm -->
-    <h2 class="text-2xl font-bold mb-3">{{ product.name }}</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Hình ảnh -->
-      <div>
-        <img
-          :src="currentImage"
-          alt="product image"
-          class="rounded-xl shadow-lg w-full object-cover"
-        />
-        <div class="flex gap-2 mt-3">
-          <img
-            v-for="(img, i) in selectedSku?.skuImages"
-            :key="i"
-            :src="img.path"
-            class="w-20 h-20 rounded-lg cursor-pointer border hover:border-blue-500"
-            @click="currentImage = img.path"
-          />
+  <div class="product-detail container mx-auto py-12 px-6">
+    <div class="product-layout">
+      
+      <!-- CỘT ẢNH -->
+      <div class="product-image-container">
+        <div class="image-wrapper">
+          <img :src="currentImage" alt="Product Image" class="product-image" />
         </div>
       </div>
 
-      <!-- Thông tin -->
-      <div>
-        <p class="text-gray-600 mb-2">{{ product.description }}</p>
-        <h3 class="text-xl font-semibold text-red-600">
-          {{ selectedSku?.price?.toLocaleString() }}₫
-        </h3>
-        <p class="text-sm text-gray-500 mb-3">
-          Số lượng: {{ selectedSku?.quantity }}
+      <!-- CỘT THÔNG TIN -->
+      <div class="product-info">
+        <h1 class="product-name">{{ product.name }}</h1>
+
+        <!-- ✅ Giá: nếu chưa chọn SKU thì hiện giá mặc định -->
+        <p class="product-price">
+          {{ displayPrice.toLocaleString("vi-VN") }} ₫
         </p>
 
-        <!-- Thuộc tính (VD: Màu sắc, Dung lượng) -->
-        <div v-for="(values, option) in groupedAttributes" :key="option" class="mb-3">
-          <h4 class="font-semibold">{{ option }}:</h4>
-          <div class="flex gap-2 mt-1">
-            <button
-              v-for="value in values"
-              :key="value"
-              :class="[
-                'px-3 py-1 rounded-lg border',
-                selectedAttributes[option] === value ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
-              ]"
-              @click="selectAttribute(option, value)"
-            >
-              {{ value }}
-            </button>
+        <!-- CHỌN THUỘC TÍNH -->
+        <div v-if="attributes.length" class="product-attributes">
+          <div
+            v-for="(attrGroup, index) in attributes"
+            :key="index"
+            class="attribute-group"
+          >
+            <h3>{{ attrGroup.name }}</h3>
+            <div class="options">
+              <span
+                v-for="option in attrGroup.values"
+                :key="option"
+                class="option"
+                :class="{ active: selectedAttributes[attrGroup.name] === option }"
+                @click="selectAttribute(attrGroup.name, option)"
+              >
+                {{ option }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Nút thêm giỏ hàng -->
-        <button
-          class="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          :disabled="!selectedSku"
-        >
-          Thêm vào giỏ hàng
-        </button>
+        <p v-if="selectedSku?.quantity">
+          Số lượng còn lại: <strong>{{ selectedSku.quantity }}</strong>
+        </p>
+
+        <!-- NÚT -->
+        <div class="button-group">
+          <button class="btn add-cart" :disabled="!hasStock" @click="addToCart">
+            🛒 Thêm vào giỏ hàng
+          </button>
+          <button class="btn buy-now" :disabled="!hasStock">
+            💳 Thanh toán ngay
+          </button>
+        </div>
       </div>
     </div>
   </div>
-
-  <div v-else class="text-center py-10">Đang tải sản phẩm...</div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import axios from 'axios'
+import { ref, onMounted, computed } from "vue";
+import { useRoute } from "vue-router";
+import axios from "axios";
+import Swal from "sweetalert2";
 
-const route = useRoute()
-const slug = route.params.slug
+const route = useRoute();
+const product = ref({});
+const attributes = ref([]);
+const selectedAttributes = ref({});
+const selectedSku = ref(null);
+const currentImage = ref("");
 
-const product = ref(null)
-const selectedSku = ref(null)
-const selectedAttributes = ref({})
-const currentImage = ref('')
-
-// ✅ Lấy dữ liệu sản phẩm theo slug
+// 🟢 Lấy dữ liệu sản phẩm
 onMounted(async () => {
-  const res = await axios.get(`http://localhost:8080/api/products/${id}`)
-  product.value = res.data
+  try {
+    const res = await axios.get(
+      `http://localhost:8080/api/product/${route.params.id}`
+    );
+    product.value = res.data;
+    currentImage.value = product.value.image;
 
-  // Chọn SKU có giá thấp nhất làm mặc định
-  selectedSku.value = product.value.skus.reduce((min, s) =>
-    s.price < min.price ? s : min
-  )
-  currentImage.value = selectedSku.value.skuImages[0]?.path
-
-  // Gán thuộc tính mặc định tương ứng SKU
-  selectedSku.value.skuAttributes.forEach(attr => {
-    selectedAttributes.value[attr.optionAttributeName] = attr.valueAttributeName
-  })
-})
-
-// ✅ Gom các thuộc tính (Màu sắc, Dung lượng, ...)
-const groupedAttributes = computed(() => {
-  if (!product.value) return {}
-  const groups = {}
-  product.value.skus.forEach(sku => {
-    sku.skuAttributes.forEach(attr => {
-      if (!groups[attr.optionAttributeName]) groups[attr.optionAttributeName] = new Set()
-      groups[attr.optionAttributeName].add(attr.valueAttributeName)
-    })
-  })
-  // Chuyển từ Set → Array để dễ v-for
-  for (let key in groups) {
-    groups[key] = Array.from(groups[key])
+    // Xử lý nhóm thuộc tính
+    if (product.value.skus && product.value.skus.length > 0) {
+      const attrMap = {};
+      product.value.skus.forEach((sku) => {
+        sku.skuAttributes?.forEach((attr) => {
+          if (!attrMap[attr.optionAttributeName]) {
+            attrMap[attr.optionAttributeName] = new Set();
+          }
+          attrMap[attr.optionAttributeName].add(attr.valueAttributeName);
+        });
+      });
+      attributes.value = Object.entries(attrMap).map(([name, values]) => ({
+        name,
+        values: Array.from(values),
+      }));
+    }
+  } catch (err) {
+    console.error("Lỗi khi tải sản phẩm:", err);
   }
-  return groups
-})
+});
 
-// ✅ Khi chọn thuộc tính
-function selectAttribute(option, value) {
-  selectedAttributes.value[option] = value
-  updateSelectedSku()
-}
+// 🟡 Khi chọn thuộc tính
+const selectAttribute = (name, value) => {
+  selectedAttributes.value[name] = value;
+  updateSelectedSku();
+};
 
-// ✅ Cập nhật SKU tương ứng khi chọn thuộc tính
-function updateSelectedSku() {
-  if (!product.value) return
-
-  // Tìm SKU khớp tất cả thuộc tính
-  const found = product.value.skus.find(sku => {
-    return sku.skuAttributes.every(attr =>
-      selectedAttributes.value[attr.optionAttributeName] === attr.valueAttributeName
+// 🔵 Cập nhật SKU khi chọn đủ
+const updateSelectedSku = () => {
+  const chosen = product.value.skus?.find((sku) =>
+    sku.skuAttributes.every(
+      (attr) =>
+        selectedAttributes.value[attr.optionAttributeName] ===
+        attr.valueAttributeName
     )
-  })
-
-  if (found) {
-    selectedSku.value = found
-    currentImage.value = found.skuImages[0]?.path
+  );
+  if (chosen) {
+    selectedSku.value = chosen;
+    currentImage.value = chosen.skuImages?.[0]?.path || product.value.image;
   }
-}
+};
+
+// 🟣 Giá hiển thị — nếu chưa chọn SKU thì lấy giá mặc định
+const displayPrice = computed(() => {
+  // Nếu đã chọn SKU
+  if (selectedSku.value && selectedSku.value.price) {
+    return selectedSku.value.price;
+  }
+
+  // Nếu có giá mặc định trong product
+  if (product.value.price) {
+    return product.value.price;
+  }
+
+  // Nếu không có product.price thì lấy giá SKU đầu tiên (nếu có)
+  if (product.value.skus && product.value.skus.length > 0) {
+    return product.value.skus[0].price || 0;
+  }
+
+  // Nếu vẫn không có thì trả 0
+  return 0;
+});
+
+// 🟢 Kiểm tra còn hàng
+const hasStock = computed(() => {
+  if (selectedSku.value) return selectedSku.value.quantity > 0;
+  return true; // chưa chọn thì vẫn cho thêm
+});
+
+// 🛒 Thêm vào giỏ hàng
+const addToCart = () => {
+  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  const skuId = selectedSku.value?.id || product.value.id;
+  const existingItem = cart.find((item) => item.skuId === skuId);
+
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      skuId,
+      name: product.value.name,
+      price: displayPrice.value,
+      image: currentImage.value,
+      quantity: 1,
+      attributes: selectedAttributes.value,
+    });
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+
+  Swal.fire({
+    icon: "success",
+    title: "Đã thêm vào giỏ hàng!",
+    showConfirmButton: false,
+    timer: 1200,
+  });
+};
 </script>
 
 <style scoped>
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.container {
+  max-width: 1200px;
+  margin-top: 100px;
+}
+.product-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 50px;
+  flex-wrap: wrap;
+}
+.product-image-container {
+  flex: 1;
+  max-width: 45%;
+  display: flex;
+  justify-content: flex-end;
+}
+.image-wrapper {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f9f9f9;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+.product-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.product-info {
+  flex: 1;
+  max-width: 45%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.product-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+.product-price {
+  font-size: 1.8rem;
+  color: #e53935;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.attribute-group {
+  margin-bottom: 20px;
+}
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.option {
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.option:hover {
+  background: #e0e0e0;
+}
+.option.active {
+  background: #2563eb;
+  color: white;
+}
+.button-group {
+  display: flex;
+  gap: 20px;
+}
+.btn {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.add-cart {
+  background: #2563eb;
+  color: white;
+}
+.add-cart:hover {
+  background: #1d4ed8;
+}
+.buy-now {
+  background: #e53935;
+  color: white;
+}
+.buy-now:hover {
+  background: #c62828;
 }
 </style>
