@@ -77,28 +77,119 @@ const clientRouter = [
 
 // --- ADMIN ROUTER --- //
 const adminRouter = [
-  { path: '', name: 'Dashboard', component: Dashboard },
-  { path: 'auth', name: 'AuthAdmin', component: Auth },
-  { path: 'list-product', name: 'ProductList', component: ProductList },
-  { path: 'products/update/:id', name: 'UpdateProduct', component: ProductUpdate, props: true },
-  { path: 'products/create', name: 'AddProduct', component: ProductAdd },
-  { path: 'category', component: CategoryList },
-  { path: 'attribute', name: 'Attribute', component: Attribute },
-  { path: 'flashsale', name: 'FlashSale', component: FlashSale },
-  { path: 'flashsale/:id?', name: 'FlashSaleEdit', component: FlashSale },
-  { path: 'categories/add', component: CategoryAdd },
-  { path: 'categories/edit/:id', component: CategoryAdd },
-  { path: 'status', component: StatusList },
-  { path: 'status/add', component: StatusAdd },
-  { path: 'status/edit/:id', component: StatusAdd },
-  { path: 'payment-method', component: PaymentMethodList },
-  { path: 'payment-method/add', component: PaymentMethodAdd },
-  { path: 'payment-method/edit/:id', component: PaymentMethodAdd },
-  { path: 'review', component: ReviewList },
-  { path: 'review/detail/:id', component: ReviewDetail },
-  { path: 'list-voucher', component: ListVoucher },
-  { path: 'add-voucher', component: VoucherAdd },
-  { path: 'update-voucher/:id', component: VoucherUpdate, props: true },
+  {
+    path: '',
+    name: 'Dashboard',
+    component: Dashboard
+  },
+  {
+    path: 'auth',
+    name: 'AuthAdmin',
+    component: Auth
+  },
+  {
+    path: 'list-product',
+    name: 'ListProduct',
+    component: ListProduct
+  },
+  {
+    path: 'products/update/:id',
+    name: 'UpdateProduct',
+    component: UpdateProduct,
+    props: true
+  },
+  {
+    path: 'products/create',
+    name: 'AddProduct',
+    component: ProductAdd
+  },
+  {
+    path: 'category',
+    component: CategoryList
+  },
+
+
+  {
+    path: 'attribute',
+    name: 'Attribute',
+    component: Attribute
+  },
+  {
+    path: 'flashsale',
+    name: 'FlashSale',
+    component: FlashSale
+  },
+  {
+    path: 'flashsale/:id?',
+    name: 'FlashSale',
+    component: FlashSale
+  },
+
+  {
+    path: "categories/add",
+    component: CategoryAdd
+  },
+  {
+    path: "/categories/edit/:id",
+    component: CategoryAdd
+  },
+  {
+    path: '/status',
+    component: StatusList,
+  },
+  {
+    path: '/status/add',
+    component: StatusAdd,
+  },
+  {
+    path: '/status/edit/:id',
+    component: StatusAdd,
+  },
+  {
+    path: '/payment-method',
+    name: 'PaymentMethodList',
+    component: PaymentMethodList,
+  },
+  {
+    path: '/payment-method/add',
+    name: 'PaymentMethodAdd',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: '/payment-method/edit/:id',
+    name: 'PaymentMethodEdit',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: "/review",
+    component: ReviewList,
+  },
+  {
+    path: "/review/detail/:id",
+    component: ReviewDetail,
+  },
+  {
+    path: "categories/edit/:id",
+    component: CategoryAdd
+  },
+  {
+    path: 'list-voucher',
+    name: 'ListVoucher',
+    component: ListVoucher
+  },
+  {
+    path: 'add-voucher',
+    name: 'VoucherAdd',
+    component: VoucherAdd
+  },
+  {
+    path: 'update-voucher/:id',
+    name: 'VoucherUpdate',
+    component: VoucherUpdate,
+    props: true
+  },
+
+
 ];
 
 
