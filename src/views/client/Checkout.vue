@@ -171,10 +171,22 @@ const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = 2;
+const accountId = ref(null);
 const storeDistrictId = 1451;
 
 const shippingFee = ref(0);
+
+const fetchAccountId = () => {
+   const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      accountId.value = payload.id; // Lấy id từ token backend đã gắn
+    } catch (err) {
+      console.error("Lỗi khi giải mã token:", err);
+    }
+  }
+};
 
 // ✅ Format tiền
 const formatShippingFee = (fee) => {
@@ -210,9 +222,12 @@ const fetchWards = async () => {
 // ✅ Lấy danh sách địa chỉ từ DB
 const fetchAddresses = async () => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/address?account=${accountId}`);
-    addresses.value = res.data.data || [];
+    const res = await axios.get(`http://localhost:8080/api/address/account/${accountId.value}`);
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
+    addresses.value = res.data || [];
+    console.log(addresses.value);
   } catch (err) {
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
     console.error("Lỗi khi load danh sách địa chỉ:", err);
   }
 };
@@ -242,7 +257,7 @@ const saveAddress = async () => {
       fulladdress: fullAddress,
       defaultAddress: false,
       active: true,
-      accountId,
+      accountId: accountId.value,
     };
 
     await axios.post("http://localhost:8080/api/address", payload);
@@ -320,8 +335,11 @@ const handleVnpayPayment = async () => {
 };
 
 onMounted(() => {
+  fetchAccountId();
   fetchProvinces();
+  
   fetchAddresses();
+ 
 });
 </script>
 
