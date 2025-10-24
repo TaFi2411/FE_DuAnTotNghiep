@@ -130,6 +130,7 @@ const selectedAddress = ref(null);
 const accountId = ref(null);
 const storeDistrictId = 1451;
 const shippingFee = ref(0);
+const cartItems = ref([]);
 
 const fetchAccountId = () => {
    const token = localStorage.getItem("token");
@@ -143,20 +144,6 @@ const fetchAccountId = () => {
   }
 };
 
-// Giỏ hàng
-const cartItems = ref([]);
-
-// Load giỏ hàng từ localStorage
-onMounted(() => {
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-  cartItems.value = cart.map(item => ({
-    ...item,
-    quantity: item.quantity || 1,
-    price: item.price || 0
-  }));
-  fetchProvinces();
-  fetchAddresses();
-});
 
 // Tổng tiền sản phẩm
 const totalProductPrice = computed(() =>
@@ -241,7 +228,6 @@ const saveAddress = async () => {
 };
 
 const selectAddress = (a) => {
-const selectAddress = a => {
   selectedAddress.value = a;
 };
 
@@ -275,36 +261,6 @@ const closeModal = () => {
   selectedWard.value = "";
   specificAddress.value = "";
 };
-
-const saveAddress = async () => {
-  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
-    alert("Vui lòng nhập đầy đủ thông tin!");
-    return;
-  }
-  const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
-  const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
-  const wardName = wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
-  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
-  try {
-    await axios.post("http://localhost:8080/api/address", {
-      province_id: selectedProvince.value,
-      district_id: selectedDistrict.value,
-      ward_code: selectedWard.value,
-      address: specificAddress.value,
-      fulladdress: fullAddress,
-      defaultAddress: false,
-      active: true,
-      accountId
-    });
-    alert("Lưu địa chỉ thành công!");
-    closeModal();
-    fetchAddresses();
-  } catch (err) {
-    console.error(err);
-    alert("Không thể lưu địa chỉ.");
-  }
-};
-
 // Thanh toán VNPAY
 const handleVnpayPayment = async () => {
   if (!selectedAddress.value) { alert("Vui lòng chọn địa chỉ giao hàng!"); return; }
@@ -319,12 +275,20 @@ const handleVnpayPayment = async () => {
   }
 };
 
+const fetchCartFromLocalStorage = () => {
+  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  cartItems.value = cart.map(item => ({
+    ...item,
+    quantity: item.quantity || 1,
+    price: item.price || 0
+  }));
+};
+
 onMounted(() => {
+  fetchCartFromLocalStorage();
   fetchAccountId();
   fetchProvinces();
-  
-  fetchAddresses();
- 
+fetchAddresses();
 });
 </script>
 
