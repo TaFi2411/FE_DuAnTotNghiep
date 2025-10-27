@@ -203,7 +203,7 @@
 
 
               <!-- Nút mua -->
-              <router-link :to="`/san-pham/${n}`" class="btn btn-primary rounded-pill px-4 py-2 mt-3">
+              <router-link :to="`/product/${n}`" class="btn btn-primary rounded-pill px-4 py-2 mt-3">
                 <i class="bi bi-cart3 me-2"></i> Mua sản phẩm
               </router-link>
             </div>
@@ -300,7 +300,7 @@
           <h5 class="card-title fw-bold mb-2">iPhone 17 Promax</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -389,7 +389,7 @@
           <h5 class="fw-bold mb-2">iPhone 17 Pro Max</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/iphone-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/iphone-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -438,7 +438,7 @@
           <h5 class="fw-bold mb-2">MacBook Pro M3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">45.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/macbook-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/macbook-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -487,7 +487,7 @@
           <h5 class="fw-bold mb-2">iPad Pro M4</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">25.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -536,7 +536,7 @@
           <h5 class="fw-bold mb-2">Apple Watch Ultra 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">18.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -586,7 +586,7 @@
           <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>

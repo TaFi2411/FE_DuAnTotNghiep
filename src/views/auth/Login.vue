@@ -31,7 +31,6 @@ const email = ref("");
 const password = ref("");
 const error = ref("");
 
-
 const login = async () => {
   try {
     const res = await axios.post("http://localhost:8080/auth/login", {
@@ -41,15 +40,26 @@ const login = async () => {
 
     const token = res.data.token;
     if (token) {
-      sessionStorage.setItem("token", token);
-      
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // 🧩 Giải mã token để lấy thông tin người dùng (nếu backend chưa trả về id)
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const roles = payload.roles || [];
-      const role = roles[0]; 
-      sessionStorage.setItem("role", role);
+      const role = roles[0];
+      const userId = payload.id || payload.userId; // hoặc tùy backend cậu đặt tên
 
-      console.log(role);
-      window.location.href = "/"; 
+      // 🧠 Lưu tất cả thông tin vào localStorage
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: userId, // <--- id là số (ví dụ 1)
+          email: email.value,
+          role: role,
+          token: token,
+        })
+      );
+
+      console.log("Đã lưu user:", JSON.parse(localStorage.getItem("user")));
+
+      window.location.href = "/";
     } else {
       error.value = "Không nhận được token từ server!";
     }
@@ -58,6 +68,7 @@ const login = async () => {
     error.value = "Sai tài khoản hoặc mật khẩu!";
   }
 };
+
 
 // 🧠 Login với Google
 const loginWithGoogle = () => {
@@ -69,6 +80,7 @@ const loginWithFacebook = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
 };
 </script>
+
 
 <style scoped>
 .login-container {

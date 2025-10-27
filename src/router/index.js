@@ -22,10 +22,7 @@ import OAuth2Success from '@/views/auth/OAuth2Success.vue';
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
-import PaymentMethodAdd from '@/views/admin/PaymentMethodAdd.vue';
-import PaymentMethodList from '@/views/admin/PaymentMethodList.vue';
-import StatusAdd from '@/views/admin/StatusAdd.vue';
-import StatusList from '@/views/admin/StatusList.vue';
+import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
 import ReviewList from '@/views/admin/ReviewList.vue';
 
@@ -40,7 +37,7 @@ import ListProduct from '@/views/admin/products/ListProduct.vue';
 import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
 import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
-
+import Status from '@/views/admin/Status.vue';
 import ProductAdd from '@/views/admin/products/ProductAdd.vue';
 // --- Định nghĩa các route con ---
 const clientRouter = [
@@ -86,18 +83,18 @@ const clientRouter = [
     component: Support
   },
 
-  // {
-  //   path: 'product/:id', // URL sẽ có dạng /product/123
-  //   name: 'ProductDetail',
-  //   component: ProductDetail,
-  //   props: true // Tự động truyền id vào làm prop
-  // },
   {
-    path: 'product-details', // URL sẽ có dạng /product/123
+    path: 'product/:id', // URL sẽ có dạng /product/123
     name: 'ProductDetail',
     component: ProductDetail,
     props: true // Tự động truyền id vào làm prop
   },
+  // {
+  //   path: 'product-details', // URL sẽ có dạng /product/123
+  //   name: 'ProductDetail',
+  //   component: ProductDetail,
+  //   props: true // Tự động truyền id vào làm prop
+  // },
   {
     path: '/cart',
     component: Cart
@@ -105,7 +102,8 @@ const clientRouter = [
   {
     path: '/checkout',
     component: Checkout
-  }
+  },
+  
 ];
 
 const adminRouter = [
@@ -161,32 +159,16 @@ const adminRouter = [
     path: "/categories/edit/:id", 
     component: CategoryAdd
   },
+  
   {
     path: '/status',
-    component:StatusList,
-  },
-  {
-    path: '/status/add',
-    component: StatusAdd,
-  },
-  {
-    path: '/status/edit/:id',
-    component: StatusAdd,
+    name: 'status',
+    component: Status,            
   },
 {
-  path: '/payment-method',
-  name: 'PaymentMethodList',
-  component: PaymentMethodList,
-},
-{
-  path: '/payment-method/add',
-  name: 'PaymentMethodAdd',
-  component: PaymentMethodAdd,
-},
-{
-  path: '/payment-method/edit/:id',
-  name: 'PaymentMethodEdit',
-  component: PaymentMethodAdd,
+  path: '/paymentMethod',
+  name: 'paymentMethod',
+  component: paymentMethod,
 },
 {
   path: "/review",
@@ -216,7 +198,6 @@ const adminRouter = [
     component: VoucherUpdate,
     props: true                 
   },
-
 ];
 
 
