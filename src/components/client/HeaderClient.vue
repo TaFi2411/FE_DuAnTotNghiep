@@ -133,13 +133,13 @@ onMounted(() => {
 
 // Hàm đăng xuất
 function logoutHandler() {
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("role");
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
   isLoggedIn.value = false;
   isAdmin.value = false;
   accountName.value = "Khách";
   router.push("/auth/login");
-}
+} 
 </script>
 
 

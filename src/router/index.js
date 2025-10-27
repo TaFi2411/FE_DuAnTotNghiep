@@ -18,6 +18,7 @@ import Cart from '@/views/client/Cart.vue';
 import Checkout from '@/views/client/Checkout.vue';
 import Violate from '@/views/403.vue'
 import OAuth2Success from '@/views/auth/OAuth2Success.vue';
+import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
@@ -42,7 +43,8 @@ import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
 
 import ProductAdd from '@/views/admin/products/ProductAdd.vue';
-import FlashSaleSku from '@/views/admin/FlashSaleSku.vue';
+
+
 // --- Định nghĩa các route con ---
 const clientRouter = [
   {
@@ -50,7 +52,11 @@ const clientRouter = [
     name: 'Home',
     component: Home
   },
-
+  {
+    path: 'flash-sale-sku-user',
+    name: 'FlashSaleSkuUser',
+    component: FlashSaleSkuUser
+  },
   {
     path: '',
     name: 'Violate',
