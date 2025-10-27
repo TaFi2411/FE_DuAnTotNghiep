@@ -9,245 +9,295 @@
         <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Địa chỉ giao hàng</h5>
-            <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <button
+              class="btn btn-outline-primary btn-sm rounded-pill px-3"
+              @click="showAddressModal = true"
+            >
               <i class="bi bi-plus-circle"></i> Thêm địa chỉ mới
             </button>
           </div>
 
-          <div class="address-card border rounded-3 p-3 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="address" id="addr1" checked />
-              <label class="form-check-label w-100" for="addr1">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <strong>Lương Thế Tài</strong> — 0909 123 456
-                    <p class="text-secondary mb-0 small">
-                      123 Đường ABC, Quận 1, TP. Hồ Chí Minh
-                    </p>
-                  </div>
-                  <span class="badge bg-primary text-white">Mặc định</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div class="address-card border rounded-3 p-3 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="address" id="addr2" />
-              <label class="form-check-label w-100" for="addr2">
-                <div>
-                  <strong>Nguyễn Văn A</strong> — 0987 654 321
-                  <p class="text-secondary mb-0 small">
-                    456 Đường XYZ, Quận Bình Thạnh, TP. Hồ Chí Minh
-                  </p>
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- VOUCHER -->
-        <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
-          <h5 class="fw-bold mb-3">Mã giảm giá (Voucher)</h5>
-
-          <div class="input-group mb-4">
-            <input
-              type="text"
-              class="form-control rounded-start-pill"
-              placeholder="Nhập mã giảm giá của bạn..."
-            />
-            <button class="btn btn-dark rounded-end-pill px-4">Áp dụng</button>
-          </div>
-
-          <!-- Nút bật/tắt danh sách voucher -->
-          <button
-            class="btn btn-outline-primary rounded-pill w-100 fw-semibold d-flex justify-content-between align-items-center"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#voucherList"
-            aria-expanded="false"
-          >
-            <span><i class="bi bi-ticket-perforated me-2"></i> Chọn voucher có sẵn</span>
-            <i class="bi bi-chevron-down"></i>
-          </button>
-
-          <!-- DANH SÁCH VOUCHER -->
-          <div class="collapse mt-4" id="voucherList">
-            <!-- Voucher sản phẩm -->
-            <h6 class="fw-bold text-primary mb-3 mt-2">
-              <i class="bi bi-gift me-2"></i> Voucher sản phẩm
-            </h6>
-
-            <div class="voucher-section mb-4">
-              <div
-                class="voucher-card border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap"
-              >
-                <div>
-                  <strong>GIAM10K</strong>
-                  <p class="text-secondary small mb-1">Giảm 10.000₫ cho đơn từ 500.000₫</p>
-                  <span class="badge bg-success">Còn hạn</span>
-                </div>
-                <button class="btn btn-outline-primary rounded-pill px-3 mt-2 mt-sm-0">
-                  Áp dụng
-                </button>
+          <!-- Danh sách địa chỉ -->
+          <div v-if="addresses.length">
+            <div
+              v-for="a in addresses"
+              :key="a.id"
+              class="border rounded-3 p-3 mb-2 d-flex justify-content-between align-items-center"
+              :class="{ 'border-primary bg-light': selectedAddress?.id === a.id }"
+              @click="selectAddress(a)"
+              style="cursor: pointer;"
+            >
+              <div>
+                <strong>{{ a.fulladdress }}</strong>
+                <div class="text-muted small">#{{ a.id }}</div>
               </div>
-
-              <div
-                class="voucher-card border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap"
-              >
-                <div>
-                  <strong>SALE20</strong>
-                  <p class="text-secondary small mb-1">Giảm 20% tối đa 200.000₫</p>
-                  <span class="badge bg-success">Còn hạn</span>
-                </div>
-                <button class="btn btn-outline-primary rounded-pill px-3 mt-2 mt-sm-0">
-                  Áp dụng
-                </button>
-              </div>
-            </div>
-
-            <!-- Voucher vận chuyển -->
-            <h6 class="fw-bold text-primary mb-3">
-              <i class="bi bi-truck me-2"></i> Voucher vận chuyển
-            </h6>
-
-            <div class="voucher-section">
-              <div
-                class="voucher-card border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap"
-              >
-                <div>
-                  <strong>FREESHIP</strong>
-                  <p class="text-secondary small mb-1">Miễn phí vận chuyển toàn quốc</p>
-                  <span class="badge bg-primary">Hot</span>
-                </div>
-                <button class="btn btn-outline-primary rounded-pill px-3 mt-2 mt-sm-0">
-                  Áp dụng
-                </button>
-              </div>
-
-              <div
-                class="voucher-card border rounded-3 p-3 mb-3 d-flex justify-content-between align-items-center flex-wrap"
-              >
-                <div>
-                  <strong>SHIP20</strong>
-                  <p class="text-secondary small mb-1">Giảm 20.000₫ phí ship cho đơn từ 300.000₫</p>
-                  <span class="badge bg-success">Còn hạn</span>
-                </div>
-                <button class="btn btn-outline-primary rounded-pill px-3 mt-2 mt-sm-0">
-                  Áp dụng
-                </button>
-              </div>
+              <i
+                v-if="selectedAddress?.id === a.id"
+                class="bi bi-check-circle-fill text-primary fs-5"
+              ></i>
             </div>
           </div>
-        </div>
-
-        <!-- PHƯƠNG THỨC THANH TOÁN -->
-        <div class="bg-white rounded-4 shadow-sm p-4">
-          <h5 class="fw-bold mb-3">Phương thức thanh toán</h5>
-
-          <div class="payment-method border rounded-3 p-3 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment" id="cod" checked />
-              <label class="form-check-label fw-semibold" for="cod">
-                <i class="bi bi-truck me-2 text-primary"></i> Thanh toán khi nhận hàng (COD)
-              </label>
-            </div>
-          </div>
-
-          <div class="payment-method border rounded-3 p-3 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment" id="bank" />
-              <label class="form-check-label fw-semibold" for="bank">
-                <i class="bi bi-bank me-2 text-primary"></i> Chuyển khoản ngân hàng
-              </label>
-            </div>
-          </div>
-
-          <div class="payment-method border rounded-3 p-3 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="payment" id="momo" />
-              <label class="form-check-label fw-semibold" for="momo">
-                <i class="bi bi-phone me-2 text-primary"></i> Ví MoMo / ZaloPay
-              </label>
-            </div>
-          </div>
+          <div v-else class="text-muted fst-italic">Chưa có địa chỉ nào được lưu.</div>
         </div>
       </div>
 
-      <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
+      <!-- CỘT PHẢI (Tóm tắt đơn hàng) -->
       <div class="col-lg-4">
         <div class="summary-box bg-white rounded-4 shadow-sm p-4">
           <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
 
-          <!-- DANH SÁCH SẢN PHẨM -->
-          <div class="product-summary mb-4">
-            <div class="product-item d-flex align-items-center mb-3">
-              <img
-                src="/images/crs-ip17-air.png"
-                alt="MacBook Pro 14”"
-                class="rounded-3 me-3"
-                width="60"
-                height="60"
-              />
-              <div class="flex-grow-1">
-                <h6 class="mb-1">MacBook Pro 14” M3</h6>
-                <small class="text-secondary d-block">Màu: Xám | RAM: 16GB</small>
-                <small class="text-secondary">x1</small>
-              </div>
-              <span class="fw-semibold">52.000.000₫</span>
-            </div>
-
-            <div class="product-item d-flex align-items-center mb-3">
-              <img
-                src="/images/crs-ip17-air.png"
-                alt="AirPods Pro 2"
-                class="rounded-3 me-3"
-                width="60"
-                height="60"
-              />
-              <div class="flex-grow-1">
-                <h6 class="mb-1">AirPods Pro 2</h6>
-                <small class="text-secondary d-block">Bản sạc Type-C</small>
-                <small class="text-secondary">x1</small>
-              </div>
-              <span class="fw-semibold">7.000.000₫</span>
-            </div>
-          </div>
-
-          <hr />
-
           <div class="d-flex justify-content-between mb-2">
-            <span>Tạm tính:</span>
-            <span class="fw-semibold">59.000.000₫</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Giảm giá:</span>
-            <span class="fw-semibold text-success">-1.000.000₫</span>
-          </div>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Phí vận chuyển:</span>
-            <span class="fw-semibold text-success">Miễn phí</span>
-          </div>
-          <hr />
-          <div class="d-flex justify-content-between mb-3">
-            <span class="fw-bold fs-5">Tổng cộng:</span>
-            <span class="fw-bold fs-5 text-primary">58.000.000₫</span>
+            <span>Phí vận chuyển</span>
+            <strong>{{ formatShippingFee( shippingFee.toLocaleString() )}} đ</strong>
           </div>
 
           <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold">
             Xác nhận thanh toán
           </button>
-          <router-link
-            to="/cart"
-            class="btn btn-outline-dark w-100 rounded-pill py-2 mt-3 fw-semibold"
-          >
-            Quay lại giỏ hàng
-          </router-link>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL THÊM ĐỊA CHỈ -->
+    <div
+      v-if="showAddressModal"
+      class="modal fade show d-block"
+      style="background: rgba(0,0,0,0.5)"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold">Thêm địa chỉ mới</h5>
+            <button type="button" class="btn-close" @click="closeModal"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Chọn tỉnh -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Tỉnh/Thành phố</label>
+              <select
+                v-model="selectedProvince"
+                @change="fetchDistricts"
+                class="form-select"
+              >
+                <option value="">-- Chọn tỉnh --</option>
+                <option
+                  v-for="p in provinces"
+                  :key="p.ProvinceID"
+                  :value="p.ProvinceID"
+                >
+                  {{ p.ProvinceName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Chọn huyện -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Quận/Huyện</label>
+              <select
+                v-model="selectedDistrict"
+                @change="fetchWards"
+                class="form-select"
+                :disabled="!districts.length"
+              >
+                <option value="">-- Chọn quận/huyện --</option>
+                <option
+                  v-for="d in districts"
+                  :key="d.DistrictID"
+                  :value="d.DistrictID"
+                >
+                  {{ d.DistrictName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Chọn phường -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Phường/Xã</label>
+              <select
+                v-model="selectedWard"
+                class="form-select"
+                :disabled="!wards.length"
+              >
+                <option value="">-- Chọn phường/xã --</option>
+                <option
+                  v-for="w in wards"
+                  :key="w.WardCode"
+                  :value="w.WardCode"
+                >
+                  {{ w.WardName }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Nhập địa chỉ cụ thể -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Địa chỉ cụ thể</label>
+              <input
+                type="text"
+                v-model="specificAddress"
+                class="form-control"
+                placeholder="Ví dụ: 123 Đường ABC..."
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" @click="closeModal">Hủy</button>
+            <button class="btn btn-primary" @click="saveAddress">Lưu địa chỉ</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted, watch } from "vue";
+import axios from "axios";
+
+const showAddressModal = ref(false);
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+const addresses = ref([]);
+
+const selectedProvince = ref("");
+const selectedDistrict = ref("");
+const selectedWard = ref("");
+const specificAddress = ref("");
+const selectedAddress = ref(null);
+
+const accountId = 7; // ⚠️ sau này lấy từ login
+const storeDistrictId = 1451; // Quận shop GHN
+
+const shippingFee = ref(0);
+
+// ✅ Gọi API GHN
+const fetchProvinces = async () => {
+  const res = await axios.get("http://localhost:8080/api/ghn/provinces");
+  provinces.value = res.data;
+};
+
+const fetchDistricts = async () => {
+  if (!selectedProvince.value) return;
+  const res = await axios.get(
+    `http://localhost:8080/api/ghn/districts?provinceId=${selectedProvince.value}`
+  );
+  districts.value = res.data;
+  wards.value = [];
+  selectedDistrict.value = "";
+  selectedWard.value = "";
+};
+
+const fetchWards = async () => {
+  if (!selectedDistrict.value) return;
+  const res = await axios.get(
+    `http://localhost:8080/api/ghn/wards?districtId=${selectedDistrict.value}`
+  );
+  wards.value = res.data;
+  selectedWard.value = "";
+};
+
+// ✅ Gọi API lấy danh sách địa chỉ từ DB
+const fetchAddresses = async () => {
+  try {
+    const res = await axios.get(`http://localhost:8080/api/address?account=${accountId}`);
+    addresses.value = res.data.data || [];
+  } catch (err) {
+    console.error("Lỗi khi load danh sách địa chỉ:", err);
+  }
+};
+
+// ✅ Lưu địa chỉ mới
+const saveAddress = async () => {
+  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
+    alert("Vui lòng nhập đầy đủ thông tin địa chỉ!");
+    return;
+  }
+
+  const provinceName =
+    provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
+  const districtName =
+    districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
+  const wardName =
+    wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
+
+  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
+
+  try {
+    const payload = {
+      province_id: selectedProvince.value,
+      district_id: selectedDistrict.value,
+      ward_code: selectedWard.value,
+      address: specificAddress.value,
+      fulladdress: fullAddress,
+      defaultAddress: false,
+      active: true,
+      accountId,
+    };
+
+    await axios.post("http://localhost:8080/api/address", payload);
+    alert("Lưu địa chỉ thành công!");
+    closeModal();
+    fetchAddresses();
+  } catch (err) {
+    console.error("Lỗi lưu địa chỉ:", err);
+    alert("Không thể lưu địa chỉ. Vui lòng thử lại!");
+  }
+};
+
+const selectAddress = (a) => {
+  selectedAddress.value = a;
+};
+
+// ✅ Hàm tính phí ship chuẩn GHN
+const fetchShippingFee = async () => {
+  if (!selectedAddress.value) return;
+  const toDistrictId = Number(selectedAddress.value.district_id);
+  const toWardCode = String(selectedAddress.value.ward_code);
+
+  if (!toDistrictId || !toWardCode) {
+    shippingFee.value = 0;
+    return;
+  }
+
+  try {
+    const res = await axios.get("http://localhost:8080/api/ghn/fee", {
+      params: {
+        fromDistrictId: storeDistrictId,
+        toDistrictId,
+        toWardCode,
+        weight: 1000, // thay bằng tổng khối lượng giỏ hàng
+      },
+    });
+    shippingFee.value = res.data?.total || res.data?.data?.total || 0;
+    console.log("Phí ship:", shippingFee.value);
+  } catch (err) {
+    console.error("Lỗi khi tính phí ship:", err.response?.data || err.message);
+    shippingFee.value = 0;
+  }
+};
+const formatShippingFee = (fee) => {
+  if (!shippingFee.value) return 0;
+  return Math.ceil(shippingFee.value / 1000) * 1000; // làm tròn lên đơn vị nghìn
+};
+
+watch(selectedAddress, (newVal) => {
+  if (newVal) fetchShippingFee();
+});
+
+const closeModal = () => {
+  showAddressModal.value = false;
+  selectedProvince.value = "";
+  selectedDistrict.value = "";
+  selectedWard.value = "";
+  specificAddress.value = "";
+};
+
+onMounted(() => {
+  fetchProvinces();
+  fetchAddresses();
+});
+</script>
 
 <style scoped>
 .checkout-page {
@@ -261,35 +311,8 @@
   transition: 0.3s;
 }
 
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.summary-box {
-  border: 1px solid #eee;
-}
-
-.product-item img {
-  object-fit: cover;
-}
-
-.product-item:hover {
-  background-color: #f9f9ff;
-  border-radius: 12px;
-  transition: 0.3s;
-  padding: 4px;
-}
-
-.voucher-card:hover {
-  border-color: #0d6efd;
-  background-color: #f8f9ff;
-}
-
-.btn[data-bs-toggle="collapse"] i {
-  transition: transform 0.3s ease;
-}
-.btn[aria-expanded="true"] i {
-  transform: rotate(180deg);
+.modal-content {
+  border: none;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
 }
 </style>

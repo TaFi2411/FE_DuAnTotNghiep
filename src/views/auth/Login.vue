@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref } from "vue";
-import axios from "axios";
+import api from '@/axios.js'
 
 const email = ref("");
 const password = ref("");
@@ -34,19 +34,22 @@ const error = ref("");
 
 const login = async () => {
   try {
-    const res = await axios.post("http://localhost:8080/auth/login", {
+     const res = await api.post('/auth/login', {
       email: email.value,
       password: password.value,
-    });
+    })
 
     const token = res.data.token;
+
     if (token) {
-      sessionStorage.setItem("token", token);
+
+      localStorage.setItem("token", token);
       
       const payload = JSON.parse(atob(token.split('.')[1]));
       const roles = payload.roles || [];
       const role = roles[0]; 
-      sessionStorage.setItem("role", role);
+
+      localStorage.setItem("role", role);
 
       console.log(role);
       window.location.href = "/"; 

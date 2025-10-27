@@ -32,9 +32,9 @@ onMounted(() => {
 
     // ✅ Điều hướng theo quyền
     if (roles.includes("ROLE_ADMIN")) {
-      router.push("/admin");
+      window.location.href = "/"; 
     } else {
-      router.push("/");
+      window.location.href = "/"; 
     }
   } else {
     router.push("/auth/login");

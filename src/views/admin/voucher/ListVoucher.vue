@@ -18,9 +18,9 @@
       />
       <button class="btn btn-primary ms-2 px-4" @click="applySearch">Tìm</button>
       
-      <router-link to="add-voucher" class="btn btn-primary">
-      <i class="bi bi-plus-circle me-2"></i>Thêm Voucher mới
-      </router-link>
+     <router-link to="add-voucher" class="btn btn-success ms-3">
+  <i class="bi bi-plus-circle me-2"></i>Thêm Voucher mới
+</router-link>
      
     </div>
 
