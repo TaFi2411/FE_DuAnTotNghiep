@@ -139,7 +139,7 @@ function logoutHandler() {
   isAdmin.value = false;
   accountName.value = "Khách";
   router.push("/auth/login");
-}
+} 
 </script>
 
 
