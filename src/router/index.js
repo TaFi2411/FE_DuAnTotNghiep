@@ -24,15 +24,6 @@ import Cart from "@/views/client/Cart.vue";
 import Checkout from "@/views/client/Checkout.vue";
 import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
-import Home from '@/views/client/Home.vue';
-import Store from '@/views/client/Store.vue';
-import Introduce from '../views/client/Introduce.vue';
-import Support from '@/views/client/Support.vue';
-import ProductDetail from '@/views/client/ProductDetail.vue';
-import Cart from '@/views/client/Cart.vue';
-import Checkout from '@/views/client/Checkout.vue';
-import Violate from '@/views/403.vue'
-import OAuth2Success from '@/views/auth/OAuth2Success.vue';
 import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
@@ -61,10 +52,6 @@ import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 3f66f791c39b7b5a9d70588ee282a59fd52bacc0
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
 const clientRouter = [
