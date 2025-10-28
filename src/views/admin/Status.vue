@@ -108,8 +108,8 @@
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "@/axios";
-import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
+import axios from "@/composables/axios";
+
 
 const emit = defineEmits(["update:modelValue"]);
 const errorMessage = ref("");

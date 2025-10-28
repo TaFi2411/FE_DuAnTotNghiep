@@ -32,6 +32,7 @@ import Auth from '@/views/admin/Auth.vue';
 import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
 import ReviewList from '@/views/admin/ReviewList.vue';
+import Status from '@/views/admin/Status.vue';
 
 // Admin Voucher
 import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
@@ -153,7 +154,7 @@ const clientRouter = [
   },
 
   {
-    path: 'product/:id', // URL sẽ có dạng /product/123
+    path: 'product/:id',
     name: 'ProductDetail',
 
     path: "/san-pham/:id",
@@ -162,7 +163,7 @@ const clientRouter = [
     props: true,
   },
 
-  // ✅ Route kết quả thanh toán
+
   {
     path: "/payment-result",
     name: "PaymentResult",
@@ -174,10 +175,11 @@ const clientRouter = [
     component: Checkout
   },
 
-  { path: "/403", 
-    name: "Violate", 
+  {
+    path: "/403",
+    name: "Violate",
     component: Violate
-   },
+  },
 
 ];
 
@@ -237,48 +239,27 @@ const adminRouter = [
     path: "/categories/edit/:id",
     component: CategoryAdd,
   },
-  
+
   {
 
     path: '/status',
     name: 'status',
-    component: Status,            
-  },
-{
-  path: '/paymentMethod',
-  name: 'paymentMethod',
-  component: paymentMethod,
-},
-{
-  path: "/review",
-  component: ReviewList,
-},
-{
-  path: "/review/detail/:id",
-  component: ReviewDetail,
-},
-{
-    path: "categories/edit/:id", 
-   component: StatusList,
+    component: Status,
   },
   {
-    path: "/status/add",
-    component: StatusAdd,
+    path: '/paymentMethod',
+    name: 'paymentMethod',
+    component: paymentMethod,
   },
   {
-    path: "/status/edit/:id",
-    component: StatusAdd,
+    path: "/review",
+    component: ReviewList,
   },
   {
-    path: "/payment-method/add",
-    name: "PaymentMethodAdd",
-    component: PaymentMethodAdd,
+    path: "/review/detail/:id",
+    component: ReviewDetail,
   },
-  {
-    path: "/payment-method/edit/:id",
-    name: "PaymentMethodEdit",
-    component: PaymentMethodAdd,
-  },
+
   {
     path: "/review",
     component: ReviewList,

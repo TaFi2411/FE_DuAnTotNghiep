@@ -80,8 +80,6 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "@/axios";
-import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const emit = defineEmits(["update:modelValue"]);
 

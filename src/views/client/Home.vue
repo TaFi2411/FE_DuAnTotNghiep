@@ -463,10 +463,10 @@
     <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
       <h2 class="fw-bold mb-2">iPad Mới</h2>
       <p class="fs-5 mb-3">Công cụ sáng tạo tuyệt vời.</p>
-=======
+
       <h2 class="fw-bold mb-2">AirPods</h2>
       <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
+
       <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
     </div>
   </div>
@@ -497,19 +497,19 @@
           :alt="product.name"
         />
         <div class="card-body">
-<<<<<<< HEAD
+
           <h5 class="fw-bold mb-2">iPad Pro M4</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">25.000.000 VNĐ</p>
-          <router-link :to="`/product/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
-=======
+          <router-link :to="`/product/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link
             :to="`/san-pham/${product.id}`"
             class="btn btn-primary rounded-pill px-4 py-2"
           >
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
+
             Mua ngay
           </router-link>
         </div>
@@ -562,19 +562,19 @@
           :alt="product.name"
         />
         <div class="card-body">
-<<<<<<< HEAD
+
           <h5 class="fw-bold mb-2">Apple Watch Ultra 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">18.000.000 VNĐ</p>
-          <router-link :to="`/product/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
-=======
+          <router-link :to="`/product/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link
             :to="`/san-pham/${product.id}`"
             class="btn btn-primary rounded-pill px-4 py-2"
           >
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
+
             Mua ngay
           </router-link>
         </div>
@@ -688,19 +688,18 @@
           :alt="product.name"
         />
         <div class="card-body">
-<<<<<<< HEAD
+
           <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
-          <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
-=======
+          <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link
             :to="`/san-pham/${product.id}`"
             class="btn btn-primary rounded-pill px-4 py-2"
           >
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
             Mua ngay
           </router-link>
         </div>
