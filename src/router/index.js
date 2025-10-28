@@ -39,6 +39,7 @@ import Attribute from '@/views/admin/products/Attribute.vue';
 import FlashSale from '@/views/admin/FlashSale.vue';
 import Status from '@/views/admin/Status.vue';
 import ProductAdd from '@/views/admin/products/ProductAdd.vue';
+
 // --- Định nghĩa các route con ---
 const clientRouter = [
   {
@@ -51,7 +52,7 @@ const clientRouter = [
     path: '',
     name: 'Violate',
     component: Violate
-  }, 
+  },
   {
     path: 'auth/register',
     name: 'Register',
@@ -82,7 +83,10 @@ const clientRouter = [
     name: 'Support',
     component: Support
   },
+<<<<<<< HEAD
 
+=======
+>>>>>>> 891d36366d8d48307bcb4c1d4a9d3f5650d49136
   {
     path: 'product/:id', // URL sẽ có dạng /product/123
     name: 'ProductDetail',
@@ -126,9 +130,9 @@ const adminRouter = [
     path: 'products/update/:id',
     name: 'UpdateProduct',
     component: UpdateProduct,
-    props: true                 
+    props: true
   },
-    {
+  {
     path: 'products/create',
     name: 'AddProduct',
     component: ProductAdd
@@ -137,31 +141,36 @@ const adminRouter = [
     path: 'category',
     component: CategoryList
   },
-  {
-    path: 'attribute',
-    component: Attribute
-  },
+
 
   {
+    path: 'attribute',
+    name: 'Attribute',
+    component: Attribute
+  },
+  {
     path: 'flashsale',
+    name: 'FlashSale',
     component: FlashSale
   },
   {
-  path: '/flash-sale/:id?',
-  name: 'FlashSale',
-  component: FlashSale
+    path: 'flashsale/:id?',
+    name: 'FlashSale',
+    component: FlashSale
   },
+
   {
     path: "categories/add",
     component: CategoryAdd
   },
   {
-    path: "/categories/edit/:id", 
+    path: "/categories/edit/:id",
     component: CategoryAdd
   },
   
   {
     path: '/status',
+<<<<<<< HEAD
     name: 'status',
     component: Status,            
   },
@@ -180,9 +189,46 @@ const adminRouter = [
 },
 {
     path: "categories/edit/:id", 
+=======
+    component: StatusList,
+  },
+  {
+    path: '/status/add',
+    component: StatusAdd,
+  },
+  {
+    path: '/status/edit/:id',
+    component: StatusAdd,
+  },
+  {
+    path: '/payment-method',
+    name: 'PaymentMethodList',
+    component: PaymentMethodList,
+  },
+  {
+    path: '/payment-method/add',
+    name: 'PaymentMethodAdd',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: '/payment-method/edit/:id',
+    name: 'PaymentMethodEdit',
+    component: PaymentMethodAdd,
+  },
+  {
+    path: "/review",
+    component: ReviewList,
+  },
+  {
+    path: "/review/detail/:id",
+    component: ReviewDetail,
+  },
+  {
+    path: "categories/edit/:id",
+>>>>>>> 891d36366d8d48307bcb4c1d4a9d3f5650d49136
     component: CategoryAdd
   },
-   {
+  {
     path: 'list-voucher',
     name: 'ListVoucher',
     component: ListVoucher
@@ -196,7 +242,7 @@ const adminRouter = [
     path: 'update-voucher/:id',
     name: 'VoucherUpdate',
     component: VoucherUpdate,
-    props: true                 
+    props: true
   },
 ];
 
@@ -213,7 +259,7 @@ const router = createRouter({
       path: '/admin',
       component: LayoutAdmin,
       children: adminRouter,
-      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     }
   ]
 })
@@ -221,27 +267,27 @@ const router = createRouter({
 
 
 
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token");
-//   const role = localStorage.getItem("role");
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-//   // Nếu route cần đăng nhập
-//   if (to.meta.requiresAuth) {
-//     if (!token) {
-//       // Chưa đăng nhập
-//       return next({ name: "Login" });
-//     }
+  // Nếu route cần đăng nhập
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      // Chưa đăng nhập
+      return next({ name: "Login" });
+    }
 
-//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
-//     if (to.meta.role && to.meta.role !== role) {
-//       // Không đủ quyền → về trang chủ
-//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
-//       return next({ name: "Violate" });
-//     }
-//   }
+    // Nếu route yêu cầu quyền ADMIN mà user không phải admin
+    if (to.meta.role && to.meta.role !== role) {
+      // Không đủ quyền → về trang chủ
+      console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
+      return next({ name: "Violate" });
+    }
+  }
 
-//   next();
-// });
+  next();
+});
 
 
 export default router

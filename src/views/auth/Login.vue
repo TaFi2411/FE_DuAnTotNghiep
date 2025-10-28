@@ -25,7 +25,7 @@
 
 <script setup>
 import { ref } from "vue";
-import axios from "axios";
+import api from '@/axios.js'
 
 const email = ref("");
 const password = ref("");
@@ -33,18 +33,30 @@ const error = ref("");
 
 const login = async () => {
   try {
-    const res = await axios.post("http://localhost:8080/auth/login", {
+     const res = await api.post('/auth/login', {
       email: email.value,
       password: password.value,
-    });
+    })
 
     const token = res.data.token;
+
     if (token) {
+<<<<<<< HEAD
       // 🧩 Giải mã token để lấy thông tin người dùng (nếu backend chưa trả về id)
       const payload = JSON.parse(atob(token.split(".")[1]));
       const roles = payload.roles || [];
       const role = roles[0];
       const userId = payload.id || payload.userId; // hoặc tùy backend cậu đặt tên
+=======
+
+      localStorage.setItem("token", token);
+      
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const roles = payload.roles || [];
+      const role = roles[0]; 
+
+      localStorage.setItem("role", role);
+>>>>>>> 891d36366d8d48307bcb4c1d4a9d3f5650d49136
 
       // 🧠 Lưu tất cả thông tin vào localStorage
       localStorage.setItem(
