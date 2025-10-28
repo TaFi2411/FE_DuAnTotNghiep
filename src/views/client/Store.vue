@@ -1,8 +1,6 @@
 <template>
-  <div class="store-page  text-dark min-vh-100">
-    
-
-    <!-- Video Banner -->
+  <div class="store-page text-dark min-vh-100">
+    <!-- 🎥 Video Banner -->
     <section class="banner-section position-relative overflow-hidden">
       <video autoplay muted loop playsinline class="w-100 h-100 object-fit-cover">
         <source src="/images/banner-iphone.mp4" type="video/mp4" />
@@ -19,111 +17,68 @@
         </button>
       </div>
     </section>
-<!-- Navbar -->
+
+    <!-- 🧭 Navbar Danh mục -->
     <nav class="navbar navbar-expand-lg bg-none">
       <div class="container mt-3 mb-1">
-        <button
-          class="navbar-toggler border-0"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div
-          class="collapse navbar-collapse justify-content-center"
-          id="navbarNav"
-        >
+        <div class="collapse navbar-collapse justify-content-center">
           <ul
             class="navbar-nav category-nav text-uppercase fw-semibold small rounded-pill px-3 py-2"
           >
-            <li class="nav-item"><a class="nav-link" href="#">iPhone</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">iPad</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">MacBook</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Watch</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">iPod</a></li>
+            <li
+              v-for="cat in categories"
+              :key="cat.display"
+              class="nav-item"
+            >
+              <a
+                href="#"
+                class="nav-link"
+                :class="{ active: selectedCategory === cat.display }"
+                @click.prevent="selectCategory(cat.display)"
+              >
+                {{ cat.display }}
+              </a>
+            </li>
           </ul>
         </div>
       </div>
     </nav>
-    <!-- Filter Buttons -->
+
+    <!-- 🛍️ Danh sách sản phẩm -->
     <div class="container py-5">
-      <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
-        <button class="btn btn-outline-primary btn-sm active">iPhone 17 Series</button>
-        <button class="btn btn-outline-primary btn-sm">iPhone 16 Series</button>
-        <button class="btn btn-outline-primary btn-sm">iPhone 15 Series</button>
-        <button class="btn btn-outline-primary btn-sm">iPhone 14 Series</button>
-        <button class="btn btn-outline-primary btn-sm">iPhone 13 Series</button>
-      </div>
-
-      <!-- Product Grid -->
       <div class="row g-4">
-        <!-- Sản phẩm 1 -->
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+        <div
+          class="col-12 col-sm-6 col-md-4 col-lg-3"
+          v-for="product in filteredProducts"
+          :key="product.id"
+        >
           <div
-            class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-decoration-none text-dark text-center p-3"
+            class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center"
           >
-            <img
-              src="/images/crs-ip17-air.png"
-              class="m-auto mt-2 card-img-top h-75 w-75"
-              alt="Sản phẩm"
-            />
-            <div class="card-body text-center">
-              <h5 class="card-title fw-bold mb-2">iPhone 17 Pro Max</h5>
-
-              <!-- Nút dung lượng -->
-              <div class="mb-3 d-flex justify-content-center gap-2 flex-wrap">
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  128GB
-                </button>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  256GB
-                </button>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  512GB
-                </button>
-              </div>
-
-              <p class="text-muted mb-1">Giá chỉ từ</p>
-              <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
-              <router-link
-                to="/san-pham/1"
-                class="btn btn-primary rounded-pill px-4 py-2"
-              >
-                Mua ngay
-              </router-link>
+            <!-- Ảnh sản phẩm -->
+            <div class="product-image-wrapper">
+              <img
+                :src="product.image"
+                class="product-image"
+                :alt="product.name"
+              />
             </div>
-          </div>
-        </div>
 
-        <!-- Thêm các sản phẩm khác -->
-        <div class="col-12 col-sm-6 col-lg-4 col-xl-3" v-for="n in 4" :key="n">
-          <div
-            class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-decoration-none text-dark text-center p-3"
-          >
-            <img
-              src="/images/crs-ip17-air.png"
-              class="m-auto mt-2 card-img-top h-75 w-75"
-              alt="Sản phẩm"
-            />
-            <div class="card-body text-center">
-              <h5 class="card-title fw-bold mb-2">iPhone 17 Promax</h5>
-              <div class="mb-3 d-flex justify-content-center gap-2 flex-wrap">
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  128GB
-                </button>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  256GB
-                </button>
-                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                  512GB
-                </button>
-              </div>
-              <p class="text-muted mb-1">Giá chỉ từ</p>
-              <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
+            <!-- Nội dung sản phẩm -->
+            <div class="card-body">
+              <h5 class="fw-bold mb-2">{{ product.name }}</h5>
+              <p class="text-muted mb-1">
+                {{ getMemory(product) || "Không có thông tin bộ nhớ" }}
+              </p>
+              <p class="fw-semibold text-primary mb-2">
+                {{
+                  getPrice(product)
+                    ? getPrice(product).toLocaleString("vi-VN") + "₫"
+                    : "Giá: Liên hệ"
+                }}
+              </p>
               <router-link
-                :to="`/san-pham/${n}`"
+                :to="`/san-pham/${product.id}`"
                 class="btn btn-primary rounded-pill px-4 py-2"
               >
                 Mua ngay
@@ -137,74 +92,142 @@
 </template>
 
 <script setup>
-// chưa cần backend
+import { ref, computed, onMounted } from "vue";
+import axios from "axios";
+
+// 📦 Danh mục hiển thị và ánh xạ tên trong DB
+const categories = [
+  { display: "iPhone", db: "điện thoại" },
+  { display: "iPad", db: "ipad" },
+  { display: "MacBook", db: "mac" },
+  { display: "Watch", db: "apple watch" },
+  { display: "AirPods", db: "ipod" },
+];
+
+// ✅ Danh mục mặc định (hiển thị khi load trang)
+const selectedCategory = ref("iPhone");
+
+// 📦 Dữ liệu sản phẩm
+const products = ref([]);
+
+// 🧠 Lấy danh sách sản phẩm từ API
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/product");
+    products.value = res.data.data || [];
+  } catch (err) {
+    console.error("Lỗi khi tải sản phẩm:", err);
+  }
+});
+
+// 🔍 Lọc sản phẩm theo danh mục đang chọn
+const filteredProducts = computed(() => {
+  const cat = categories.find((c) => c.display === selectedCategory.value);
+  if (!cat) return [];
+
+  const dbCategory = cat.db.toLowerCase();
+
+  return products.value.filter(
+    (p) =>
+      p.categoryName &&
+      p.categoryName.toLowerCase().includes(dbCategory)
+  );
+});
+
+// 🎯 Khi người dùng chọn danh mục
+const selectCategory = (category) => {
+  selectedCategory.value = category;
+};
+
+// 💰 Lấy giá đầu tiên khác 0 trong danh sách SKU
+const getPrice = (product) => {
+  if (!product.skus || product.skus.length === 0) return null;
+  const skuWithPrice = product.skus.find((sku) => sku.price > 0);
+  return skuWithPrice ? skuWithPrice.price : null;
+};
+
+// 📱 Lấy đầy đủ dung lượng (RAM / ROM), bỏ qua màu sắc
+const getMemory = (product) => {
+  if (!product.skus || product.skus.length === 0) return null;
+
+  const memorySet = new Set();
+
+  for (const sku of product.skus) {
+    for (const attr of sku.skuAttributes || []) {
+      if (
+        attr.optionAttributeName &&
+        ["ram", "bộ nhớ", "rom", "dung lượng"].includes(
+          attr.optionAttributeName.toLowerCase()
+        )
+      ) {
+        memorySet.add(attr.valueAttributeName);
+      }
+    }
+  }
+
+  return Array.from(memorySet).join(" / ");
+};
 </script>
 
 <style scoped>
-/* ===== Navbar danh mục ===== */
-.category-nav {
-  gap: 60px;
-  background-color: #000000;
+/* 🖼️ Ảnh sản phẩm */
+.product-image-wrapper {
+  width: 100%;
+  height: 220px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
+.product-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.05);
+}
+
+/* 🌈 Navbar danh mục */
 .category-nav .nav-link {
-  color: #ffffff !important;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  color: #555;
+  margin: 0 10px;
+  transition: all 0.3s;
 }
 
 .category-nav .nav-link:hover {
-  background-color: #0d6efd;
-  color: #fff !important;
+  color: #007bff;
 }
 
-/* ===== Banner video ===== */
+.category-nav .nav-link.active {
+  color: #fff;
+  background-color: #007bff;
+  border-radius: 20px;
+  padding: 5px 15px;
+}
+
+/* 🧩 Banner video */
 .banner-section {
-  height: 500px;
+  height: 400px;
   position: relative;
 }
 
 .banner-section video {
   object-fit: cover;
-  height: 100%;
   width: 100%;
+  height: 100%;
 }
 
 .banner-overlay {
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.4);
 }
 
-/* ===== Product card ===== */
-.product-card img {
-  transition: transform 0.4s ease, box-shadow 0.3s ease;
-}
-
-.product-card:hover img {
-  transform: scale(1.05);
-  box-shadow: 0 4px 25px rgba(13, 110, 253, 0.3);
-}
-
-/* ===== Active button ===== */
-.btn-outline-primary.active {
-  background: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-  .banner-section {
-    height: 320px;
-  }
-
-  .banner-overlay h2 {
-    font-size: 1.25rem;
-  }
-
-  .banner-overlay p {
-    font-size: 0.9rem;
-  }
+/* 🔳 Card sản phẩm */
+.card-body {
+  padding: 15px;
 }
 </style>

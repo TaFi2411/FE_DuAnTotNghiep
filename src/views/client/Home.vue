@@ -406,10 +406,12 @@
     <h2 class="fw-bold">Hiệu năng mạnh mẽ cho công việc sáng tạo</h2>
   </div>
 <!-- ===== BANNER MACBOOK ===== -->
+<!-- ===== BANNER AIRPODS ===== -->
 <div class="container-fluid category-banner mb-5">
   <div class="position-relative rounded-4 overflow-hidden">
-    <img src="/images/banner-home-macbook.png" alt="MacBook Banner" class="w-100 rounded-4" />
+    <img src="/images/banner-home-ipod.png" alt="AirPods Banner" class="w-100 rounded-4" />
     <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center overlay-bg">
+<<<<<<< HEAD
       <h2 class="fw-bold mb-2">MacBook Pro & Air</h2>
       <p class="fs-5 mb-3">Mạnh mẽ hơn bao giờ hết.</p>
       <a href="#" class="btn btn-light rounded-pill px-4 py-2">Xem chi tiết</a>
@@ -461,6 +463,10 @@
     <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
       <h2 class="fw-bold mb-2">iPad Mới</h2>
       <p class="fs-5 mb-3">Công cụ sáng tạo tuyệt vời.</p>
+=======
+      <h2 class="fw-bold mb-2">AirPods</h2>
+      <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
+>>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
       <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
     </div>
   </div>
@@ -480,14 +486,30 @@
     }"
     class="py-3 product-swiper"
   >
-    <swiper-slide v-for="n in 6" :key="`ipad-${n}`">
-      <div class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3">
-        <img src="/images/ctg-ipad.png" class="m-auto mt-2 card-img-top h-75 w-75" alt="iPad" />
+   <swiper-slide v-for="product in macBooks" :key="product.id">
+    
+      <div
+        class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3"
+      >
+        <img
+          :src="product.image"
+          class="m-auto mt-2 card-img-top h-75 w-75"
+          :alt="product.name"
+        />
         <div class="card-body">
+<<<<<<< HEAD
           <h5 class="fw-bold mb-2">iPad Pro M4</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">25.000.000 VNĐ</p>
           <router-link :to="`/product/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+=======
+          <h5 class="fw-bold mb-2">{{ product.name }}</h5>
+       
+          <router-link
+            :to="`/san-pham/${product.id}`"
+            class="btn btn-primary rounded-pill px-4 py-2"
+          >
+>>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
             Mua ngay
           </router-link>
         </div>
@@ -497,20 +519,20 @@
 </div>
 
 
-<!-- Watch -->
+<!-- iPad -->
 <div class="container py-5">
   <div class="text-center mb-4">
-    <h5 class="text-uppercase text-primary fw-bold">Sản phẩm Apple Watch</h5>
-    <h2 class="fw-bold">Đồng hành cùng sức khỏe mỗi ngày</h2>
+    <h5 class="text-uppercase text-primary fw-bold">Sản phẩm iPad</h5>
+    <h2 class="fw-bold">Sức mạnh. Linh hoạt. Đẳng cấp.</h2>
   </div>
-<!-- ===== BANNER WATCH ===== -->
+<!-- ===== BANNER AIRPODS ===== -->
 <div class="container-fluid category-banner mb-5">
   <div class="position-relative rounded-4 overflow-hidden">
-    <img src="/images/banner-home-watch.png" alt="Apple Watch Banner" class="w-100 rounded-4" />
-    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
-      <h2 class="fw-bold mb-2">Apple Watch</h2>
-      <p class="fs-5 mb-3">Đồng hành cùng sức khỏe của bạn.</p>
-      <a href="#" class="btn btn-light rounded-pill px-4 py-2">Xem ngay</a>
+    <img src="/images/banner-home-ipod.png" alt="AirPods Banner" class="w-100 rounded-4" />
+    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center overlay-bg">
+      <h2 class="fw-bold mb-2">AirPods</h2>
+      <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
+      <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
     </div>
   </div>
 </div>
@@ -529,14 +551,30 @@
     }"
     class="py-3 product-swiper"
   >
-    <swiper-slide v-for="n in 6" :key="`watch-${n}`">
-      <div class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3">
-        <img src="/images/ctg-watch.png" class="m-auto mt-2 card-img-top h-75 w-75" alt="Watch" />
+   <swiper-slide v-for="product in ipads" :key="product.id">
+    
+      <div
+        class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3"
+      >
+        <img
+          :src="product.image"
+          class="m-auto mt-2 card-img-top h-75 w-75"
+          :alt="product.name"
+        />
         <div class="card-body">
+<<<<<<< HEAD
           <h5 class="fw-bold mb-2">Apple Watch Ultra 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">18.000.000 VNĐ</p>
           <router-link :to="`/product/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+=======
+          <h5 class="fw-bold mb-2">{{ product.name }}</h5>
+       
+          <router-link
+            :to="`/san-pham/${product.id}`"
+            class="btn btn-primary rounded-pill px-4 py-2"
+          >
+>>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
             Mua ngay
           </router-link>
         </div>
@@ -544,6 +582,66 @@
     </swiper-slide>
   </swiper>
 </div>
+
+
+<!-- Watch -->
+<div class="container py-5">
+  <div class="text-center mb-4">
+    <h5 class="text-uppercase text-primary fw-bold">Sản phẩm Apple Watch</h5>
+    <h2 class="fw-bold">Đồng hành cùng sức khỏe mỗi ngày</h2>
+  </div>
+<!-- ===== BANNER AIRPODS ===== -->
+<div class="container-fluid category-banner mb-5">
+  <div class="position-relative rounded-4 overflow-hidden">
+    <img src="/images/banner-home-ipod.png" alt="AirPods Banner" class="w-100 rounded-4" />
+    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center overlay-bg">
+      <h2 class="fw-bold mb-2">AirPods</h2>
+      <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
+      <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
+    </div>
+  </div>
+</div>
+  <swiper
+    :modules="[Navigation, Autoplay]"
+    navigation
+    loop
+    :autoplay="{ delay: 3000, disableOnInteraction: false }"
+    :slides-per-view="4"
+    :space-between="20"
+    :breakpoints="{
+      320: { slidesPerView: 1 },
+      576: { slidesPerView: 2 },
+      768: { slidesPerView: 3 },
+      992: { slidesPerView: 4 }
+    }"
+    class="py-3 product-swiper"
+  >
+   <swiper-slide v-for="product in watches" :key="product.id">
+    
+      <div
+        class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3"
+      >
+        <img
+          :src="product.image"
+          class="m-auto mt-2 card-img-top h-75 w-75"
+          :alt="product.name"
+        />
+        <div class="card-body">
+          <h5 class="fw-bold mb-2">{{ product.name }}</h5>
+       
+          <router-link
+            :to="`/san-pham/${product.id}`"
+            class="btn btn-primary rounded-pill px-4 py-2"
+          >
+            Mua ngay
+          </router-link>
+        </div>
+      </div>
+    </swiper-slide>
+  </swiper>
+</div>
+
+
 
 
 <!-- AirPods -->
@@ -579,14 +677,30 @@
     }"
     class="py-3 product-swiper"
   >
-    <swiper-slide v-for="n in 6" :key="`airpods-${n}`">
-      <div class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3">
-        <img src="/images/ctg-ipod.png" class="m-auto mt-2 card-img-top h-75 w-75" alt="AirPods" />
+   <swiper-slide v-for="product in phones" :key="product.id">
+    
+      <div
+        class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3"
+      >
+        <img
+          :src="product.image"
+          class="m-auto mt-2 card-img-top h-75 w-75"
+          :alt="product.name"
+        />
         <div class="card-body">
+<<<<<<< HEAD
           <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
           <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+=======
+          <h5 class="fw-bold mb-2">{{ product.name }}</h5>
+       
+          <router-link
+            :to="`/san-pham/${product.id}`"
+            class="btn btn-primary rounded-pill px-4 py-2"
+          >
+>>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
             Mua ngay
           </router-link>
         </div>
@@ -599,22 +713,145 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from "vue";
+import axios from "axios";
+
+// Import Swiper
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Autoplay } from "swiper/modules";
-
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/autoplay";
 
-import { ref } from "vue";
+// Khai báo biến lưu danh sách điện thoại
+const phones = ref([]);
 
-const sold = ref(6);
-const total = ref(10);
+// Khi component được mount
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/product");
+
+    console.log("Dữ liệu API:", res.data);
+
+    // Kiểm tra nếu có dữ liệu trong res.data.data
+    if (res.data && res.data.data) {
+      // Lọc ra các sản phẩm có categoryName chứa chữ "điện thoại"
+      phones.value = res.data.data.filter(
+        (p) =>
+          p.categoryName &&
+          p.categoryName.toLowerCase().includes("điện thoại")
+      );
+    } else {
+      console.warn("Không có dữ liệu sản phẩm trong phản hồi API.");
+      phones.value = [];
+    }
+
+    console.log("Sản phẩm điện thoại:", phones.value);
+  } catch (err) {
+    console.error("Lỗi tải sản phẩm điện thoại:", err);
+  }
+});
 
 
+// Khai báo biến lưu danh sách Apple Watch
+const watches = ref([]);
+
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/product");
+
+    console.log("Dữ liệu API:", res.data);
+
+    // Kiểm tra nếu có dữ liệu trong res.data.data
+    if (res.data && res.data.data) {
+      // Lọc ra sản phẩm có categoryName chứa "apple watch"
+      watches.value = res.data.data.filter(
+        (p) =>
+          p.categoryName &&
+          p.categoryName.toLowerCase().includes("apple watch")
+      );
+    } else {
+      console.warn("Không có dữ liệu sản phẩm trong phản hồi API.");
+      watches.value = [];
+    }
+
+    console.log("Sản phẩm Apple Watch:", watches.value);
+  } catch (err) {
+    console.error("Lỗi tải sản phẩm Apple Watch:", err);
+  }
+});
+
+
+// Khai báo biến lưu danh sách iPad
+const ipads = ref([]);
+
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/product");
+
+    console.log("Dữ liệu API:", res.data);
+
+    // Kiểm tra nếu có dữ liệu trong res.data.data
+    if (res.data && res.data.data) {
+      // Lọc ra sản phẩm có categoryName chứa "ipad"
+      ipads.value = res.data.data.filter(
+        (p) =>
+          p.categoryName &&
+          p.categoryName.toLowerCase().includes("ipad")
+      );
+    } else {
+      console.warn("Không có dữ liệu sản phẩm trong phản hồi API.");
+      ipads.value = [];
+    }
+
+    console.log("Sản phẩm iPad:", ipads.value);
+  } catch (err) {
+    console.error("Lỗi tải sản phẩm iPad:", err);
+  }
+});
+
+
+
+// Khai báo biến lưu danh sách iPad
+const macBooks = ref([]);
+
+onMounted(async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/product");
+
+    console.log("Dữ liệu API:", res.data);
+
+    // Kiểm tra nếu có dữ liệu trong res.data.data
+    if (res.data && res.data.data) {
+      // Lọc ra sản phẩm có categoryName chứa "ipad"
+      macBooks.value = res.data.data.filter(
+        (p) =>
+          p.categoryName &&
+          p.categoryName.toLowerCase().includes("macbook")
+      );
+    } else {
+      console.warn("Không có dữ liệu sản phẩm trong phản hồi API.");
+      macBooks.value = [];
+    }
+
+    console.log("Sản phẩm iPad:", macBooks.value);
+  } catch (err) {
+    console.error("Lỗi tải sản phẩm iPad:", err);
+  }
+});
+
+onMounted(async () => {
+  const res = await axios.get("/api/product?category=dienthoai");
+  iPhoneProducts.value = res.data.data;
+  console.log(iPhoneProducts.value);
+});
 </script>
 
+
 <style scoped>
+
+
+
 
 
 .carousel-header-banner {
@@ -870,6 +1107,43 @@ const total = ref(10);
   font-size: 10px;
   font-weight: bold;
 }
+
+
+
+
+
+
+
+
+
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.product-img {
+  width: 100%;
+  height: 250px; /* chỉnh tùy ý: 200–300px */
+  object-fit: cover; /* cắt ảnh cho đều, không méo */
+  border-radius: 10px;
+}
+
+.card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.swiper-slide {
+  height: auto !important;
+  display: flex;
+  align-items: stretch;
+}
+
 
 
 

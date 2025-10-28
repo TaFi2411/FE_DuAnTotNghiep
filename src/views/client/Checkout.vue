@@ -3,16 +3,12 @@
     <h2 class="fw-bold text-center mb-4">Thanh toán đơn hàng 💳</h2>
 
     <div class="row g-4">
-      <!-- CỘT TRÁI -->
+      <!-- CỘT TRÁI: ĐỊA CHỈ -->
       <div class="col-lg-8">
-        <!-- ĐỊA CHỈ GIAO HÀNG -->
         <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Địa chỉ giao hàng</h5>
-            <button
-              class="btn btn-outline-primary btn-sm rounded-pill px-3"
-              @click="showAddressModal = true"
-            >
+            <button class="btn btn-outline-primary btn-sm rounded-pill px-3" @click="showAddressModal = true">
               <i class="bi bi-plus-circle"></i> Thêm địa chỉ mới
             </button>
           </div>
@@ -31,27 +27,39 @@
                 <strong>{{ a.fulladdress }}</strong>
                 <div class="text-muted small">#{{ a.id }}</div>
               </div>
-              <i
-                v-if="selectedAddress?.id === a.id"
-                class="bi bi-check-circle-fill text-primary fs-5"
-              ></i>
+              <i v-if="selectedAddress?.id === a.id" class="bi bi-check-circle-fill text-primary fs-5"></i>
             </div>
           </div>
           <div v-else class="text-muted fst-italic">Chưa có địa chỉ nào được lưu.</div>
         </div>
       </div>
 
-      <!-- CỘT PHẢI (Tóm tắt đơn hàng) -->
+      <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
       <div class="col-lg-4">
         <div class="summary-box bg-white rounded-4 shadow-sm p-4">
           <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
 
-          <div class="d-flex justify-content-between mb-2">
-            <span>Phí vận chuyển</span>
-            <strong>{{ formatShippingFee( shippingFee.toLocaleString() )}} đ</strong>
+          <!-- Sản phẩm trong giỏ -->
+          <div v-for="item in cartItems" :key="item.productId" class="d-flex mb-3 align-items-center">
+            <img :src="item.image || 'https://via.placeholder.com/50'" alt="" class="me-2 rounded" width="50" height="50" />
+            <div class="flex-grow-1">
+              <div class="fw-semibold">{{ item.name || 'Sản phẩm' }}</div>
+              <div class="text-muted small">{{ (item.price || 0).toLocaleString('vi-VN') }} ₫ × {{ item.quantity }}</div>
+            </div>
+            <div class="fw-semibold">{{ ((item.price || 0) * (item.quantity || 1)).toLocaleString('vi-VN') }} ₫</div>
           </div>
 
-          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Phí vận chuyển</span>
+            <strong>{{ (shippingFee || 0).toLocaleString('vi-VN') }} ₫</strong>
+          </div>
+
+          <div class="d-flex justify-content-between fw-bold border-top pt-2">
+            <span>Tổng thanh toán</span>
+            <span>{{ totalPayment.toLocaleString('vi-VN') }} ₫</span>
+          </div>
+
+          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handleVnpayPayment">
             Xác nhận thanh toán
           </button>
         </div>
@@ -59,11 +67,7 @@
     </div>
 
     <!-- MODAL THÊM ĐỊA CHỈ -->
-    <div
-      v-if="showAddressModal"
-      class="modal fade show d-block"
-      style="background: rgba(0,0,0,0.5)"
-    >
+    <div v-if="showAddressModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5)">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4">
           <div class="modal-header">
@@ -71,73 +75,30 @@
             <button type="button" class="btn-close" @click="closeModal"></button>
           </div>
           <div class="modal-body">
-            <!-- Chọn tỉnh -->
             <div class="mb-3">
               <label class="form-label fw-semibold">Tỉnh/Thành phố</label>
-              <select
-                v-model="selectedProvince"
-                @change="fetchDistricts"
-                class="form-select"
-              >
+              <select v-model="selectedProvince" @change="fetchDistricts" class="form-select">
                 <option value="">-- Chọn tỉnh --</option>
-                <option
-                  v-for="p in provinces"
-                  :key="p.ProvinceID"
-                  :value="p.ProvinceID"
-                >
-                  {{ p.ProvinceName }}
-                </option>
+                <option v-for="p in provinces" :key="p.ProvinceID" :value="p.ProvinceID">{{ p.ProvinceName }}</option>
               </select>
             </div>
-
-            <!-- Chọn huyện -->
             <div class="mb-3">
               <label class="form-label fw-semibold">Quận/Huyện</label>
-              <select
-                v-model="selectedDistrict"
-                @change="fetchWards"
-                class="form-select"
-                :disabled="!districts.length"
-              >
+              <select v-model="selectedDistrict" @change="fetchWards" class="form-select" :disabled="!districts.length">
                 <option value="">-- Chọn quận/huyện --</option>
-                <option
-                  v-for="d in districts"
-                  :key="d.DistrictID"
-                  :value="d.DistrictID"
-                >
-                  {{ d.DistrictName }}
-                </option>
+                <option v-for="d in districts" :key="d.DistrictID" :value="d.DistrictID">{{ d.DistrictName }}</option>
               </select>
             </div>
-
-            <!-- Chọn phường -->
             <div class="mb-3">
               <label class="form-label fw-semibold">Phường/Xã</label>
-              <select
-                v-model="selectedWard"
-                class="form-select"
-                :disabled="!wards.length"
-              >
+              <select v-model="selectedWard" class="form-select" :disabled="!wards.length">
                 <option value="">-- Chọn phường/xã --</option>
-                <option
-                  v-for="w in wards"
-                  :key="w.WardCode"
-                  :value="w.WardCode"
-                >
-                  {{ w.WardName }}
-                </option>
+                <option v-for="w in wards" :key="w.WardCode" :value="w.WardCode">{{ w.WardName }}</option>
               </select>
             </div>
-
-            <!-- Nhập địa chỉ cụ thể -->
             <div class="mb-3">
               <label class="form-label fw-semibold">Địa chỉ cụ thể</label>
-              <input
-                type="text"
-                v-model="specificAddress"
-                class="form-control"
-                placeholder="Ví dụ: 123 Đường ABC..."
-              />
+              <input type="text" v-model="specificAddress" class="form-control" placeholder="Ví dụ: 123 Đường ABC..." />
             </div>
           </div>
           <div class="modal-footer">
@@ -151,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import axios from "axios";
 
 const showAddressModal = ref(false);
@@ -166,12 +127,33 @@ const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = 5; // ⚠️ sau này lấy từ login
-const storeDistrictId = 1451; // Quận shop GHN
-
+const accountId = ref(null);
+const storeDistrictId = 1451;
 const shippingFee = ref(0);
+const cartItems = ref([]);
 
-// ✅ Gọi API GHN
+const fetchAccountId = () => {
+   const token = localStorage.getItem("token");
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      accountId.value = payload.id; // Lấy id từ token backend đã gắn
+    } catch (err) {
+      console.error("Lỗi khi giải mã token:", err);
+    }
+  }
+};
+
+
+// Tổng tiền sản phẩm
+const totalProductPrice = computed(() =>
+  cartItems.value.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
+);
+
+// Tổng thanh toán = sản phẩm + ship
+const totalPayment = computed(() => totalProductPrice.value + (shippingFee.value || 0));
+
+// Load danh sách tỉnh/huyện/xã
 const fetchProvinces = async () => {
   const res = await axios.get("http://localhost:8080/api/ghn/provinces");
   provinces.value = res.data;
@@ -179,9 +161,7 @@ const fetchProvinces = async () => {
 
 const fetchDistricts = async () => {
   if (!selectedProvince.value) return;
-  const res = await axios.get(
-    `http://localhost:8080/api/ghn/districts?provinceId=${selectedProvince.value}`
-  );
+  const res = await axios.get(`http://localhost:8080/api/ghn/districts?provinceId=${selectedProvince.value}`);
   districts.value = res.data;
   wards.value = [];
   selectedDistrict.value = "";
@@ -190,20 +170,22 @@ const fetchDistricts = async () => {
 
 const fetchWards = async () => {
   if (!selectedDistrict.value) return;
-  const res = await axios.get(
-    `http://localhost:8080/api/ghn/wards?districtId=${selectedDistrict.value}`
-  );
+  const res = await axios.get(`http://localhost:8080/api/ghn/wards?districtId=${selectedDistrict.value}`);
   wards.value = res.data;
   selectedWard.value = "";
 };
 
-// ✅ Gọi API lấy danh sách địa chỉ từ DB
+// Địa chỉ
 const fetchAddresses = async () => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/address?account=${accountId}`);
-    addresses.value = res.data.data || [];
+    const res = await axios.get(`http://localhost:8080/api/address/account/${accountId.value}`);
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
+    addresses.value = res.data || [];
+    console.log(addresses.value);
   } catch (err) {
+    console.log(`http://localhost:8080/api/address/account/${accountId.value}`)
     console.error("Lỗi khi load danh sách địa chỉ:", err);
+    console.error(err);
   }
 };
 
@@ -232,7 +214,7 @@ const saveAddress = async () => {
       fulladdress: fullAddress,
       defaultAddress: false,
       active: true,
-      accountId,
+      accountId: accountId.value,
     };
 
     await axios.post("http://localhost:8080/api/address", payload);
@@ -249,42 +231,29 @@ const selectAddress = (a) => {
   selectedAddress.value = a;
 };
 
-// ✅ Hàm tính phí ship chuẩn GHN
+// Tính phí ship
 const fetchShippingFee = async () => {
   if (!selectedAddress.value) return;
   const toDistrictId = Number(selectedAddress.value.district_id);
   const toWardCode = String(selectedAddress.value.ward_code);
-
   if (!toDistrictId || !toWardCode) {
     shippingFee.value = 0;
     return;
   }
-
   try {
     const res = await axios.get("http://localhost:8080/api/ghn/fee", {
-      params: {
-        fromDistrictId: storeDistrictId,
-        toDistrictId,
-        toWardCode,
-        weight: 1000, // thay bằng tổng khối lượng giỏ hàng
-      },
+      params: { fromDistrictId: storeDistrictId, toDistrictId, toWardCode, weight: 1000 }
     });
     shippingFee.value = res.data?.total || res.data?.data?.total || 0;
-    console.log("Phí ship:", shippingFee.value);
   } catch (err) {
-    console.error("Lỗi khi tính phí ship:", err.response?.data || err.message);
     shippingFee.value = 0;
+    console.error(err);
   }
 };
-const formatShippingFee = (fee) => {
-  if (!shippingFee.value) return 0;
-  return Math.ceil(shippingFee.value / 1000) * 1000; // làm tròn lên đơn vị nghìn
-};
 
-watch(selectedAddress, (newVal) => {
-  if (newVal) fetchShippingFee();
-});
+watch(selectedAddress, (newVal) => { if (newVal) fetchShippingFee(); });
 
+// Modal địa chỉ
 const closeModal = () => {
   showAddressModal.value = false;
   selectedProvince.value = "";
@@ -292,27 +261,78 @@ const closeModal = () => {
   selectedWard.value = "";
   specificAddress.value = "";
 };
+// Thanh toán VNPAY
+// ✅ Thanh toán VNPAY — tạo đơn + redirect thanh toán
+const handleVnpayPayment = async () => {
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+
+  try {
+    // 1️⃣ Gửi tạo đơn hàng
+    const orderPayload = {
+      accountId: accountId.value,
+      addressId: selectedAddress.value.id,
+      paymentMethodId: 1, // VNPAY
+      feeship: shippingFee.value,
+      total: totalPayment.value,
+      payment_status: false,
+      discount: 0,
+      voucherId: null,
+      orderDetails: cartItems.value.map(i => ({
+        skuId: i.skuId,
+        quantity: i.quantity,
+        price: i.price
+      }))
+    };
+
+    const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
+    const order = orderRes.data; // ✅ chứa id thật của đơn hàng
+    console.log("🧾 Đơn hàng tạo thành công:", order);
+
+    // Lưu lại orderId để callback dùng
+    localStorage.setItem("orderId", order.id);
+
+    // 2️⃣ Gọi API tạo link thanh toán VNPAY
+    const vnpayRes = await axios.post("http://localhost:8080/api/vnpay/create", {
+      orderId: order.id,   // ✅ dùng id thật
+      amount: order.total, // tổng tiền thật của đơn
+    });
+
+    if (vnpayRes.data?.paymentUrl) {
+      // ✅ Redirect sang trang VNPAY
+      window.location.href = vnpayRes.data.paymentUrl;
+    } else {
+      alert("Không tạo được link thanh toán!");
+    }
+  } catch (err) {
+    console.error("❌ Lỗi tạo đơn hàng hoặc thanh toán VNPAY:", err);
+    alert("Lỗi tạo đơn hàng hoặc thanh toán VNPAY!");
+  }
+};
+
+
+const fetchCartFromLocalStorage = () => {
+  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  cartItems.value = cart.map(item => ({
+    ...item,
+    quantity: item.quantity || 1,
+    price: item.price || 0
+  }));
+};
 
 onMounted(() => {
+  fetchCartFromLocalStorage();
+  fetchAccountId();
   fetchProvinces();
-  fetchAddresses();
+fetchAddresses();
 });
 </script>
 
 <style scoped>
-.checkout-page {
-  color: #1d1d1f;
-}
-
-.address-card:hover,
-.payment-method:hover {
-  border-color: #0d6efd;
-  background-color: #f8f9ff;
-  transition: 0.3s;
-}
-
-.modal-content {
-  border: none;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
-}
+.checkout-page { color: #1d1d1f; }
+.address-card:hover, .payment-method:hover { border-color: #0d6efd; background-color: #f8f9ff; transition: 0.3s; }
+.modal-content { border: none; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+.summary-box img { object-fit: cover; }
 </style>

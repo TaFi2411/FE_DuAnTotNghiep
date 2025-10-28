@@ -1,532 +1,313 @@
 <template>
-  <div class="container">
-    <h2>Quản lý Thuộc Tính Và Giá Trị</h2>
+  <div class="container mt-4">
+    <h3>Quản lý Thuộc Tính & Giá Trị</h3>
 
     <!-- Tabs -->
-    <div class="tabs">
-      <button
-        :class="{ active: activeTab === 'attribute' }"
-        @click="activeTab = 'attribute'"
-      >
-        Thuộc Tính
-      </button>
-      <button
-        :class="{ active: activeTab === 'value' }"
-        @click="activeTab = 'value'"
-      >
-        Giá Trị Thuộc Tính
-      </button>
-    </div>
+    <ul class="nav nav-tabs mb-3">
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'attribute' }"
+          @click="activeTab = 'attribute'"
+        >
+          Thuộc tính
+        </button>
+      </li>
+      <li class="nav-item">
+        <button
+          class="nav-link"
+          :class="{ active: activeTab === 'value' }"
+          @click="activeTab = 'value'"
+        >
+          Giá trị thuộc tính
+        </button>
+      </li>
+    </ul>
 
-    <!-- 🔹 Thuộc Tính -->
+    <!-- ===================== BẢNG THUỘC TÍNH ===================== -->
     <div v-if="activeTab === 'attribute'">
-      <form @submit.prevent="handleAttributeSubmit" class="form-box">
+      <div class="d-flex gap-2 mb-3 flex-wrap">
         <input
           v-model="attributeForm.name"
           type="text"
-          placeholder="Nhập tên thuộc tính (VD: Màu sắc, RAM...)"
-          
+          class="form-control w-auto flex-grow-1"
+          placeholder="Nhập tên thuộc tính..."
         />
-        <button type="submit">
+        <button class="btn btn-primary" @click="saveAttribute">
           {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
         </button>
         <button
           v-if="isEditAttribute"
-          type="button"
+          class="btn btn-secondary"
           @click="cancelEditAttribute"
-          class="cancel"
         >
           Hủy
         </button>
-      </form>
-
-      <p v-if="errorAttribute" class="error">{{ errorAttribute }}</p>
-
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Tên thuộc tính</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in paginatedAttributes" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>
-              <button @click="editAttribute(item)" class="edit">Sửa</button>
-              <button @click="deleteAttribute(item.id)" class="delete">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination" v-if="totalPagesAttr > 1">
-        <button :disabled="currentPageAttr === 1" @click="prevPageAttr">« Trước</button>
-        <button
-          v-for="page in totalPagesAttr"
-          :key="page"
-          :class="{ active: currentPageAttr === page }"
-          @click="goToPageAttr(page)"
-        >
-          {{ page }}
-        </button>
-        <button :disabled="currentPageAttr === totalPagesAttr" @click="nextPageAttr">Sau »</button>
       </div>
+
+      <vue-good-table
+        :columns="attrColumns"
+        :rows="attributes"
+        :pagination-options="paginationOptions"
+        :search-options="{ enabled: true, placeholder: 'Tìm kiếm thuộc tính...' }"
+        theme="polar-bear"
+      >
+        <template #table-row="props">
+          <span v-if="props.column.field === 'actions'">
+            <button
+              class="btn btn-warning btn-sm me-2"
+              @click="editAttribute(props.row)"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              @click="deleteAttribute(props.row.id)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
+        </template>
+      </vue-good-table>
     </div>
 
-    <!-- 🔹 Giá Trị Thuộc Tính -->
-    <div v-if="activeTab === 'value'">
-      <form @submit.prevent="handleValueSubmit" class="form-box">
-        <select v-model="valueForm.optionAttributeId" >
+    <!-- ===================== BẢNG GIÁ TRỊ ===================== -->
+    <div v-else>
+      <div class="d-flex gap-2 mb-3 flex-wrap">
+        <select v-model="valueForm.optionAttributeId" class="form-select w-auto">
           <option value="">-- Chọn thuộc tính --</option>
-          <option
-            v-for="opt in listAttributes"
-            :key="opt.id"
-            :value="opt.id"
-          >
-            {{ opt.name }}
+          <option v-for="a in allAttributes" :key="a.id" :value="a.id">
+            {{ a.name }}
           </option>
         </select>
 
         <input
           v-model="valueForm.name"
           type="text"
-          placeholder="Nhập giá trị (VD: Đỏ, 8GB, 256GB)"
-          
+          class="form-control w-auto flex-grow-1"
+          placeholder="Nhập giá trị..."
         />
 
-        <button type="submit">
+        <button class="btn btn-primary" @click="saveValue">
           {{ isEditValue ? "Cập nhật" : "Thêm mới" }}
         </button>
-
-        <button v-if="isEditValue" type="button" @click="cancelEditValue" class="cancel">
+        <button
+          v-if="isEditValue"
+          class="btn btn-secondary"
+          @click="cancelEditValue"
+        >
           Hủy
         </button>
-      </form>
-
-      <p v-if="errorValue" class="error">{{ errorValue }}</p>
-
-      <div class="search-box">
-        <select v-model="searchOptionId">
-          <option value="">-- Tất cả thuộc tính --</option>
-          <option v-for="opt in listAttributes" :key="opt.id" :value="opt.id">
-            {{ opt.name }}
-          </option>
-        </select>
-        <button @click="handleSearch">Tìm kiếm</button>
-        <button @click="resetSearch" class="cancel">Hiển thị tất cả</button>
       </div>
 
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Thuộc tính</th>
-            <th>Giá trị</th>
-            <th>Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="item in paginatedValues" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ getAttributeName(item.optionAttributeId) }}</td>
-            <td>{{ item.name }}</td>
-            <td>
-              <button @click="editValue(item)" class="edit">Sửa</button>
-              <button @click="deleteValue(item.id)" class="delete">Xóa</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="pagination" v-if="totalPagesVal > 1">
-        <button :disabled="currentPageVal === 1" @click="prevPageVal">« Trước</button>
-        <button
-          v-for="page in totalPagesVal"
-          :key="page"
-          @click="goToPageVal(page)"
-          :class="{ active: currentPageVal === page }"
-        >
-          {{ page }}
-        </button>
-        <button :disabled="currentPageVal === totalPagesVal" @click="nextPageVal">Sau »</button>
-      </div>
+      <vue-good-table
+        :columns="valColumns"
+        :rows="values"
+        :pagination-options="paginationOptions"
+        :search-options="{ enabled: true, placeholder: 'Tìm kiếm giá trị...' }"
+        theme="polar-bear"
+      >
+        <template #table-row="props">
+          <span v-if="props.column.field === 'attrName'">
+            {{ findAttrName(props.row.optionAttributeId) }}
+          </span>
+          <span v-else-if="props.column.field === 'actions'">
+            <button
+              class="btn btn-warning btn-sm me-2"
+              @click="editValue(props.row)"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              @click="deleteValue(props.row.id)"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </span>
+          <span v-else>
+            {{ props.formattedRow[props.column.field] }}
+          </span>
+        </template>
+      </vue-good-table>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import api from "@/axios";
-
-const BASE_ATTR = "/api/option-attribute";
-const BASE_VAL = "/api/value-attribute";
+import { ref, onMounted } from "vue";
+import Swal from "sweetalert2";
+import axios from "@/composables/axios.js";
 
 const activeTab = ref("attribute");
 
-/* ------------------ THUỘC TÍNH ------------------ */
-const attributeList = ref([]);
-const valueList = ref([]);
+/* =====================================================
+   =============== QUẢN LÝ THUỘC TÍNH ==================
+===================================================== */
+const attributes = ref([]);
+const allAttributes = ref([]);
 const attributeForm = ref({ id: null, name: "" });
 const isEditAttribute = ref(false);
-const errorAttribute = ref("");
 
-const currentPageAttr = ref(1);
-const pageSizeAttr = 5;
+const attrColumns = [
+  { label: "ID", field: "id" },
+  { label: "Tên thuộc tính", field: "name" },
+  { label: "Hành động", field: "actions" },
+];
 
-const totalPagesAttr = computed(() =>
-  Math.ceil(attributeList.value.length / pageSizeAttr)
-);
-const paginatedAttributes = computed(() => {
-  const start = (currentPageAttr.value - 1) * pageSizeAttr;
-  return attributeList.value.slice(start, start + pageSizeAttr);
-});
+// ✅ Phân trang frontend chung cho cả 2 bảng
+const paginationOptions = {
+  enabled: true,
+  perPage: 10,
+  perPageDropdown: [5, 10, 20, 50],
+  dropdownAllowAll: true,
+  nextLabel: "Trang sau",
+  prevLabel: "Trang trước",
+};
 
-const goToPageAttr = (p) => (currentPageAttr.value = p);
-const nextPageAttr = () => currentPageAttr.value++;
-const prevPageAttr = () => currentPageAttr.value--;
-
-// Fetch attributes
 const fetchAttributes = async () => {
-  const res = await api.get(BASE_ATTR);
-  attributeList.value = res.data.data || res.data;
-};
-const fetchValues = async () => {
-  const res = await api.get(BASE_VAL);
-  valueList.value = res.data.data?.content || res.data.data || res.data;
+  const res = await axios.get("/api/option-attribute", {
+    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 bản ghi
+  });
+  attributes.value = res.data.data || res.data.content || [];
+  allAttributes.value = attributes.value;
 };
 
-const handleAttributeSubmit = async () => {
+const saveAttribute = async () => {
   const name = attributeForm.value.name.trim();
-  if (!name) {
-    errorAttribute.value = "Tên thuộc tính không được để trống.";
-    return;
-  }
+  if (!name)
+    return Swal.fire("Lỗi!", "Tên thuộc tính không được để trống", "error");
 
-  const dup = attributeList.value.some(
-    (a) =>
-      a.name.trim().toLowerCase() === name.toLowerCase() &&
-      a.id !== attributeForm.value.id
-  );
-  if (dup) {
-    errorAttribute.value = "Thuộc tính này đã tồn tại.";
-    return;
-  }
-
-  const payload = { name };
   if (isEditAttribute.value) {
-    await api.put(`${BASE_ATTR}/${attributeForm.value.id}`, payload);
+    await axios.put(`/api/option-attribute/${attributeForm.value.id}`, { name });
+    Swal.fire("Thành công!", "Cập nhật thuộc tính thành công", "success");
   } else {
-    await api.post(BASE_ATTR, payload);
+    await axios.post(`/api/option-attribute`, { name });
+    Swal.fire("Thành công!", "Thêm mới thuộc tính thành công", "success");
   }
-  await fetchAttributes();
-  cancelEditAttribute();
+
+  attributeForm.value = { id: null, name: "" };
+  isEditAttribute.value = false;
+  fetchAttributes();
 };
 
-const editAttribute = (item) => {
-  attributeForm.value = { id: item.id, name: item.name };
+const editAttribute = (row) => {
+  attributeForm.value = { id: row.id, name: row.name };
   isEditAttribute.value = true;
-};
-
-const deleteAttribute = async (id) => {
-  const used = valueList.value.some(
-    (v) => String(v.optionAttributeId) === String(id)
-  );
-  if (used) {
-    errorAttribute.value =
-      "Không thể xóa thuộc tính vì còn giá trị liên quan.";
-    return;
-  }
-  await api.delete(`${BASE_ATTR}/${id}`);
-  await fetchAttributes();
 };
 
 const cancelEditAttribute = () => {
   attributeForm.value = { id: null, name: "" };
   isEditAttribute.value = false;
-  errorAttribute.value = "";
 };
 
-/* ------------------ GIÁ TRỊ ------------------ */
-const listValues = ref([]);
-const listAttributes = attributeList;
+const deleteAttribute = async (id) => {
+  const confirm = await Swal.fire({
+    title: "Xóa thuộc tính?",
+    text: "Bạn có chắc muốn xóa thuộc tính này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  });
+
+  if (!confirm.isConfirmed) return;
+  await axios.delete(`/api/option-attribute/${id}`);
+  Swal.fire("Đã xóa!", "Thuộc tính đã được xóa", "success");
+  fetchAttributes();
+};
+
+/* =====================================================
+   =============== QUẢN LÝ GIÁ TRỊ ======================
+===================================================== */
+const values = ref([]);
 const valueForm = ref({ id: null, optionAttributeId: "", name: "" });
 const isEditValue = ref(false);
-const errorValue = ref("");
-const searchOptionId = ref("");
 
-const currentPageVal = ref(1);
-const pageSizeVal = 5;
+const valColumns = [
+  { label: "ID", field: "id" },
+  { label: "Thuộc tính", field: "attrName" },
+  { label: "Giá trị", field: "name" },
+  { label: "Hành động", field: "actions" },
+];
 
-const totalPagesVal = computed(() =>
-  Math.ceil(listValues.value.length / pageSizeVal)
-);
-const paginatedValues = computed(() => {
-  const start = (currentPageVal.value - 1) * pageSizeVal;
-  return listValues.value.slice(start, start + pageSizeVal);
-});
-
-const goToPageVal = (p) => (currentPageVal.value = p);
-const nextPageVal = () => currentPageVal.value++;
-const prevPageVal = () => currentPageVal.value--;
-
-// Fetch values
-const fetchValueList = async (optionId = "") => {
-  let url = BASE_VAL;
-  if (optionId) url += `?optionAttributeId=${optionId}`;
-  const res = await api.get(url);
-  listValues.value = res.data.data?.content || res.data.data || res.data;
-  currentPageVal.value = 1;
+const fetchValues = async () => {
+  const res = await axios.get("/api/value-attribute", {
+    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 giá trị
+  });
+  values.value = res.data.data || res.data.content || [];
 };
 
-// Search
-const handleSearch = async () => {
-  await fetchValueList(searchOptionId.value);
-};
-const resetSearch = async () => {
-  searchOptionId.value = "";
-  await fetchValueList();
+const findAttrName = (id) => {
+  const attr = allAttributes.value.find((a) => a.id === id);
+  return attr ? attr.name : "Không xác định";
 };
 
-const handleValueSubmit = async () => {
-  const name = valueForm.value.name.trim();
-  if (!valueForm.value.optionAttributeId) {
-    errorValue.value = "Vui lòng chọn thuộc tính .";
-    return;
-  }
-  if (!name) {
-    errorValue.value = "Giá trị không được để trống.";
-    return;
-  }
-
-  const dup = listValues.value.some(
-    (v) =>
-      String(v.optionAttributeId) === String(valueForm.value.optionAttributeId) &&
-      v.name.trim().toLowerCase() === name.toLowerCase() &&
-      v.id !== valueForm.value.id
-  );
-  if (dup) {
-    errorValue.value = "Giá trị này đã tồn tại cho thuộc tính đã chọn.";
-    return;
-  }
-
-  const payload = {
-    optionAttributeId: valueForm.value.optionAttributeId,
-    name,
-  };
+const saveValue = async () => {
+  const { optionAttributeId, name } = valueForm.value;
+  if (!optionAttributeId || !name.trim())
+    return Swal.fire("Lỗi!", "Vui lòng nhập đầy đủ thông tin", "error");
 
   if (isEditValue.value) {
-    await api.put(`${BASE_VAL}/${valueForm.value.id}`, payload);
+    await axios.put(`/api/value-attribute/${valueForm.value.id}`, {
+      optionAttributeId,
+      name,
+    });
+    Swal.fire("Thành công!", "Cập nhật giá trị thành công", "success");
   } else {
-    await api.post(BASE_VAL, payload);
+    await axios.post(`/api/value-attribute`, { optionAttributeId, name });
+    Swal.fire("Thành công!", "Thêm mới giá trị thành công", "success");
   }
 
-  await fetchValueList(searchOptionId.value);
-  cancelEditValue();
+  valueForm.value = { id: null, optionAttributeId: "", name: "" };
+  isEditValue.value = false;
+  fetchValues();
 };
 
-const editValue = (item) => {
+const editValue = (row) => {
   valueForm.value = {
-    id: item.id,
-    optionAttributeId: item.optionAttributeId,
-    name: item.name,
+    id: row.id,
+    optionAttributeId: row.optionAttributeId,
+    name: row.name,
   };
   isEditValue.value = true;
-  errorValue.value = "";
-};
-
-const deleteValue = async (id) => {
-  if (!confirm("Bạn có chắc muốn xóa giá trị này không?")) return;
-  await api.delete(`${BASE_VAL}/${id}`);
-  await fetchValueList(searchOptionId.value);
 };
 
 const cancelEditValue = () => {
-  isEditValue.value = false;
   valueForm.value = { id: null, optionAttributeId: "", name: "" };
-  errorValue.value = "";
+  isEditValue.value = false;
 };
 
-const getAttributeName = (id) => {
-  const a = listAttributes.value.find((x) => String(x.id) === String(id));
-  return a ? a.name : "Không xác định";
+const deleteValue = async (id) => {
+  const confirm = await Swal.fire({
+    title: "Xóa giá trị?",
+    text: "Bạn có chắc muốn xóa giá trị này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  });
+  if (!confirm.isConfirmed) return;
+  await axios.delete(`/api/value-attribute/${id}`);
+  Swal.fire("Đã xóa!", "Giá trị đã được xóa", "success");
+  fetchValues();
 };
 
-// Mount
-onMounted(async () => {
-  await Promise.all([fetchAttributes(), fetchValues(), fetchValueList()]);
+/* =====================================================
+   =============== KHỞI CHẠY ===========================
+===================================================== */
+onMounted(() => {
+  fetchAttributes();
+  fetchValues();
 });
 </script>
 
 <style scoped>
-.container {
-  width: 900px;
-  margin: 40px auto;
-  padding: 25px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.btn-sm {
+  padding: 3px 6px;
+  font-size: 13px;
 }
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-.tabs button {
-  padding: 10px 20px;
-  border: none;
-  background: #eee;
-  margin: 0 5px;
-  cursor: pointer;
-  border-radius: 6px;
-}
-.tabs button.active {
-  background: #007bff;
-  color: white;
-}
-.form-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.form-box input,
-.form-box select {
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-.form-box button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-.cancel {
-  background: #999;
-}
-.error {
-  color: #f33;
-  text-align: center;
-  margin-bottom: 10px;
-}
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.table th,
-.table td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-.edit {
-  background: #4caf50;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  margin-right: 5px;
-  cursor: pointer;
-}
-.delete {
-  background: #f44336;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.search-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 15px;
-}
-.pagination button {
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  background: #f8f8f8;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.pagination button.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.search-box {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  margin: 20px 0;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Dropdown */
-.search-box select {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: white;
-  font-size: 14px;
-  transition: 0.2s;
-}
-.search-box select:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
-  outline: none;
-}
-
-/* Buttons */
-.search-box button {
-  padding: 8px 14px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.search-box button:first-of-type {
-  background-color: #007bff;
-  color: white;
-}
-
-.search-box button:first-of-type:hover {
-  background-color: #0056b3;
-}
-
-.search-box .cancel {
-  background-color: #6c757d;
-  color: white;
-}
-
-.search-box .cancel:hover {
-  background-color: #5a6268;
-}
-
 </style>

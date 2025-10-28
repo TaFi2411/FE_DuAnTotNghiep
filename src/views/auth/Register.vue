@@ -1,9 +1,10 @@
 <template>
-  <div class="container mt-5" style="max-width: 600px;">
-    <h3 class="text-center mb-4">Đăng ký tài khoản</h3>
+  <div class="register-page container py-5 mt-5">
+    <h2 class="text-center fw-bold mb-4">Đăng ký tài khoản</h2>
 
-    <form @submit.prevent="handleRegister">
+    <form @submit.prevent="handleRegister" class="mx-auto register-form">
       <!-- Họ tên -->
+
       <div class="mb-3">
         <label for="fullname" class="form-label">Họ và tên</label>
         <input
@@ -45,16 +46,22 @@
 
       <!-- Mật khẩu -->
       <div class="mb-3">
-        <label for="password" class="form-label">Mật khẩu</label>
-        <input
-          type="password"
-          class="form-control"
-          id="password"
-          v-model="form.password"
-          placeholder="••••••••"
-          minlength="6"
-          required
-        />
+        <label class="form-label">Mật khẩu</label>
+        <div class="position-relative">
+          <input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            class="form-control pe-5"
+            placeholder="Nhập mật khẩu"
+            required
+          />
+          <i
+            class="bi position-absolute end-0 top-50 translate-middle-y me-3"
+            :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"
+            @click="togglePassword"
+            style="cursor: pointer; color: #777;"
+          ></i>
+        </div>
       </div>
 
       <!-- Giới tính -->
@@ -87,60 +94,77 @@
       </div>
 
       <!-- Nút đăng ký -->
-      <div class="d-grid">
-        <button type="submit" class="btn btn-primary">Đăng ký</button>
-      </div>
+      <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
+        Đăng ký
+      </button>
+
+     
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { ref } from "vue";
+import axios from "axios";
+import { useRouter, RouterLink } from "vue-router";
 
-const router = useRouter()
-const API_URL = 'http://localhost:8080/auth/register'
+const router = useRouter();
+const API_URL = "http://localhost:8080/auth/register";
 
 const form = ref({
-  fullname: '',
-  email: '',
-  phone: '',
-  password: '',
+  fullname: "",
+  email: "",
+  phone: "",
+  password: "",
   gender: true,
   role: false,
-  active: true
-})
+  active: true,
+});
+
+const showPassword = ref(false);
+const togglePassword = () => {
+  showPassword.value = !showPassword.value;
+};
 
 const handleRegister = async () => {
   try {
-    await axios.post(API_URL, form.value)
-
-    alert('🎉 Đăng ký thành công! Hãy đăng nhập.')
-    router.push('/auth/login') // chuyển sang trang đăng nhập
-
-    // reset form
+    await axios.post(API_URL, form.value);
+    alert("🎉 Đăng ký thành công! Hãy đăng nhập.");
+    router.push("/auth/login");
     form.value = {
-      fullname: '',
-      email: '',
-      phone: '',
-      password: '',
+      fullname: "",
+      email: "",
+      phone: "",
+      password: "",
       gender: true,
       role: false,
-      active: true
-    }
+      active: true,
+    };
   } catch (err) {
-    console.error('Lỗi khi đăng ký tài khoản:', err)
-    alert('⚠️ Đăng ký thất bại! Kiểm tra lại thông tin.')
+    console.error("Lỗi khi đăng ký tài khoản:", err);
+    alert("⚠️ Đăng ký thất bại! Kiểm tra lại thông tin.");
   }
-}
+};
 </script>
 
 <style scoped>
-.container {
-  background: #fff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.register-form {
+  max-width: 480px;
+}
+
+/* Giúp icon con mắt nằm chính giữa đẹp hơn */
+.password-toggle {
+  cursor: pointer;
+  color: #777;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .register-form {
+    max-width: 100%;
+    padding: 0 15px;
+  }
 }
 </style>

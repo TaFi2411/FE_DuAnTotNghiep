@@ -1,160 +1,134 @@
 <template>
-  <div class="container mt-4">
-    <h2 class="mb-3 text-center">Quản lý Category</h2>
-
-    <!-- 🔍 Tìm kiếm + Lọc trạng thái + Nút thêm -->
-    <div class="d-flex justify-content-between mb-3 align-items-center gap-2">
-      <div class="d-flex gap-2 w-75">
-        <input
-          v-model="name"
-          @input="fetchCategories"
-          type="text"
-          class="form-control"
-          placeholder="Tìm theo tên..."
-        />
-        <input
-          v-model="slug"
-          @input="fetchCategories"
-          type="text"
-          class="form-control"
-          placeholder="Tìm theo slug..."
-        />
-        <select v-model="status" @change="fetchCategories" class="form-select w-auto">
-          <option value="">Tất cả</option>
-          <option value="true">Hoạt động</option>
-          <option value="false">Ẩn</option>
-        </select>
-      </div>
-
-      <button class="btn btn-primary" @click="goAdd">+ Thêm Category</button>
-    </div>
-
-    <!-- 🧱 Bảng danh mục -->
-    <table class="table table-bordered table-hover">
-      <thead class="table-light">
-        <tr>
-          <th>ID</th>
-          <th>Slug</th>
-          <th>Tên</th>
-          <th>Trạng thái</th>
-          <th class="text-center">Hành động</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="cat in categories" :key="cat.id">
-          <td>{{ cat.id }}</td>
-          <td>{{ cat.slug }}</td>
-          <td>{{ cat.name }}</td>
-          <td>
-            <span class="badge" :class="cat.status ? 'bg-success' : 'bg-secondary'">
-              {{ cat.status ? 'Hoạt động' : 'Ẩn' }}
-            </span>
-          </td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-warning me-2" @click="goEdit(cat.id)">
-              Sửa
-            </button>
-            <button class="btn btn-sm btn-danger" @click="confirmDelete(cat.id)">
-              Xóa
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Khi không có dữ liệu -->
-    <div v-if="categories.length === 0" class="text-center text-muted mt-3">
-      Không có danh mục nào.
-    </div>
-
-    <!-- 📄 Phân trang -->
-    <div
-      v-if="totalPages > 1"
-      class="d-flex justify-content-between align-items-center mt-3"
+  <div class="p-3">
+    <vue-good-table
+      :columns="columns"
+      :rows="categories"
+      :pagination-options="paginationOptions"
+      :search-options="{ enabled: true, placeholder: 'Tìm kiếm danh mục...' }"
+      theme="polar-bear"
     >
-      <div>Trang {{ currentPage + 1 }} / {{ totalPages }}</div>
-      <div>
-        <button
-          class="btn btn-outline-primary me-2"
-          :disabled="currentPage === 0"
-          @click="changePage(currentPage - 1)"
-        >
-          &laquo; Trước
-        </button>
-        <button
-          class="btn btn-outline-primary"
-          :disabled="currentPage >= totalPages - 1"
-          @click="changePage(currentPage + 1)"
-        >
-          Sau &raquo;
-        </button>
-      </div>
-    </div>
+      <template #table-row="props">
+        <!-- 🟢 Trạng thái -->
+        <span v-if="props.column.field === 'status'">
+          <span :class="['badge', props.row.status ? 'bg-success' : 'bg-secondary']">
+            {{ props.row.status ? 'Hoạt động' : 'Ẩn' }}
+          </span>
+        </span>
+
+        <!-- ⚙️ Hành động -->
+        <span v-else-if="props.column.field === 'actions'">
+          <div class="d-flex justify-content-center gap-1">
+            <button
+              class="btn btn-outline-primary btn-sm"
+              @click="updateCategory(props.row.id)"
+              title="Sửa danh mục"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+
+            <button
+              class="btn btn-outline-success btn-sm"
+              @click="addCategory"
+              title="Thêm danh mục mới"
+            >
+              <i class="bi bi-plus-circle"></i>
+            </button>
+
+            <button
+              class="btn btn-outline-danger btn-sm"
+              @click="confirmDelete(props.row.id)"
+              title="Xóa danh mục"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </span>
+
+        <!-- 🔤 Các cột khác -->
+        <span v-else>
+          {{ props.formattedRow[props.column.field] }}
+        </span>
+      </template>
+    </vue-good-table>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from '@/axios'
+import axios from '@/composables/axios.js'
+import Swal from 'sweetalert2'
+import 'vue-good-table-next/dist/vue-good-table-next.css'
+import router from '@/router'
 
-const router = useRouter()
 const categories = ref([])
+const loading = ref(false)
 
-// 🔍 Bộ lọc
-const name = ref('')
-const slug = ref('')
-const status = ref('')
+const columns = ref([
+  { label: 'ID', field: 'id', sortable: true, width: '80px' },
+  { label: 'Slug', field: 'slug', sortable: true },
+  { label: 'Tên danh mục', field: 'name', sortable: true },
+  { label: 'Trạng thái', field: 'status', width: '150px' },
+  { label: 'Hành động', field: 'actions', width: '160px' },
+])
 
-// 📄 Phân trang
-const currentPage = ref(0)
-const totalPages = ref(1)
-const totalItems = ref(0)
-const pageSize = 5
+// ✅ Phân trang xử lý phía frontend
+const paginationOptions = ref({
+  enabled: true,
+  perPage: 10,
+  perPageDropdown: [5, 10, 20, 50],
+  dropdownAllowAll: true,
+  nextLabel: 'Trang sau',
+  prevLabel: 'Trang trước',
+})
 
-// 🚀 Lấy danh sách category có phân trang + tìm kiếm
-const fetchCategories = async (page = currentPage.value) => {
+// 📡 Lấy toàn bộ danh mục (ví dụ 1000 dòng)
+const fetchCategories = async () => {
+  loading.value = true
   try {
     const res = await axios.get('/api/category', {
-      params: {
-        name: name.value,
-        slug: slug.value,
-        status: status.value !== '' ? status.value : null,
-        page,
-        size: pageSize
-      }
+      params: { page: 0, size: 1000 }, // ⚡ Lấy tối đa 1000 danh mục
     })
 
-    categories.value = res.data.data || res.data.content || []
-    totalPages.value = res.data.totalPages || 1
-    totalItems.value = res.data.totalItems || categories.value.length
-    currentPage.value = res.data.currentPage || 0
+    categories.value = Array.isArray(res.data.data)
+      ? res.data.data
+      : res.data.content || res.data || []
   } catch (err) {
-    console.error('❌ Lỗi khi tải danh mục:', err)
+    console.error('❌ Lỗi tải danh mục:', err)
+    Swal.fire('Lỗi', 'Không thể tải danh mục!', 'error')
+  } finally {
+    loading.value = false
   }
 }
 
-// 👉 Đổi trang
-const changePage = (page) => {
-  if (page >= 0 && page < totalPages.value) {
-    currentPage.value = page
-    fetchCategories(page)
-  }
+const updateCategory = (id) => {
+  router.push(`/admin/category/update/${id}`)
 }
 
-// ➕ Thêm, ✏️ Sửa, ❌ Xóa
-const goAdd = () => router.push('categories/add')
-const goEdit = (id) => router.push(`/categories/edit/${id}`)
+const addCategory = () => {
+  router.push('/admin/categories/add')
+}
 
 const confirmDelete = async (id) => {
-  if (!confirm('Bạn có chắc muốn xóa danh mục này không?')) return
+  const confirm = await Swal.fire({
+    title: 'Xóa danh mục?',
+    text: 'Bạn có chắc chắn muốn xóa không?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+  })
+  if (!confirm.isConfirmed) return
+  await deleteCategory(id)
+}
+
+const deleteCategory = async (id) => {
   try {
-    await axios.delete(`/category/${id}`)
-    await fetchCategories(currentPage.value)
-    alert('✅ Xóa thành công!')
+    await axios.delete(`/api/category/${id}`)
+    Swal.fire('Đã xóa!', 'Danh mục đã bị xóa.', 'success')
+    fetchCategories()
   } catch (err) {
-    console.error('❌ Lỗi khi xóa:', err)
-    alert('Xóa thất bại, xem console để biết thêm chi tiết.')
+    console.error('❌ Lỗi xoá danh mục:', err)
+    Swal.fire('Lỗi', 'Không thể xóa danh mục!', 'error')
   }
 }
 
@@ -162,10 +136,15 @@ onMounted(fetchCategories)
 </script>
 
 <style scoped>
-.card {
-  border-radius: 10px;
+.d-flex button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
-.pagination .page-link {
-  cursor: pointer;
+.d-flex i {
+  font-size: 14px;
 }
 </style>
