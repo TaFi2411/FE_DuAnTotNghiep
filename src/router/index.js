@@ -27,7 +27,6 @@ import PaymentResult from "@/views/client/PaymentResult.vue";
 import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
-<<<<<<< HEAD
 import Dashboard from '@/views/admin/Dashboard.vue';
 import Auth from '@/views/admin/Auth.vue';
 import paymentMethod from '@/views/admin/PaymentMethod.vue';
@@ -38,31 +37,6 @@ import ReviewList from '@/views/admin/ReviewList.vue';
 import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
 import VoucherAdd from '@/views/admin/voucher/VoucherAdd.vue';
 import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
-//Admin Product
-import CategoryAdd from '@/views/admin/products/CategoryAdd.vue';
-import CategoryList from '@/views/admin/products/CategoryList.vue';
-import ListProduct from '@/views/admin/products/ListProduct.vue';
-import UpdateProduct from '@/views/admin/products/ProductUpdate.vue';
-import Attribute from '@/views/admin/products/Attribute.vue';
-import FlashSale from '@/views/admin/FlashSale.vue';
-import Status from '@/views/admin/Status.vue';
-import ProductAdd from '@/views/admin/products/ProductAdd.vue';
-=======
-// --- Admin Pages --- //
-import Dashboard from "@/views/admin/Dashboard.vue";
-import Auth from "@/views/admin/Auth.vue";
-import PaymentMethodAdd from "@/views/admin/PaymentMethodAdd.vue";
-import StatusAdd from "@/views/admin/StatusAdd.vue";
-import StatusList from "@/views/admin/StatusList.vue";
-import ReviewDetail from "@/views/admin/ReviewDetail.vue";
-import ReviewList from "@/views/admin/ReviewList.vue";
-
-
-// Admin Voucher
-// --- Voucher --- //
-import ListVoucher from "@/views/admin/voucher/ListVoucher.vue";
-import VoucherAdd from "@/views/admin/voucher/VoucherAdd.vue";
-import VoucherUpdate from "@/views/admin/voucher/VoucherUpdate.vue";
 
 //Admin Product
 import CategoryAdd from "@/views/admin/products/CategoryAdd.vue";
@@ -72,7 +46,7 @@ import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
+
 
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
@@ -142,7 +116,7 @@ const clientRouter = [
   },
 
   {
-<<<<<<< HEAD
+
     path: '',
     name: 'Violate',
     component: Violate
@@ -177,48 +151,34 @@ const clientRouter = [
     name: 'Support',
     component: Support
   },
-<<<<<<< HEAD
 
-=======
->>>>>>> 891d36366d8d48307bcb4c1d4a9d3f5650d49136
   {
     path: 'product/:id', // URL sẽ có dạng /product/123
     name: 'ProductDetail',
-=======
+
     path: "/san-pham/:id",
     name: "ProductDetail",
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
     component: ProductDetail,
     props: true,
   },
-<<<<<<< HEAD
-  // {
-  //   path: 'product-details', // URL sẽ có dạng /product/123
-  //   name: 'ProductDetail',
-  //   component: ProductDetail,
-  //   props: true // Tự động truyền id vào làm prop
-  // },
-=======
+
   // ✅ Route kết quả thanh toán
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
   {
     path: "/payment-result",
     name: "PaymentResult",
     component: PaymentResult,
   },
-<<<<<<< HEAD
+
   {
     path: '/checkout',
     component: Checkout
   },
-  
-=======
+
   { path: "/403", 
     name: "Violate", 
     component: Violate
    },
 
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
 ];
 
 // --- ADMIN ROUTER --- //
@@ -279,9 +239,8 @@ const adminRouter = [
   },
   
   {
-<<<<<<< HEAD
+
     path: '/status',
-<<<<<<< HEAD
     name: 'status',
     component: Status,            
   },
@@ -300,11 +259,7 @@ const adminRouter = [
 },
 {
     path: "categories/edit/:id", 
-=======
-=======
-    path: "/status",
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
-    component: StatusList,
+   component: StatusList,
   },
   {
     path: "/status/add",
@@ -334,12 +289,8 @@ const adminRouter = [
   },
   {
     path: "categories/edit/:id",
-<<<<<<< HEAD
->>>>>>> 891d36366d8d48307bcb4c1d4a9d3f5650d49136
     component: CategoryAdd
-=======
-    component: CategoryAdd,
->>>>>>> d4a91aaeda8ed394a77d65474e89dca61488cbad
+
   },
   {
     path: "list-voucher",
