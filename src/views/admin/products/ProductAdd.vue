@@ -1,17 +1,103 @@
 <template>
   <div class="container">
-    <h2>Thêm sản phẩm mới</h2>
-
     <form @submit.prevent="saveProduct">
       <!-- Thông tin cơ bản -->
-      <div class="mb-3">
-        <label>Tên sản phẩm</label>
-        <input v-model="product.name" class="form-control" />
-      </div>
+      <div class="row">
+        <div class="col-lg-4">
+          <label>Ảnh sản phẩm chung (nếu có)</label>
+          <div class="mb-3 text-center">
+            <!-- Khung chọn ảnh -->
+            <div
+              class="image-upload border rounded-4 position-relative bg-light border-dark-subtle"
+              style="width: 100%; max-width: 280px; height: 280px; cursor: pointer; overflow: hidden; background-color: #f8f9fa;"
+              @click="$refs.fileInput.click()"
+            >
+              <!-- Ảnh preview -->
+              <template v-if="imagePreview">
+                <img
+                  :src="imagePreview"
+                  alt="Ảnh sản phẩm"
+                  class="position-absolute top-0 start-0 w-100 h-100 p-3"
+                  style="object-fit: cover; object-position: center;"
+                />
+              </template>
 
-      <div class="mb-3">
-        <label>Slug</label>
-        <input v-model="product.slug" class="form-control" />
+              <!-- Khi chưa có ảnh -->
+              <template v-else>
+                <div
+                  class="text-muted d-flex flex-column align-items-center justify-content-center h-100"
+                >
+                  <i class="bi bi-image fs-1 mb-2"></i>
+                  <small>Bấm để chọn ảnh</small>
+                </div>
+              </template>
+            </div>
+
+            <!-- Input file ẩn -->
+            <input
+              type="file"
+              accept="image/*"
+              class="d-none"
+              ref="fileInput"
+              @change="handleImageUpload"
+            />
+
+            <!-- Loading -->
+            <div v-if="isUploadingGlobal" class="mt-2 text-center">
+              <div class="spinner-border text-primary"></div>
+              <p class="text-muted mt-2 mb-0">Đang tải ảnh lên...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-8 mb-3">
+          <div class="mb-3">
+            <label>Tên sản phẩm</label>
+            <input v-model="product.name" class="form-control" type="text"/>
+            
+          </div>
+
+          <div class="mb-3">
+            <label>Slug</label>
+            <input v-model="product.slug" class="form-control" type="text" disabled/>
+          </div>
+
+
+          <div class="mb-3">
+            <label>Danh mục</label>
+            <select v-model="product.categoryId" class="form-select">
+              <option v-for="c in categories" :key="c.id" :value="c.id">
+                {{ c.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold d-block mb-2">Trạng thái</label>
+
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="active"
+                value="true"
+                v-model="product.status"
+              />
+              <label class="form-check-label" for="active">Hoạt động</label>
+            </div>
+
+            <div class="form-check form-check-inline">
+              <input
+                class="form-check-input"
+                type="radio"
+                id="inactive"
+                value="false"
+                v-model="product.status"
+              />
+              <label class="form-check-label" for="inactive">Ngưng hoạt động</label>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="mb-3">
@@ -19,42 +105,24 @@
         <textarea v-model="product.description" class="form-control"></textarea>
       </div>
 
-      <div class="mb-3">
-        <label>Ảnh sản phẩm chung (nếu có)</label>
-        <input type="file" class="form-control" accept="image/*" @change="handleImageUpload" />
-        <div v-if="isUploadingGlobal" class="mt-2 text-center">
-          <div class="spinner-border text-primary"></div>
-          <p class="text-muted mt-2 mb-0">Đang tải ảnh lên...</p>
-        </div>
-        <div v-if="imagePreview" class="mt-3 text-center border rounded p-2">
-          <img :src="imagePreview" class="img-fluid rounded" alt="Preview" />
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label>Danh mục</label>
-        <select v-model="product.categoryId" class="form-select">
-          <option v-for="c in categories" :key="c.id" :value="c.id">
-            {{ c.name }}
-          </option>
-        </select>
-      </div>
-
-      <div class="form-check mb-3">
-        <input type="checkbox" v-model="product.status" class="form-check-input" id="status" />
-        <label class="form-check-label" for="status">Hoạt động</label>
-      </div>
-
       <hr />
 
       <!-- Danh sách SKU -->
-      <h4>Biến thể (SKU)</h4>
 
-      <div v-for="(sku, index) in product.skus" :key="index" class="border rounded p-3 mb-3">
+
+      <div
+        v-for="(sku, index) in product.skus"
+        :key="index"
+        class="border rounded p-3 mb-3"
+      >
         <div class="d-flex justify-content-between align-items-center">
-          <h5>SKU #{{ index + 1 }}</h5>
-          <button type="button" class="btn btn-danger btn-sm" @click="removeSku(index)">
-            Xóa SKU
+          <h5>Biến thể sản phẩm - {{ index + 1 }}</h5>
+          <button
+            type="button"
+            class="btn btn-danger btn-sm"
+            @click="removeSku(index)"
+          >
+            Xóa biến thể
           </button>
         </div>
 
@@ -74,73 +142,116 @@
         <!-- Thuộc tính -->
         <div class="mb-3">
           <label>Thuộc tính</label>
-          <div v-for="(attr, aIndex) in sku.attributes" :key="aIndex" class="d-flex align-items-center gap-2 mb-2">
-            <select v-model="attr.optionAttributeId" class="form-select w-25" @change="attr.valueAttributeId = null">
+          <div
+            v-for="(attr, aIndex) in sku.attributes"
+            :key="aIndex"
+            class="d-flex align-items-center gap-2 mb-2"
+          >
+            <select
+              v-model="attr.optionAttributeId"
+              class="form-select w-25"
+              @change="attr.valueAttributeId = null"
+            >
               <option disabled value="">Chọn loại</option>
               <option v-for="opt in optionAttributes" :key="opt.id" :value="opt.id">
                 {{ opt.name }}
               </option>
             </select>
 
-            <select v-model="attr.valueAttributeId" class="form-select w-50" :disabled="!attr.optionAttributeId">
+            <select
+              v-model="attr.valueAttributeId"
+              class="form-select w-50"
+              :disabled="!attr.optionAttributeId"
+            >
               <option disabled value="">Chọn giá trị</option>
-              <option v-for="val in filteredValueAttributes(attr.optionAttributeId)" :key="val.id" :value="val.id">
+              <option
+                v-for="val in filteredValueAttributes(attr.optionAttributeId)"
+                :key="val.id"
+                :value="val.id"
+              >
                 {{ val.name }}
               </option>
             </select>
 
-            <button type="button" class="btn btn-sm btn-outline-danger" @click="removeAttribute(index, aIndex)">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              @click="removeAttribute(index, aIndex)"
+            >
               Xóa
             </button>
           </div>
 
-          <button type="button" class="btn btn-outline-primary btn-sm" @click="addAttribute(index)">
+          <button
+            type="button"
+            class="btn btn-outline-primary btn-sm"
+            @click="addAttribute(index)"
+          >
             + Thêm thuộc tính
           </button>
         </div>
 
-        <!-- Ảnh SKU -->
+        <!-- Ảnh SKU (Tự upload ngay khi chọn) -->
         <div class="mb-3">
-          <label>Ảnh cho SKU</label>
+          <label>Ảnh cho biến thể sản phẩm</label>
 
-          <!-- Input chọn file -->
-          <input type="file" class="form-control mb-2" accept="image/*" multiple
-            @change="(e) => handleSelectSkuImages(e, index)" />
-
-          <!-- Hiển thị preview ảnh -->
-          <div v-if="selectedSkuImages[index]?.length" class="d-flex gap-2 flex-wrap mt-2">
-            <div v-for="(file, i) in selectedSkuImages[index]" :key="i" class="position-relative border rounded p-1"
-              style="width:120px">
-              <img :src="file.preview" style="width:100%; height:80px; object-fit:cover" />
-              <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px; right:4px"
-                @click="removeSelectedImage(index, i)">
-                x
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <!-- Ảnh đã upload -->
+            <div
+              v-for="(img, i) in sku.skuImages"
+              :key="'uploaded-' + i"
+              class="image-upload border rounded-3 position-relative bg-light border-dark-subtle"
+              style="width: 80px; height: 80px; cursor: pointer; overflow: hidden;"
+            >
+              <img
+                :src="img.url || img.path"
+                alt="Ảnh SKU"
+                class="position-absolute top-0 start-0 w-100 h-100"
+                style="object-fit: cover; object-position: center;"
+              />
+              <button
+                type="button"
+                class="btn btn-sm btn-danger position-absolute"
+                style="top: 2px; right: 2px; padding: 0 4px;"
+                @click="removeSkuImage(index, i)"
+              >
+                ×
               </button>
             </div>
+
+            <!-- Nút chọn ảnh -->
+            <div
+              class="image-upload border rounded-3 d-flex flex-column align-items-center justify-content-center bg-light border-dark-subtle text-muted"
+              style="width: 80px; height: 80px; cursor: pointer;"
+              @click="openSkuFilePicker(index)"
+            >
+              <i class="bi bi-plus-circle fs-5"></i>
+            </div>
+
+            <!-- Input file ẩn -->
+            <input
+              type="file"
+              class="d-none"
+              accept="image/*"
+              multiple
+              ref="skuFileInputs"
+              @change="(e) => handleAutoUploadSkuImages(e, index)"
+            />
           </div>
 
-          <!-- Nút upload -->
-          <button type="button" class="btn btn-outline-primary btn-sm mt-2" @click="uploadSelectedSkuImages(index)"
-            :disabled="!selectedSkuImages[index]?.length || skuUploading[index]">
-            <span v-if="skuUploading[index]">Đang tải...</span>
-            <span v-else>📤 Thêm ảnh SKU</span>
-          </button>
-
-          <!-- Ảnh SKU đã upload -->
-          <div class="d-flex gap-2 flex-wrap mt-3">
-            <div v-for="(img, i) in sku.skuImages" :key="i" class="position-relative border rounded p-1"
-              style="width:120px">
-              <img :src="img.url" style="width:100%; height:80px; object-fit:cover" />
-              <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px; right:4px"
-                @click="removeSkuImage(index, i)">
-                x
-              </button>
-            </div>
+          <div v-if="skuUploading[index]" class="mt-2 small text-primary">
+            Đang tải ảnh lên...
           </div>
         </div>
       </div>
 
-      <button type="button" class="btn btn-outline-success mt-2" @click="addSku">+ Thêm SKU</button>
+      <button
+        type="button"
+        class="btn btn-outline-success mt-2"
+        @click="addSku"
+      >
+        + Thêm biến thể sản phẩm
+      </button>
 
       <hr />
 
@@ -150,8 +261,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted,watch } from "vue";
 import axios from "@/composables/axios.js";
+import router from "@/router";
 
 const product = ref({
   name: "",
@@ -169,7 +281,30 @@ const optionAttributes = ref([]);
 const valueAttributes = ref([]);
 const isUploadingGlobal = ref(false);
 const skuUploading = ref({});
-const selectedSkuImages = ref({});
+const skuFileInputs = ref([]);
+
+function openSkuFilePicker(index) {
+  const input = skuFileInputs.value[index];
+  if (input) input.click();
+}
+
+function toSlug(str) {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+watch(
+  () => product.value.name,
+  (newVal) => {
+    product.value.slug = toSlug(newVal);
+  }
+);
 
 // ======= Load dữ liệu =======
 onMounted(async () => {
@@ -196,7 +331,7 @@ const handleImageUpload = async (event) => {
     const res = await axios.post("/api/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    product.value.image = res.data; // backend nhận image là string
+    product.value.image = res.data;
     imagePreview.value = res.data;
   } catch (err) {
     alert("Upload ảnh thất bại!");
@@ -205,50 +340,31 @@ const handleImageUpload = async (event) => {
   }
 };
 
-// ======= Chọn ảnh SKU (preview trước khi upload) =======
-function handleSelectSkuImages(event, index) {
+// ======= Upload ảnh SKU tự động =======
+async function handleAutoUploadSkuImages(event, index) {
   const files = Array.from(event.target.files);
   if (!files.length) return;
-  selectedSkuImages.value[index] = files.map((f) => ({
-    file: f,
-    preview: URL.createObjectURL(f),
-  }));
-}
 
-// ======= Xóa ảnh chưa upload =======
-function removeSelectedImage(skuIndex, imgIndex) {
-  selectedSkuImages.value[skuIndex].splice(imgIndex, 1);
-  if (!selectedSkuImages.value[skuIndex].length)
-    delete selectedSkuImages.value[skuIndex];
-}
-
-// ======= Upload ảnh SKU thật =======
-async function uploadSelectedSkuImages(index) {
-  if (!selectedSkuImages.value[index]?.length) return;
   skuUploading.value[index] = true;
-
   try {
-    for (const img of selectedSkuImages.value[index]) {
+    for (const file of files) {
       const formData = new FormData();
-      formData.append("file", img.file);
-
+      formData.append("file", file);
       const res = await axios.post("/api/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // ✅ BE yêu cầu "path" chứ không phải "url"
       if (!product.value.skus[index].skuImages)
         product.value.skus[index].skuImages = [];
 
       product.value.skus[index].skuImages.push({ path: res.data });
     }
-
-    delete selectedSkuImages.value[index];
   } catch (err) {
     console.error("❌ Lỗi upload ảnh SKU:", err);
     alert("Upload ảnh SKU thất bại!");
   } finally {
     skuUploading.value[index] = false;
+    event.target.value = "";
   }
 }
 
@@ -265,10 +381,7 @@ function removeSku(index) {
   product.value.skus.splice(index, 1);
 }
 function addAttribute(skuIndex) {
-  // ✅ BE chỉ cần valueAttributeId
-  product.value.skus[skuIndex].attributes.push({
-    valueAttributeId: null,
-  });
+  product.value.skus[skuIndex].attributes.push({ valueAttributeId: null });
 }
 function removeAttribute(skuIndex, attrIndex) {
   product.value.skus[skuIndex].attributes.splice(attrIndex, 1);
@@ -277,7 +390,6 @@ function removeSkuImage(skuIndex, imgIndex) {
   product.value.skus[skuIndex].skuImages.splice(imgIndex, 1);
 }
 
-// ======= Filter value theo option =======
 function filteredValueAttributes(optionId) {
   return valueAttributes.value.filter((v) => v.optionAttributeId === optionId);
 }
@@ -285,7 +397,6 @@ function filteredValueAttributes(optionId) {
 // ======= Lưu sản phẩm =======
 async function saveProduct() {
   try {
-    // 🧠 Xử lý trước khi gửi để chỉ giữ valueAttributeId
     product.value.skus.forEach((sku) => {
       sku.attributes = sku.attributes
         .filter((attr) => attr.valueAttributeId)
@@ -294,17 +405,17 @@ async function saveProduct() {
 
     const res = await axios.post("/api/product", product.value);
     alert("✅ Thêm sản phẩm thành công!");
+    router.push("/admin/list-product");
     console.log("Response:", res.data);
   } catch (err) {
     console.error("❌ Lỗi khi lưu sản phẩm:", err.response?.data || err);
-    alert("❌ Lỗi khi lưu sản phẩm! Xem console để biết chi tiết.");
+    alert("❌ Lỗi khi lưu sản phẩm!");
   }
 }
 </script>
 
-
 <style scoped>
 .container {
-  max-width: 800px;
+  max-width: 1000px;
 }
 </style>

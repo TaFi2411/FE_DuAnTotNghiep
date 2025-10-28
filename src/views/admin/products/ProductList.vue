@@ -130,7 +130,7 @@ const fetchProducts = async () => {
 // 📦 Hành động
 const goToAddProduct = () => router.push('/admin/product/add')
 const viewDetail = (row) => router.push(`/admin/product/${row.id}`)
-const editProduct = (id) => router.push(`/admin/product/edit/${id}`)
+const editProduct = (id) => router.push(`/admin/product/update/${id}`)
 
 const confirmDelete = async (id) => {
   const confirm = await Swal.fire({

@@ -4,21 +4,23 @@
 
     <div class="right">
 
-<div class="dropdown">
-              <a
-                class="nav-link dropdown-toggle d-flex align-items-center"
-                href="#"
-                id="userDropdown"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-               <i class="bi bi-person-circle fs-2 me-1"></i>
-                <span>{{ accountName }}</span>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="userDropdown">
-                <!-- Chưa đăng nhập -->
-                <template v-if="!isLoggedIn">
+      <!-- Dropdown người dùng -->
+      <div class="dropdown">
+        <a
+          class="nav-link dropdown-toggle d-flex align-items-center"
+          href="#"
+          id="userDropdown"
+          role="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+        >
+          <i class="bi bi-person-circle fs-4 me-2"></i>
+          <span>{{ accountName }}</span>
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <!-- Nếu chưa đăng nhập -->
+          <template v-if="!isLoggedIn">
                   <li class="dropdown-item"><strong>Chưa đăng nhập</strong></li>
                   <li><hr class="dropdown-divider" /></li>
                   <li><router-link class="dropdown-item" to="/auth/register">Đăng ký</router-link></li>
@@ -26,8 +28,8 @@
                   <li><router-link class="dropdown-item" to="/auth/login">Quên mật khẩu</router-link></li>
                 </template>
 
-                <!-- Đã đăng nhập -->
-                <template v-else>
+          <!-- Nếu đã đăng nhập -->
+          <template v-else>
                   <li class="dropdown-item"><strong>Thông tin cá nhân</strong></li>
                   <li><hr class="dropdown-divider" /></li>
                   <li><router-link class="dropdown-item" to="/orders">Đơn hàng của tôi</router-link></li>
@@ -35,17 +37,16 @@
                   <li><router-link class="dropdown-item" to="/change-password">Đổi mật khẩu</router-link></li>
                   <li><hr class="dropdown-divider" /></li>
                   <li><a class="dropdown-item" href="#" @click.prevent="logoutHandler">Đăng xuất</a></li>
-                </template>
-              </ul>
-            </div>
-
+          </template>
+        </ul>
+      </div>
 
     </div>
   </header>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -55,39 +56,55 @@ const isLoggedIn = ref(false);
 const accountName = ref("Khách");
 const isAdmin = ref(false);
 
-// Khi component được mount, kiểm tra token
-onMounted(() => {
-  const token = sessionStorage.getItem("token");
-  
-  if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const roles = payload.roles || [];
-      const role = roles[0];
-      const email = payload.sub; 
-      
-      // Gán giá trị reactive
-      isLoggedIn.value = true;
-      accountName.value = email;
-      isAdmin.value = roles.includes("ROLE_ADMIN");
 
-      console.log("✅ Đăng nhập với role:", role);
-    } catch (e) {
-      console.error("❌ Token không hợp lệ:", e);
-      sessionStorage.removeItem("token");
+
+// 👉 Hàm giải mã token an toàn với Unicode
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Lỗi khi decode JWT:", error);
+    return null;
+  }
+}
+
+// Khi component mount
+onMounted(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const payload = decodeJwtToken(token);
+    if (payload) {
+      const roles = payload.roles || [];
+      isLoggedIn.value = true;
+      accountName.value = payload.accountName || "Người dùng";
+      isAdmin.value = roles.includes("ROLE_ADMIN");
+      console.log("✅ Đăng nhập:", accountName.value, "Roles:", roles);
+    } else {
+      console.warn("❌ Token không hợp lệ, xoá token...");
+      localStorage.removeItem("token");
     }
   }
 });
 
-// Hàm đăng xuất
+// Đăng xuất
 function logoutHandler() {
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("role");
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
   isLoggedIn.value = false;
   isAdmin.value = false;
   accountName.value = "Khách";
   router.push("/auth/login");
 }
+
+
 </script>
 
 <style scoped>
@@ -98,16 +115,18 @@ function logoutHandler() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .title {
   font-size: 20px;
   font-weight: 600;
   color: #333;
+  margin: 0;
 }
 
 .right {
@@ -116,47 +135,12 @@ function logoutHandler() {
   gap: 20px;
 }
 
-.search-box {
-  display: flex;
-  align-items: center;
-  background: #f5f5f5;
-  border-radius: 6px;
-  padding: 5px 10px;
-}
-
-.search-box i {
-  color: #888;
-  margin-right: 6px;
-}
-
-.search-box input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 14px;
-}
-
-.notification {
-  font-size: 20px;
-  color: #555;
+.nav-link {
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
 
-.user-info img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-}
-
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-}
 </style>

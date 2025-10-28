@@ -107,31 +107,45 @@ const isLoggedIn = ref(false);
 const accountName = ref("Khách");
 const isAdmin = ref(false);
 
-// Khi component được mount, kiểm tra token
+
+
+// 👉 Hàm giải mã token an toàn với Unicode
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Lỗi khi decode JWT:", error);
+    return null;
+  }
+}
+
+// Khi component mount
 onMounted(() => {
   const token = localStorage.getItem("token");
-  console.log(token);
   if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
+    const payload = decodeJwtToken(token);
+    if (payload) {
       const roles = payload.roles || [];
-      const role = roles[0];
-      const email = payload.sub; 
-      
-      // Gán giá trị reactive
       isLoggedIn.value = true;
-      accountName.value = email;
+      accountName.value = payload.accountName || "Người dùng";
       isAdmin.value = roles.includes("ROLE_ADMIN");
-
-      console.log("✅ Đăng nhập với role:", role);
-    } catch (e) {
-      console.error("❌ Token không hợp lệ:", e);
-      sessionStorage.removeItem("token");
+      console.log("✅ Đăng nhập:", accountName.value, "Roles:", roles);
+    } else {
+      console.warn("❌ Token không hợp lệ, xoá token...");
+      localStorage.removeItem("token");
     }
   }
 });
 
-// Hàm đăng xuất
+// Đăng xuất
 function logoutHandler() {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
@@ -139,7 +153,9 @@ function logoutHandler() {
   isAdmin.value = false;
   accountName.value = "Khách";
   router.push("/auth/login");
-} 
+}
+
+
 </script>
 
 

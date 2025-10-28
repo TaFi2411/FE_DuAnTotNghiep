@@ -24,15 +24,6 @@ import Cart from "@/views/client/Cart.vue";
 import Checkout from "@/views/client/Checkout.vue";
 import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
-import Home from '@/views/client/Home.vue';
-import Store from '@/views/client/Store.vue';
-import Introduce from '../views/client/Introduce.vue';
-import Support from '@/views/client/Support.vue';
-import ProductDetail from '@/views/client/ProductDetail.vue';
-import Cart from '@/views/client/Cart.vue';
-import Checkout from '@/views/client/Checkout.vue';
-import Violate from '@/views/403.vue'
-import OAuth2Success from '@/views/auth/OAuth2Success.vue';
 import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
@@ -61,10 +52,6 @@ import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 3f66f791c39b7b5a9d70588ee282a59fd52bacc0
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
 const clientRouter = [
@@ -169,13 +156,13 @@ const adminRouter = [
     component: ProductList,
   },
   {
-    path: "products/update/:id",
+    path: "product/update/:id",
     name: "UpdateProduct",
     component: ProductUpdate,
     props: true,
   },
   {
-    path: "products/create",
+    path: "product/create",
     name: "AddProduct",
     component: ProductAdd,
   },
@@ -272,31 +259,60 @@ const router = createRouter({
       path: "/admin",
       component: LayoutAdmin,
       children: adminRouter,
-      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     },
   ],
 });
 
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token");
-//   const role = localStorage.getItem("role");
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(window.atob(base64));
+  } catch (e) {
+    console.error("❌ Lỗi decode token:", e);
+    return null;
+  }
+}
 
-//   // Nếu route cần đăng nhập
-//   if (to.meta.requiresAuth) {
-//     if (!token) {
-//       // Chưa đăng nhập
-//       return next({ name: "Login" });
-//     }
+function isTokenExpired(token) {
+  const payload = decodeJwtToken(token);
+  if (!payload) return true;
+  const now = Date.now() / 1000;
+  return payload.exp && payload.exp < now;
+}
 
-//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
-//     if (to.meta.role && to.meta.role !== role) {
-//       // Không đủ quyền → về trang chủ
-//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
-//       return next({ name: "Violate" });
-//     }
-//   }
 
-//   next();
-// });
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  // Nếu có token thì kiểm tra hạn
+  if (token && isTokenExpired(token)) {
+    console.warn("⚠️ Token hết hạn — đăng xuất tự động");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    return next({ name: "Login" });
+  }
+
+  // Nếu route yêu cầu đăng nhập
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
+      return next({ name: "Login" });
+    }
+
+    // Kiểm tra quyền
+    if (to.meta.role && to.meta.role !== role) {
+      console.warn(
+        `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
+      );
+      return next({ name: "Violate" });
+    }
+  }
+
+  next();
+});
+
 
 export default router;
