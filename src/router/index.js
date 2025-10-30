@@ -47,6 +47,7 @@ import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
+import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
 
 
 // --- Định nghĩa các route con ---
@@ -207,6 +208,11 @@ const adminRouter = [
     props: true,
   },
   {
+    path: "product-detail/:id",
+    name: "ProductDetailAdmin",
+    component: ProductDetailAdmin,
+  },
+  {
     path: "product/create",
     name: "AddProduct",
     component: ProductAdd,
@@ -304,60 +310,60 @@ const router = createRouter({
       path: "/admin",
       component: LayoutAdmin,
       children: adminRouter,
-      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     },
   ],
 });
 
-function decodeJwtToken(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(window.atob(base64));
-  } catch (e) {
-    console.error("❌ Lỗi decode token:", e);
-    return null;
-  }
-}
+// function decodeJwtToken(token) {
+//   try {
+//     const base64Url = token.split(".")[1];
+//     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+//     return JSON.parse(window.atob(base64));
+//   } catch (e) {
+//     console.error("❌ Lỗi decode token:", e);
+//     return null;
+//   }
+// }
 
-function isTokenExpired(token) {
-  const payload = decodeJwtToken(token);
-  if (!payload) return true;
-  const now = Date.now() / 1000;
-  return payload.exp && payload.exp < now;
-}
+// function isTokenExpired(token) {
+//   const payload = decodeJwtToken(token);
+//   if (!payload) return true;
+//   const now = Date.now() / 1000;
+//   return payload.exp && payload.exp < now;
+// }
 
 
-router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token");
+//   const role = localStorage.getItem("role");
 
-  // Nếu có token thì kiểm tra hạn
-  if (token && isTokenExpired(token)) {
-    console.warn("⚠️ Token hết hạn — đăng xuất tự động");
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    return next({ name: "Login" });
-  }
+//   // Nếu có token thì kiểm tra hạn
+//   if (token && isTokenExpired(token)) {
+//     console.warn("⚠️ Token hết hạn — đăng xuất tự động");
+//     localStorage.removeItem("token");
+//     localStorage.removeItem("role");
+//     return next({ name: "Login" });
+//   }
 
-  // Nếu route yêu cầu đăng nhập
-  if (to.meta.requiresAuth) {
-    if (!token) {
-      console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
-      return next({ name: "Login" });
-    }
+//   // Nếu route yêu cầu đăng nhập
+//   if (to.meta.requiresAuth) {
+//     if (!token) {
+//       console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
+//       return next({ name: "Login" });
+//     }
 
-    // Kiểm tra quyền
-    if (to.meta.role && to.meta.role !== role) {
-      console.warn(
-        `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
-      );
-      return next({ name: "Violate" });
-    }
-  }
+//     // Kiểm tra quyền
+//     if (to.meta.role && to.meta.role !== role) {
+//       console.warn(
+//         `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
+//       );
+//       return next({ name: "Violate" });
+//     }
+//   }
 
-  next();
-});
+//   next();
+// });
 
 
 export default router;

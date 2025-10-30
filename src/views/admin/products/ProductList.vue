@@ -35,7 +35,7 @@
 
           <!-- Cột trạng thái -->
           <span v-else-if="props.column.field === 'status'">
-            <span class="badge" :class="props.row.status ? 'bg-success' : 'bg-danger'">
+            <span class="badge">
               {{ props.row.status ? 'Đang bán' : 'Ngừng bán' }}
             </span>
           </span>
@@ -49,7 +49,7 @@
           <span v-else-if="props.column.field === 'actions'">
             <button
               class="btn btn-outline-primary btn-sm me-1"
-              @click="viewDetail(props.row)"
+              @click="viewDetail(props.row.id)"
             >
               <i class="bi bi-eye"></i>
             </button>
@@ -128,8 +128,8 @@ const fetchProducts = async () => {
 }
 
 // 📦 Hành động
-const goToAddProduct = () => router.push('/admin/product/add')
-const viewDetail = (row) => router.push(`/admin/product/${row.id}`)
+const goToAddProduct = () => router.push('/admin/product/create')
+const viewDetail = (id) => router.push(`/admin/product-detail/${id}`)
 const editProduct = (id) => router.push(`/admin/product/update/${id}`)
 
 const confirmDelete = async (id) => {

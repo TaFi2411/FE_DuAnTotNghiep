@@ -42,10 +42,7 @@
           <input class="form-check-input" type="checkbox" id="rememberMe" />
           <label class="form-check-label" for="rememberMe">Nhớ mật khẩu</label>
         </div>
-        <RouterLink
-          to="/auth/forgot-password"
-          class="text-decoration-none small text-primary"
-        >
+        <RouterLink to="/auth/forgot-password" class="text-decoration-none small text-primary">
           Quên mật khẩu?
         </RouterLink>
       </div>
@@ -59,10 +56,7 @@
     </form>
 
     <!-- OR DIVIDER -->
-    <div
-      class="text-center position-relative my-4"
-      style="max-width: 400px; margin: 0 auto;"
-    >
+    <div class="text-center position-relative my-4" style="max-width: 400px; margin: 0 auto;">
       <span class="bg-white px-3 text-muted small">hoặc</span>
       <hr
         class="position-absolute top-50 start-0 w-100 translate-middle-y border-secondary-subtle"
@@ -93,10 +87,7 @@
     <!-- REGISTER LINK -->
     <p class="text-center small text-muted mb-0">
       Bạn chưa có tài khoản?
-      <RouterLink
-        to="/auth/register"
-        class="text-decoration-none fw-semibold text-primary"
-      >
+      <RouterLink to="/auth/register" class="text-decoration-none fw-semibold text-primary">
         Đăng ký
       </RouterLink>
     </p>
@@ -113,11 +104,15 @@ const password = ref("");
 const error = ref("");
 const showPassword = ref(false);
 
+
 const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 
+
 const login = async () => {
+  console.log("Đang gửi:", email.value, password.value);
+
   try {
     const res = await api.post("/auth/login", {
       email: email.value,
@@ -125,37 +120,31 @@ const login = async () => {
     });
 
     const token = res.data.token;
-    if (!token) {
+
+    if (token) {
+      // Lưu token
+      localStorage.setItem("token", token);
+
+      // Giải mã token để lấy role
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const roles = payload.roles || [];
+      const role = roles.length > 0 ? roles[0] : null;
+
+      if (role) {
+        localStorage.setItem("role", role);
+      }
+
+      console.log("Role:", role);
+      window.location.href = "/";
+    } else {
       error.value = "Không nhận được token từ server!";
-      return;
     }
-
-    // 🧩 Giải mã token
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const userId = payload.id || payload.userId;
-    const roles = payload.roles || [];
-    const role = roles.length > 0 ? roles[0] : "USER";
-
-    // 🧠 Lưu vào localStorage
-    localStorage.setItem("token", token);
-    localStorage.setItem("role", role);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        id: userId,
-        email: email.value,
-        role: role,
-        token: token,
-      })
-    );
-
-    console.log("✅ User đã lưu:", JSON.parse(localStorage.getItem("user")));
-    window.location.href = "/";
   } catch (err) {
-    console.error(err);
-    error.value = "Sai tài khoản hoặc mật khẩu!";
+    console.error("Lỗi khi đăng nhập:", err);
+    error.value = "Email hoặc mật khẩu không đúng!";
   }
 };
+
 
 const loginWithGoogle = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/google";
@@ -165,6 +154,7 @@ const loginWithFacebook = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
 };
 </script>
+
 
 <style scoped>
 .login-page {

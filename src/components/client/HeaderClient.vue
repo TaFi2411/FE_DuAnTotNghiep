@@ -137,6 +137,7 @@ onMounted(() => {
       isLoggedIn.value = true;
       accountName.value = payload.accountName || "Người dùng";
       isAdmin.value = roles.includes("ROLE_ADMIN");
+      console.log(token);
       console.log("✅ Đăng nhập:", accountName.value, "Roles:", roles);
     } else {
       console.warn("❌ Token không hợp lệ, xoá token...");

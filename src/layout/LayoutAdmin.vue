@@ -30,7 +30,7 @@ const menu = [
     icon: 'bi bi-box-seam',
     children: [
       { name: 'Danh sách sản phẩm', path: '/admin/list-product' },
-      { name: 'Thêm sản phẩm', path: '/admin/products/create' },
+      { name: 'Thêm sản phẩm', path: '/admin/product/create' },
       { name: 'Loại sản phẩm', path: '/admin/category' },
       { name: 'Thêm thuộc tính', path: '/admin/attribute' },
     ]
