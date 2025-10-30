@@ -262,18 +262,56 @@ const closeModal = () => {
   specificAddress.value = "";
 };
 // Thanh toán VNPAY
+// ✅ Thanh toán VNPAY — tạo đơn + redirect thanh toán
 const handleVnpayPayment = async () => {
-  if (!selectedAddress.value) { alert("Vui lòng chọn địa chỉ giao hàng!"); return; }
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+
   try {
-    const orderData = { amount: totalPayment.value, orderInfo: "Thanh toán đơn hàng" };
-    const res = await axios.post("http://localhost:8080/api/vnpay/create", orderData);
-    if (res.data?.paymentUrl) window.location.href = res.data.paymentUrl;
-    else alert("Không thể tạo liên kết thanh toán!");
+    // 1️⃣ Gửi tạo đơn hàng
+    const orderPayload = {
+      accountId: accountId.value,
+      addressId: selectedAddress.value.id,
+      paymentMethodId: 1, // VNPAY
+      feeship: shippingFee.value,
+      total: totalPayment.value,
+      payment_status: false,
+      discount: 0,
+      voucherId: null,
+      orderDetails: cartItems.value.map(i => ({
+        skuId: i.skuId,
+        quantity: i.quantity,
+        price: i.price
+      }))
+    };
+
+    const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
+    const order = orderRes.data; // ✅ chứa id thật của đơn hàng
+    console.log("🧾 Đơn hàng tạo thành công:", order);
+
+    // Lưu lại orderId để callback dùng
+    localStorage.setItem("orderId", order.id);
+
+    // 2️⃣ Gọi API tạo link thanh toán VNPAY
+    const vnpayRes = await axios.post("http://localhost:8080/api/vnpay/create", {
+      orderId: order.id,   // ✅ dùng id thật
+      amount: order.total, // tổng tiền thật của đơn
+    });
+
+    if (vnpayRes.data?.paymentUrl) {
+      // ✅ Redirect sang trang VNPAY
+      window.location.href = vnpayRes.data.paymentUrl;
+    } else {
+      alert("Không tạo được link thanh toán!");
+    }
   } catch (err) {
-    console.error(err);
-    alert("Lỗi kết nối VNPAY!");
+    console.error("❌ Lỗi tạo đơn hàng hoặc thanh toán VNPAY:", err);
+    alert("Lỗi tạo đơn hàng hoặc thanh toán VNPAY!");
   }
 };
+
 
 const fetchCartFromLocalStorage = () => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");

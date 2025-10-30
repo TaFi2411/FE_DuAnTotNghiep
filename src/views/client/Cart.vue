@@ -13,11 +13,27 @@
           <h2>{{ item.name || "Sản phẩm" }}</h2>
           <p class="price">{{ (item.price || 0).toLocaleString("vi-VN") }} ₫</p>
 
-          <div class="quantity-control">
-            <button @click="decreaseQty(index)">-</button>
-            <span>{{ item.quantity }}</span>
-            <button @click="increaseQty(index)">+</button>
-          </div>
+<div class="quantity-control">
+  <button 
+  @click="decreaseQty(index)" 
+  :disabled="item.quantity <= 1"
+>-</button>
+
+  <span>{{ item.quantity }}</span>
+
+  <button 
+    @click="increaseQty(index)" 
+    :disabled="item.quantity >= item.stock"
+  >+</button>
+
+  <span v-if="item.quantity >= item.stock" class="out-of-stock">Hết hàng</span>
+</div>
+
+
+
+
+          <!-- Hiển thị tồn kho -->
+          <p class="stock-info">Kho còn: {{ item.stock }}</p>
         </div>
 
         <!-- Tổng tiền & nút xóa -->
@@ -30,8 +46,7 @@
       <!-- Tổng kết -->
       <div class="cart-summary">
         <h2>Tổng cộng: {{ totalPrice.toLocaleString("vi-VN") }} ₫</h2>
-       <button class="checkout-btn" @click="goToCheckout">💳 Thanh toán</button>
-
+        <button class="checkout-btn" @click="goToCheckout">💳 Thanh toán</button>
       </div>
     </div>
 
@@ -45,6 +60,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
 // Giỏ hàng
 const cartItems = ref([]);
@@ -52,14 +68,18 @@ const cartItems = ref([]);
 // Hình mặc định nếu sản phẩm không có image
 const defaultImage = "https://via.placeholder.com/100";
 
+const router = useRouter();
+
 // Load giỏ hàng từ localStorage
 onMounted(() => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-  cartItems.value = cart.map(item => ({
-    ...item,
-    quantity: item.quantity || 1,
-    price: item.price || 0
-  }));
+ cartItems.value = cart.map(item => ({
+  ...item,
+  quantity: Number(item.quantity) > 0 ? Number(item.quantity) : 1,
+  price: item.price || 0,
+  stock: item.stock || 0  // <- 0 nếu không có dữ liệu, không dùng 9 nữa
+}));
+
 });
 
 // Lưu giỏ hàng vào localStorage
@@ -69,18 +89,26 @@ const saveCart = () => {
 
 // Tăng số lượng
 const increaseQty = (index) => {
-  cartItems.value[index].quantity++;
+  const item = cartItems.value[index];
+
+  // Ngăn tăng vượt tồn kho
+  if (item.quantity >= item.stock) {
+    return; // không làm gì
+  }
+
+  item.quantity++;
   saveCart();
 };
 
-// Giảm số lượng
+
+/// Giảm số lượng
 const decreaseQty = (index) => {
-  if (cartItems.value[index].quantity > 1) {
-    cartItems.value[index].quantity--;
-  } else {
-    cartItems.value.splice(index, 1);
+  const item = cartItems.value[index];
+  if (item.quantity > 1) {
+    item.quantity--;
+    saveCart();
   }
-  saveCart();
+  // Nếu = 1 thì không làm gì (ẩn nút trừ ở template)
 };
 
 // Xóa sản phẩm
@@ -94,10 +122,7 @@ const totalPrice = computed(() =>
   cartItems.value.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0)
 );
 
-import { useRouter } from "vue-router";
-
-const router = useRouter();
-
+// Chuyển đến trang thanh toán
 const goToCheckout = () => {
   if (cartItems.value.length === 0) {
     alert("Giỏ hàng trống 😢");
@@ -165,6 +190,7 @@ const goToCheckout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 5px;
 }
 
 .quantity-control button {
@@ -180,6 +206,16 @@ const goToCheckout = () => {
 
 .quantity-control button:hover {
   background: #ddd;
+}
+
+.out-of-stock {
+  color: #e53935;
+  font-weight: 600;
+}
+
+.stock-info {
+  font-size: 0.9rem;
+  color: #555;
 }
 
 .cart-item-total {

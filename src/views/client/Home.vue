@@ -203,7 +203,7 @@
 
 
               <!-- Nút mua -->
-              <router-link :to="`/san-pham/${n}`" class="btn btn-primary rounded-pill px-4 py-2 mt-3">
+              <router-link :to="`/product/${n}`" class="btn btn-primary rounded-pill px-4 py-2 mt-3">
                 <i class="bi bi-cart3 me-2"></i> Mua sản phẩm
               </router-link>
             </div>
@@ -300,7 +300,7 @@
           <h5 class="card-title fw-bold mb-2">iPhone 17 Promax</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -389,7 +389,7 @@
           <h5 class="fw-bold mb-2">iPhone 17 Pro Max</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">35.000.000 VNĐ</p>
-          <router-link :to="`/san-pham/iphone-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+          <router-link :to="`/product/iphone-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
             Mua ngay
           </router-link>
         </div>
@@ -411,8 +411,62 @@
   <div class="position-relative rounded-4 overflow-hidden">
     <img src="/images/banner-home-ipod.png" alt="AirPods Banner" class="w-100 rounded-4" />
     <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-center overlay-bg">
+<<<<<<< HEAD
+      <h2 class="fw-bold mb-2">MacBook Pro & Air</h2>
+      <p class="fs-5 mb-3">Mạnh mẽ hơn bao giờ hết.</p>
+      <a href="#" class="btn btn-light rounded-pill px-4 py-2">Xem chi tiết</a>
+    </div>
+  </div>
+</div>
+  <swiper
+    :modules="[Navigation, Autoplay]"
+    navigation
+    loop
+    :autoplay="{ delay: 3000, disableOnInteraction: false }"
+    :slides-per-view="4"
+    :space-between="20"
+    :breakpoints="{
+      320: { slidesPerView: 1 },
+      576: { slidesPerView: 2 },
+      768: { slidesPerView: 3 },
+      992: { slidesPerView: 4 }
+    }"
+    class="py-3 product-swiper"
+  >
+    <swiper-slide v-for="n in 6" :key="`macbook-${n}`">
+      <div class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center p-3">
+        <img src="/images/ctg-macbook.png" class="m-auto mt-2 card-img-top h-75 w-75" alt="MacBook" />
+        <div class="card-body">
+          <h5 class="fw-bold mb-2">MacBook Pro M3</h5>
+          <p class="text-muted mb-1">Giá chỉ từ</p>
+          <p class="text-primary fw-bold fs-5 mb-3">45.000.000 VNĐ</p>
+          <router-link :to="`/product/macbook-${n}`" class="btn btn-primary rounded-pill px-4 py-2">
+            Mua ngay
+          </router-link>
+        </div>
+      </div>
+    </swiper-slide>
+  </swiper>
+</div>
+
+
+<!-- iPad -->
+<div class="container py-5">
+  <div class="text-center mb-4">
+    <h5 class="text-uppercase text-primary fw-bold">Sản phẩm iPad</h5>
+    <h2 class="fw-bold">Sức mạnh. Linh hoạt. Đẳng cấp.</h2>
+  </div>
+<!-- ===== BANNER iPAD ===== -->
+<div class="container-fluid category-banner mb-5">
+  <div class="position-relative rounded-4 overflow-hidden">
+    <img src="/images/banner-home-ipad.png" alt="iPad Banner" class="w-100 rounded-4" />
+    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
+      <h2 class="fw-bold mb-2">iPad Mới</h2>
+      <p class="fs-5 mb-3">Công cụ sáng tạo tuyệt vời.</p>
+
       <h2 class="fw-bold mb-2">AirPods</h2>
       <p class="fs-5 mb-3">Âm thanh sống động, đắm chìm.</p>
+
       <a href="#" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</a>
     </div>
   </div>
@@ -443,12 +497,19 @@
           :alt="product.name"
         />
         <div class="card-body">
+
+          <h5 class="fw-bold mb-2">iPad Pro M4</h5>
+          <p class="text-muted mb-1">Giá chỉ từ</p>
+          <p class="text-primary fw-bold fs-5 mb-3">25.000.000 VNĐ</p>
+          <router-link :to="`/product/ipad-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link
             :to="`/san-pham/${product.id}`"
             class="btn btn-primary rounded-pill px-4 py-2"
           >
+
             Mua ngay
           </router-link>
         </div>
@@ -501,12 +562,19 @@
           :alt="product.name"
         />
         <div class="card-body">
+
+          <h5 class="fw-bold mb-2">Apple Watch Ultra 3</h5>
+          <p class="text-muted mb-1">Giá chỉ từ</p>
+          <p class="text-primary fw-bold fs-5 mb-3">18.000.000 VNĐ</p>
+          <router-link :to="`/product/watch-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link
             :to="`/san-pham/${product.id}`"
             class="btn btn-primary rounded-pill px-4 py-2"
           >
+
             Mua ngay
           </router-link>
         </div>
@@ -620,6 +688,12 @@
           :alt="product.name"
         />
         <div class="card-body">
+
+          <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
+          <p class="text-muted mb-1">Giá chỉ từ</p>
+          <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
+          <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
           <router-link

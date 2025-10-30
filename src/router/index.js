@@ -26,21 +26,17 @@ import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
 
 // Admin
-// --- Admin Pages --- //
-import Dashboard from "@/views/admin/Dashboard.vue";
-import Auth from "@/views/admin/Auth.vue";
-import PaymentMethodAdd from "@/views/admin/PaymentMethodAdd.vue";
-import StatusAdd from "@/views/admin/StatusAdd.vue";
-import StatusList from "@/views/admin/StatusList.vue";
-import ReviewDetail from "@/views/admin/ReviewDetail.vue";
-import ReviewList from "@/views/admin/ReviewList.vue";
-
+import Dashboard from '@/views/admin/Dashboard.vue';
+import Auth from '@/views/admin/Auth.vue';
+import paymentMethod from '@/views/admin/PaymentMethod.vue';
+import ReviewDetail from '@/views/admin/ReviewDetail.vue';
+import ReviewList from '@/views/admin/ReviewList.vue';
+import Status from '@/views/admin/Status.vue';
 
 // Admin Voucher
-// --- Voucher --- //
-import ListVoucher from "@/views/admin/voucher/ListVoucher.vue";
-import VoucherAdd from "@/views/admin/voucher/VoucherAdd.vue";
-import VoucherUpdate from "@/views/admin/voucher/VoucherUpdate.vue";
+import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
+import VoucherAdd from '@/views/admin/voucher/VoucherAdd.vue';
+import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
 
 //Admin Product
 import CategoryAdd from "@/views/admin/products/CategoryAdd.vue";
@@ -52,6 +48,7 @@ import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
 import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
 import FlashSaleUser from "@/components/FlashSaleUser.vue";
+
 
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
@@ -126,22 +123,74 @@ const clientRouter = [
   },
 
   {
+
+    path: '',
+    name: 'Violate',
+    component: Violate
+  },
+  {
+    path: 'auth/register',
+    name: 'Register',
+    component: Register
+  },
+  {
+    path: 'auth/login',
+    name: 'Login',
+    component: Login
+  },
+  {
+    path: '/oauth2/success',
+    name: 'OAuth2Success',
+    component: OAuth2Success
+  },
+  {
+    path: 'store',
+    name: 'Store',
+    component: Store
+  },
+  {
+    path: 'introduce',
+    name: 'Introduce',
+    component: Introduce
+  },
+  {
+    path: 'support',
+    name: 'Support',
+    component: Support
+  },
+
+  {
+    path: 'product/:id',
+    name: 'ProductDetail',
+
     path: "/san-pham/:id",
     name: "ProductDetail",
     component: ProductDetail,
     props: true,
   },
+<<<<<<< HEAD
   
   // ✅ Route kết quả thanh toán
+=======
+
+
+>>>>>>> 715a5ff0f94023bf8030e7233a975c76d665d710
   {
     path: "/payment-result",
     name: "PaymentResult",
     component: PaymentResult,
   },
-  { path: "/403", 
-    name: "Violate", 
+
+  {
+    path: '/checkout',
+    component: Checkout
+  },
+
+  {
+    path: "/403",
+    name: "Violate",
     component: Violate
-   },
+  },
 
 ];
 
@@ -163,13 +212,13 @@ const adminRouter = [
     component: ProductList,
   },
   {
-    path: "products/update/:id",
+    path: "product/update/:id",
     name: "UpdateProduct",
     component: ProductUpdate,
     props: true,
   },
   {
-    path: "products/create",
+    path: "product/create",
     name: "AddProduct",
     component: ProductAdd,
   },
@@ -201,28 +250,27 @@ const adminRouter = [
     path: "/categories/edit/:id",
     component: CategoryAdd,
   },
+
   {
-    path: "/status",
-    component: StatusList,
+
+    path: '/status',
+    name: 'status',
+    component: Status,
   },
   {
-    path: "/status/add",
-    component: StatusAdd,
+    path: '/paymentMethod',
+    name: 'paymentMethod',
+    component: paymentMethod,
   },
   {
-    path: "/status/edit/:id",
-    component: StatusAdd,
+    path: "/review",
+    component: ReviewList,
   },
   {
-    path: "/payment-method/add",
-    name: "PaymentMethodAdd",
-    component: PaymentMethodAdd,
+    path: "/review/detail/:id",
+    component: ReviewDetail,
   },
-  {
-    path: "/payment-method/edit/:id",
-    name: "PaymentMethodEdit",
-    component: PaymentMethodAdd,
-  },
+
   {
     path: "/review",
     component: ReviewList,
@@ -233,7 +281,8 @@ const adminRouter = [
   },
   {
     path: "categories/edit/:id",
-    component: CategoryAdd,
+    component: CategoryAdd
+
   },
   {
     path: "list-voucher",
@@ -266,31 +315,60 @@ const router = createRouter({
       path: "/admin",
       component: LayoutAdmin,
       children: adminRouter,
-      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     },
   ],
 });
 
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token");
-//   const role = localStorage.getItem("role");
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(window.atob(base64));
+  } catch (e) {
+    console.error("❌ Lỗi decode token:", e);
+    return null;
+  }
+}
 
-//   // Nếu route cần đăng nhập
-//   if (to.meta.requiresAuth) {
-//     if (!token) {
-//       // Chưa đăng nhập
-//       return next({ name: "Login" });
-//     }
+function isTokenExpired(token) {
+  const payload = decodeJwtToken(token);
+  if (!payload) return true;
+  const now = Date.now() / 1000;
+  return payload.exp && payload.exp < now;
+}
 
-//     // Nếu route yêu cầu quyền ADMIN mà user không phải admin
-//     if (to.meta.role && to.meta.role !== role) {
-//       // Không đủ quyền → về trang chủ
-//       console.warn(`⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`);
-//       return next({ name: "Violate" });
-//     }
-//   }
 
-//   next();
-// });
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
+  // Nếu có token thì kiểm tra hạn
+  if (token && isTokenExpired(token)) {
+    console.warn("⚠️ Token hết hạn — đăng xuất tự động");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    return next({ name: "Login" });
+  }
+
+  // Nếu route yêu cầu đăng nhập
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
+      return next({ name: "Login" });
+    }
+
+    // Kiểm tra quyền
+    if (to.meta.role && to.meta.role !== role) {
+      console.warn(
+        `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
+      );
+      return next({ name: "Violate" });
+    }
+  }
+
+  next();
+});
+
 
 export default router;
