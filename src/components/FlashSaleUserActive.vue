@@ -2,7 +2,12 @@
   <div class="flashsale-container">
     <!-- Header -->
     <div class="flashsale-header">
-      <div class="flashsale-logo">⚡FLASH<span>SALE</span></div>
+      <div class="flashsale-logo">⚡FLASH<span>SALE</span>
+      <div class="flashsale-status">
+  🔥 Đang diễn ra 
+</div>
+
+      </div>
       <div class="countdown-box">
         <span class="label">KẾT THÚC TRONG</span>
         <div class="countdown">
@@ -13,23 +18,18 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flashsale-tabs">
-      <button
-        :class="{ active: activeTab === 'today' }"
-        @click="activeTab = 'today'"
-      >
-        Đang diễn ra<br />
-        <small>{{ todayTime }}</small>
-      </button>
-      <button
-        :class="{ active: activeTab === 'tomorrow' }"
-        @click="activeTab = 'tomorrow'"
-      >
-        Ngày mai<br />
-        <small>{{ tomorrowTime }}</small>
-      </button>
-    </div>
+  <!-- Tabs -->
+<div class="flashsale-tabs">
+  <button
+    v-for="time in saleTimes"
+    :key="time.label"
+    :class="{ active: activeTime === time.hour }"
+    @click="setActiveTime(time.hour)"
+  >
+    {{ time.label }}<br />
+    <small>{{ time.status }}</small>
+  </button>
+</div>
 
     <!-- Loading -->
     <div v-if="loading" class="text-center my-5">
@@ -49,39 +49,46 @@
             @error="setDefaultImage"
             alt="Ảnh sản phẩm"
           />
-          <div class="discount-badge">-{{ currentSale?.discount }}%</div>
+          <div class="discount-badge" v-if="getDiscountPercent(product.id) > 0">
+            -{{ getDiscountPercent(product.id) }}%
+          </div>
         </div>
+
         <div class="product-info">
           <h6 class="product-name">{{ product.name }}</h6>
 
-          <!-- ✅ Hiển thị giá lấy từ SKU -->
+          <!-- Giá sau giảm -->
           <div class="product-prices">
             <span class="new-price">
-              {{
-                formatPrice(
-                  getSkuPrice(product.id) * (1 - currentSale.discount / 100)
-                )
-              }}₫
+              {{ formatPrice(getDiscountedPrice(product.id)) }}₫
             </span>
             <span class="old-price">
               {{ formatPrice(getSkuPrice(product.id)) }}₫
             </span>
           </div>
 
+          <!-- Thanh stock và số lượng còn lại -->
           <div class="stock-bar mt-1">
             <div class="progress">
               <div
                 class="progress-bar bg-warning"
                 role="progressbar"
-                :style="{ width: randomStock(product.id) + '%' }"
+                :style="{ width: (getRemainingStock(product.id)/getTotalStock(product.id))*100 + '%' }"
               ></div>
             </div>
             <small class="text-white">
-              Còn {{ Math.floor(randomStock(product.id) / 10) }}/10
+              Còn {{ getRemainingStock(product.id) }}/{{ getTotalStock(product.id) }}
             </small>
           </div>
         </div>
       </div>
+    </div>
+
+    <div
+      v-if="!loading && filteredProducts.length === 0"
+      class="text-center py-4"
+    >
+      <p>⚠️ Hiện không có sản phẩm nào trong Flash Sale.</p>
     </div>
   </div>
 </template>
@@ -92,20 +99,120 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 const loading = ref(true);
 const activeSales = ref([]);
 const products = ref([]);
-const skus = ref([]); // ✅ thêm danh sách SKU
+const skus = ref([]);
+const flashSaleSkus = ref([]);
 const activeTab = ref("today");
 const countdown = ref({ hours: "00", minutes: "00", seconds: "00" });
 let countdownTimer = null;
 
-const todayTime = "09:00 - 23:59";
-const tomorrowTime = "09:00 - 23:59";
 
+// Flash Sale đang hoạt động
 const currentSale = computed(() =>
   activeSales.value.length > 0 ? activeSales.value[0] : null
 );
 
-const filteredProducts = computed(() => products.value);
+// Lọc sản phẩm theo flash sale
+function getProductsByFlashSale(flashSaleId) {
+  const activeSkuIds = flashSaleSkus.value
+    .filter(fss => fss.flash_sale_id === flashSaleId || fss.flashSaleId === flashSaleId)
+    .map(fss => fss.sku_id ?? fss.skuId)
+    .filter(id => id != null);
 
+  const productIds = skus.value
+    .filter(sku => activeSkuIds.includes(sku.id))
+    .map(sku => sku.productId);
+
+  return products.value.filter(p => productIds.includes(p.id));
+}
+
+// Filter sản phẩm hiển thị
+const filteredProducts = computed(() => {
+  if (!activeSales.value.length) return [];
+
+  if (activeTab.value === 'today') {
+    // Flash sale đang diễn ra
+    if (!currentSale.value) return [];
+    return getProductsByFlashSale(currentSale.value.id);
+  }
+
+  if (activeTab.value === 'tomorrow') {
+    // Flash sale sắp diễn ra theo khung giờ
+    const upcomingHours = [19, 21]; // các khung giờ muốn hiển thị
+    const now = new Date();
+    const upcomingSales = activeSales.value.filter(s => {
+      const start = new Date(s.started_date ?? s.startedDate);
+      const hour = start.getHours();
+      return upcomingHours.includes(hour) && start > now;
+    });
+
+    let result = [];
+    upcomingSales.forEach(fs => {
+      result.push(...getProductsByFlashSale(fs.id));
+    });
+    return result;
+  }
+
+  return [];
+});
+
+
+// Discount
+function getDiscountPercent(productId) {
+  const sku = skus.value.find((s) => s.productId === productId);
+  if (!sku) return 0;
+
+  const flashSaleSku = flashSaleSkus.value.find(
+    (f) => f.sku_id === sku.id || f.skuId === sku.id
+  );
+  if (!flashSaleSku) return 0;
+
+  const flashSale = activeSales.value.find(
+    (fs) =>
+      fs.id === flashSaleSku.flash_sale_id || fs.id === flashSaleSku.flashSaleId
+  );
+  const maxDiscount = flashSale?.discount || 0;
+  const skuDiscount = flashSaleSku.discount || 0;
+
+  return Math.min(skuDiscount, maxDiscount);
+}
+
+// Số lượng còn lại
+function getRemainingStock(productId) {
+  const sku = skus.value.find(s => s.productId === productId);
+  if (!sku) return 0;
+
+  const flashSaleSku = flashSaleSkus.value.find(
+    f => f.sku_id === sku.id || f.skuId === sku.id
+  );
+  if (!flashSaleSku) return 0;
+
+  const purchased = flashSaleSku.purchased ?? 0;
+  const quantity = flashSaleSku.quantity ?? 10;
+
+  return Math.max(quantity - purchased, 0);
+}
+
+// Tổng số lượng ban đầu
+function getTotalStock(productId) {
+  const sku = skus.value.find(s => s.productId === productId);
+  if (!sku) return 0;
+
+  const flashSaleSku = flashSaleSkus.value.find(
+    f => f.sku_id === sku.id || f.skuId === sku.id
+  );
+  return flashSaleSku?.quantity ?? 10;
+}
+
+// Giá sau giảm
+function getDiscountedPrice(productId) {
+  const sku = skus.value.find((s) => s.productId === productId);
+  if (!sku) return 0;
+
+  const discount = getDiscountPercent(productId);
+  return sku.price * (1 - discount / 100);
+}
+
+// URL ảnh
 function getImageUrl(image) {
   if (!image) return "https://placehold.co/300x300?text=No+Image";
   return image.startsWith("http")
@@ -121,10 +228,7 @@ function formatPrice(price) {
   return price ? price.toLocaleString("vi-VN") : "0";
 }
 
-function randomStock(id) {
-  return (id * 13) % 90 + 5;
-}
-
+// Countdown
 function updateCountdown(endDate) {
   const now = new Date();
   const diff = new Date(endDate) - now;
@@ -144,6 +248,7 @@ function updateCountdown(endDate) {
   };
 }
 
+// Fetch APIs
 async function fetchProducts() {
   const res = await fetch("http://localhost:8080/api/product");
   const data = await res.json();
@@ -163,13 +268,13 @@ async function fetchFlashSales() {
 
   const now = new Date();
   activeSales.value = list.filter((s) => {
-    const start = new Date(s.started_date);
-    const end = new Date(s.ended_date);
+    const start = new Date(s.started_date ?? s.startedDate);
+    const end = new Date(s.ended_date ?? s.endedDate);
     return s.active && start <= now && end >= now;
   });
 
   if (activeSales.value.length > 0) {
-    const end = activeSales.value[0].ended_date;
+    const end = activeSales.value[0].ended_date ?? activeSales.value[0].endedDate;
     updateCountdown(end);
     countdownTimer = setInterval(() => updateCountdown(end), 1000);
   }
@@ -177,25 +282,27 @@ async function fetchFlashSales() {
   loading.value = false;
 }
 
-// ✅ Hàm lấy giá SKU theo product_id
+async function fetchFlashSaleSkus() {
+  const res = await fetch("http://localhost:8080/api/flash-sale-sku");
+  const data = await res.json();
+  flashSaleSkus.value = data.content || data.data || data || [];
+}
+
+// Giá SKU tối thiểu
 function getSkuPrice(productId) {
   const skuList = skus.value.filter((s) => s.productId === productId);
   if (skuList.length === 0) return 0;
   const minSku = skuList.reduce((min, s) => (s.price < min.price ? s : min));
   return minSku.price;
 }
-// ✅ Lấy số lượng tồn theo SKU rẻ nhất
-function getSkuQuantity(productId) {
-  const skuList = skus.value.filter((s) => s.productId === productId);
-  if (skuList.length === 0) return 0;
-  const minSku = skuList.reduce((min, s) => (s.price < min.price ? s : min));
-  return minSku.quantity || 0;
-}
 
 onMounted(async () => {
-  await fetchProducts();
-  await fetchSkus();
-  await fetchFlashSales();
+  await Promise.all([
+    fetchProducts(),
+    fetchSkus(),
+    fetchFlashSaleSkus(),
+    fetchFlashSales(),
+  ]);
 });
 
 onUnmounted(() => {

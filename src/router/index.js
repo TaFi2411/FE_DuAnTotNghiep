@@ -24,7 +24,6 @@ import Cart from "@/views/client/Cart.vue";
 import Checkout from "@/views/client/Checkout.vue";
 import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
-import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
@@ -47,6 +46,8 @@ import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
+import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
+import FlashSaleUser from "@/components/FlashSaleUser.vue";
 import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
 
 
@@ -59,9 +60,14 @@ const clientRouter = [
     component: Home,
   },
   {
-    path: 'flash-sale-sku-user',
-    name: 'FlashSaleSkuUser',
-    component: FlashSaleSkuUser
+    path: 'flash-sale-user-active',
+    name: 'FlashSaleUserActive',
+    component: FlashSaleUserActive
+  },
+    {
+    path: 'flash-sale-user',
+    name: 'FlashSaleUser',
+    component: FlashSaleUser
   },
   {
   path: '/orders',
@@ -170,8 +176,13 @@ const clientRouter = [
     component: ProductDetail,
     props: true,
   },
+<<<<<<< HEAD
+  
+  // ✅ Route kết quả thanh toán
+=======
 
 
+>>>>>>> 715a5ff0f94023bf8030e7233a975c76d665d710
   {
     path: "/payment-result",
     name: "PaymentResult",
