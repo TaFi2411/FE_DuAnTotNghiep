@@ -110,7 +110,6 @@
 import { ref, onMounted } from "vue";
 import axios from "@/composables/axios";
 
-
 const emit = defineEmits(["update:modelValue"]);
 const errorMessage = ref("");
 
@@ -148,7 +147,14 @@ const addStatus = async () => {
     errorMessage.value = "Tên trạng thái không được để trống!";
     return;
   }
-
+  // ✅ Kiểm tra trùng trước khi gọi API
+  const isDuplicate = statuses.value.some(
+    (s) => s.name.toLowerCase() === name.toLowerCase()
+  );
+  if (isDuplicate) {
+    errorMessage.value = "Trạng thái này đã tồn tại!";
+    return;
+  }
   try {
     await axios.post("/api/status", { name: newStatus.value.trim() });
     newStatus.value = "";
@@ -158,7 +164,6 @@ const addStatus = async () => {
     errorMessage.value = "Không thể thêm trạng thái!";
   }
 };
-
 
 // ✅ Start Editing
 const startEdit = (item) => {
