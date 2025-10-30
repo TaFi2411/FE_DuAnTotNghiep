@@ -43,13 +43,18 @@
           <div class="navbar-right d-lg-flex align-items-center gap-5 mb-2 mb-lg-0">
 
             <!-- Giỏ hàng -->
-            <router-link to="/cart" class="nav-link d-lg-flex align-items-center">
-              <span class="position-relative">
-                <i class="bi bi-cart3 fs-3"></i>
-                <span class="badge bg-danger cart-badge position-absolute bottom-50 start-100 translate-middle rounded-pill" style="font-size: 10px;">
-                  99+
-                </span>
+            <router-link to="/cart" class="nav-link d-lg-flex align-items-center position-relative">
+              <i class="bi bi-cart3 fs-3"></i>
+
+              <!-- Badge số lượng loại sản phẩm -->
+              <span
+                v-if="cartCount > 0"
+                class="badge bg-danger cart-badge position-absolute bottom-50 start-100 translate-middle rounded-pill"
+                style="font-size: 10px;"
+              >
+                {{ cartCount > 99 ? "99+" : cartCount }}
               </span>
+
               <span class="d-lg-none ms-1">Giỏ hàng</span>
             </router-link>
 
@@ -97,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -107,9 +112,46 @@ const isLoggedIn = ref(false);
 const accountName = ref("Khách");
 const isAdmin = ref(false);
 
+// Biến lưu số loại sản phẩm trong giỏ hàng
+const cartCount = ref(0);
 
+// 👉 Hàm cập nhật số lượng sản phẩm trong giỏ hàng (tính theo số loại)
+function updateCartCount() {
+  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  cartCount.value = cart.length;
+}
 
-// 👉 Hàm giải mã token an toàn với Unicode
+// 👉 Lắng nghe sự kiện từ Cart.vue
+onMounted(() => {
+  // Cập nhật ban đầu khi load trang
+  updateCartCount();
+
+  // Khi localStorage thay đổi (Cart.vue phát event)
+  window.addEventListener("cart-updated", updateCartCount);
+
+  // Kiểm tra đăng nhập
+  const token = localStorage.getItem("token");
+  if (token) {
+    const payload = decodeJwtToken(token);
+    if (payload) {
+      const roles = payload.roles || [];
+      isLoggedIn.value = true;
+      accountName.value = payload.accountName || "Người dùng";
+      isAdmin.value = roles.includes("ROLE_ADMIN");
+      console.log("✅ Đăng nhập:", accountName.value, "Roles:", roles);
+    } else {
+      console.warn("❌ Token không hợp lệ, xoá token...");
+      localStorage.removeItem("token");
+    }
+  }
+});
+
+// 👉 Khi component bị hủy
+onBeforeUnmount(() => {
+  window.removeEventListener("cart-updated", updateCartCount);
+});
+
+// 👉 Giải mã JWT token
 function decodeJwtToken(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -155,11 +197,7 @@ function logoutHandler() {
   accountName.value = "Khách";
   router.push("/auth/login");
 }
-
-
 </script>
-
-
 
 <style scoped>
 .active-link {

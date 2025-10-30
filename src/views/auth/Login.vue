@@ -44,7 +44,7 @@
         </div>
         <RouterLink to="/auth/forgot-password" class="text-decoration-none small text-primary">
           Quên mật khẩu?
-        </RouterLink>
+        </RouterLink> -->
       </div>
 
       <!-- LOGIN BUTTON -->

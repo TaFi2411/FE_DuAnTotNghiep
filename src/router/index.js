@@ -64,6 +64,13 @@ const clientRouter = [
     component: FlashSaleSkuUser
   },
   {
+  path: '/orders',
+  name: 'orders',
+  component: () => import('@/views/client/Orders.vue'),
+  meta: { requiresAuth: true }
+},
+
+  {
     path: "",
     name: "Violate",
     component: Violate,
