@@ -62,6 +62,14 @@
           <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handleVnpayPayment">
             Xác nhận thanh toán
           </button>
+          <!-- Nút thanh toán MoMo -->
+<button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleMomoPayment">
+  Thanh toán bằng MoMo
+</button>
+<button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleCODPayment">
+  Thanh toán khi nhận hàng (COD)
+</button>
+
         </div>
       </div>
     </div>
@@ -289,6 +297,9 @@ const handleVnpayPayment = async () => {
 
     const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
     const order = orderRes.data; // ✅ chứa id thật của đơn hàng
+    localStorage.removeItem("cart");
+cartItems.value = [];
+
     console.log("🧾 Đơn hàng tạo thành công:", order);
 
     // Lưu lại orderId để callback dùng
@@ -311,16 +322,117 @@ const handleVnpayPayment = async () => {
     alert("Lỗi tạo đơn hàng hoặc thanh toán VNPAY!");
   }
 };
+// ✅ Thanh toán MoMo — tạo đơn + redirect thanh toán
+const handleMomoPayment = async () => {
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+
+  try {
+    // 1️⃣ Gửi tạo đơn hàng
+    const orderPayload = {
+      accountId: accountId.value,
+      addressId: selectedAddress.value.id,
+      paymentMethodId: 3, // MoMo
+      feeship: shippingFee.value,
+      total: totalPayment.value,
+      payment_status: false,
+      discount: 0,
+      voucherId: null,
+      orderDetails: cartItems.value.map(i => ({
+        skuId: i.skuId,
+        quantity: i.quantity,
+        price: i.price
+      }))
+    };
+
+    const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
+    const order = orderRes.data;
+    localStorage.removeItem("cart");
+cartItems.value = [];
+
+    console.log("🧾 Đơn hàng tạo thành công:", order);
+
+    localStorage.setItem("orderId", order.id);
+
+    // 2️⃣ Gọi API backend để tạo link thanh toán MoMo
+    const momoRes = await axios.post("http://localhost:8080/api/momo/create", {
+      orderId: order.id,
+      amount: order.total,
+      orderInfo: "Thanh toán đơn hàng #" + order.id
+    });
+
+    console.log("🔗 MoMo response:", momoRes.data);
+
+    // 3️⃣ Nếu tạo link thành công => redirect người dùng sang trang MoMo
+    if (momoRes.data?.resultCode === 0 && momoRes.data?.payUrl) {
+      window.location.href = momoRes.data.payUrl;
+    } else {
+      alert("Không tạo được link thanh toán MoMo!");
+    }
+  } catch (err) {
+    console.error("❌ Lỗi tạo đơn hàng hoặc thanh toán MoMo:", err);
+    alert("Lỗi tạo đơn hàng hoặc thanh toán MoMo!");
+  }
+};
+
+// ✅ Thanh toán COD — tạo đơn và thông báo thành công
+const handleCODPayment = async () => {
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+
+  try {
+    // 1️⃣ Tạo payload đơn hàng
+    const orderPayload = {
+      accountId: accountId.value,
+      addressId: selectedAddress.value.id,
+      paymentMethodId: 2, // COD
+      feeship: shippingFee.value,
+      total: totalPayment.value,
+      payment_status: false,
+      discount: 0,
+      voucherId: null,
+      orderDetails: cartItems.value.map(i => ({
+        skuId: i.skuId,
+        quantity: i.quantity,
+        price: i.price
+      }))
+    };
+
+    // 2️⃣ Gọi API backend tạo đơn COD
+    const res = await axios.post("http://localhost:8080/api/order-cod", orderPayload);
+
+    const order = res.data;
+
+    if (order && order.id) {
+      alert(`Đặt hàng COD thành công! Mã đơn hàng: #${order.id}`);
+      // Xoá giỏ hàng sau khi đặt
+      localStorage.removeItem("cart");
+      cartItems.value = [];
+      // Redirect hoặc làm gì đó nếu muốn
+    } else {
+      alert("Đặt hàng COD thất bại!");
+    }
+  } catch (err) {
+    console.error("❌ Lỗi tạo đơn COD:", err);
+    alert("Đặt hàng COD thất bại!");
+  }
+};
+
 
 
 const fetchCartFromLocalStorage = () => {
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  const cart = JSON.parse(localStorage.getItem("checkoutItems") || "[]");
   cartItems.value = cart.map(item => ({
     ...item,
     quantity: item.quantity || 1,
     price: item.price || 0
   }));
 };
+
 
 onMounted(() => {
   fetchCartFromLocalStorage();

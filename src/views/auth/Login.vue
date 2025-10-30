@@ -42,12 +42,12 @@
           <input class="form-check-input" type="checkbox" id="rememberMe" />
           <label class="form-check-label" for="rememberMe">Nhớ mật khẩu</label>
         </div>
-        <RouterLink
+        <!-- <RouterLink
           to="/auth/forgot-password"
           class="text-decoration-none small text-primary"
         >
           Quên mật khẩu?
-        </RouterLink>
+        </RouterLink> -->
       </div>
 
       <!-- LOGIN BUTTON -->

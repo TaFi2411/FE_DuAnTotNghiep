@@ -28,24 +28,27 @@
           <!-- Giá -->
           <p class="product-price">{{ displayPrice.toLocaleString("vi-VN") }} ₫</p>
 
-          <!-- CHỌN THUỘC TÍNH -->
-          <div
-            v-for="(attrGroup, index) in attributes"
-            :key="index"
-            class="attribute-group"
-          >
-            <div class="options">
-              <span
-                v-for="option in availableOptions[attrGroup.name] || []"
-                :key="option"
-                class="option"
-                :class="{ active: selectedAttributes[attrGroup.name] === option }"
-                @click="selectAttribute(attrGroup.name, option)"
-              >
-                {{ option }}
-              </span>
-            </div>
-          </div>
+  <!-- CHỌN THUỘC TÍNH -->
+  <div
+    v-for="(attrGroup, index) in attributes"
+    :key="index"
+    class="attribute-group mb-3"
+  >
+    <h6 class="fw-semibold mb-2">{{ attrGroup.name }}</h6>
+
+    <div class="options">
+      <span
+        v-for="option in getVisibleOptions(attrGroup)"
+        :key="option"
+        class="option"
+        :class="{ active: selectedAttributes[attrGroup.name] === option }"
+        @click="selectAttribute(attrGroup.name, option)"
+      >
+        {{ option }}
+      </span>
+    </div>
+  </div>
+
 
           <!-- CHỌN SỐ LƯỢNG -->
           <div class="quantity-selector" v-if="selectedSku">
@@ -172,7 +175,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
-
+import { nextTick } from "vue"; // 👈 nhớ import dòng này ở đầu file
 const route = useRoute();
 const router = useRouter();
 
@@ -192,7 +195,7 @@ const loadProductDetail = async () => {
     product.value = res.data;
     currentImage.value = product.value.image;
 
-    // Gom tất cả thuộc tính
+    // Gom các thuộc tính từ SKU
     const attrMap = {};
     product.value.skus?.forEach(sku => {
       sku.skuAttributes?.forEach(attr => {
@@ -200,12 +203,12 @@ const loadProductDetail = async () => {
         attrMap[attr.optionAttributeName].add(attr.valueAttributeName);
       });
     });
+
     attributes.value = Object.entries(attrMap).map(([name, values]) => ({
       name,
       values: Array.from(values),
     }));
 
-    // Reset selection
     selectedAttributes.value = {};
     selectedSku.value = null;
     quantity.value = 1;
@@ -224,33 +227,41 @@ const loadAllProducts = async () => {
   }
 };
 
-// --- Chọn thuộc tính ---
-const selectAttribute = (name, value) => {
-  selectedAttributes.value[name] = value;
+// ✅ Khi chọn thuộc tính
+// ✅ Khi chọn thuộc tính
+const selectAttribute = async (name, value) => {
+  // Nếu click lại cùng giá trị -> bỏ chọn
+  if (selectedAttributes.value[name] === value) {
+    delete selectedAttributes.value[name];
+  } else {
+    selectedAttributes.value[name] = value;
+  }
 
-  // Loại bỏ các lựa chọn không còn hợp lệ
-  Object.keys(selectedAttributes.value).forEach(key => {
-    if (!availableOptions.value[key]?.includes(selectedAttributes.value[key])) {
-      delete selectedAttributes.value[key];
-    }
-  });
+  // ⚙️ Khi đổi màu thì KHÔNG reset hết các thuộc tính khác — chỉ reset nếu SKU không tồn tại
+  await nextTick(); // Đợi Vue cập nhật xong state
 
   updateSelectedSku();
 };
-
-// --- Cập nhật SKU khi chọn đủ thuộc tính ---
+// ✅ Cập nhật SKU khi chọn đủ thuộc tính
 const updateSelectedSku = () => {
   const keys = Object.keys(selectedAttributes.value);
-  selectedSku.value = product.value.skus?.find(sku =>
-    keys.every(key => sku.skuAttributes.find(a => a.optionAttributeName === key && a.valueAttributeName === selectedAttributes.value[key]))
-  ) || null;
+  selectedSku.value =
+    product.value.skus?.find(sku =>
+      keys.every(key =>
+        sku.skuAttributes.find(
+          a =>
+            a.optionAttributeName === key &&
+            a.valueAttributeName === selectedAttributes.value[key]
+        )
+      )
+    ) || null;
 
   if (selectedSku.value) {
-    currentImage.value = selectedSku.value.skuImages?.[0]?.path || product.value.image;
+    currentImage.value =
+      selectedSku.value.skuImages?.[0]?.path || product.value.image;
     quantity.value = 1;
   }
 };
-
 // --- Tính giá hiển thị ---
 const displayPrice = computed(() => {
   if (selectedSku.value?.price) return selectedSku.value.price;
@@ -262,8 +273,8 @@ const displayPrice = computed(() => {
 // --- Kiểm tra còn hàng ---
 const hasStock = computed(() => selectedSku.value?.quantity > 0);
 
-// --- Thêm vào giỏ hàng ---
-const addToCart = () => {
+  // --- Thêm vào giỏ hàng ---
+  const addToCart = () => {
   const requiredAttrs = attributes.value.map(a => a.name);
   const isComplete = requiredAttrs.every(attr => selectedAttributes.value[attr]);
   if (!isComplete) {
@@ -281,7 +292,10 @@ const addToCart = () => {
   const existingItem = cart.find(item => item.skuId === skuId);
 
   if (existingItem) {
-    existingItem.quantity = Math.min(existingItem.quantity + quantity.value, selectedSku.value.quantity);
+    existingItem.quantity = Math.min(
+      existingItem.quantity + quantity.value,
+      selectedSku.value.quantity
+    );
   } else {
     cart.push({
       skuId,
@@ -295,7 +309,14 @@ const addToCart = () => {
   }
 
   localStorage.setItem("cart", JSON.stringify(cart));
-  Swal.fire({ icon: "success", title: "Đã thêm vào giỏ hàng!", showConfirmButton: false, timer: 1200 });
+  window.dispatchEvent(new Event("cart-updated"));
+
+  Swal.fire({
+    icon: "success",
+    title: "Đã thêm vào giỏ hàng!",
+    showConfirmButton: false,
+    timer: 1200,
+  });
 };
 
 // --- Mua ngay ---
@@ -327,53 +348,96 @@ const buyNow = () => {
   router.push("/thanh-toan");
 };
 
-// --- Giá sản phẩm ---
-const getPrice = (p) => {
+// --- Giá sản phẩm trong danh sách ---
+const getPrice = p => {
   if (!p.skus || p.skus.length === 0) return null;
   const skuWithPrice = p.skus.find(sku => sku.price > 0);
   return skuWithPrice ? skuWithPrice.price : null;
 };
 
 // --- Xem thêm sản phẩm ---
-const visibleProducts = computed(() => products.value.slice(0, visibleCount.value));
+const visibleProducts = computed(() =>
+  products.value.slice(0, visibleCount.value)
+);
 const loadMore = () => (visibleCount.value += 10);
 
 // --- Tăng / giảm số lượng ---
 const increaseQuantity = () => {
-  if (selectedSku.value && quantity.value < selectedSku.value.quantity) quantity.value++;
+  if (selectedSku.value && quantity.value < selectedSku.value.quantity)
+    quantity.value++;
 };
 const decreaseQuantity = () => {
   if (quantity.value > 1) quantity.value--;
 };
 
-// --- Tính các option khả dụng dynamic ---
+// ✅ Cập nhật lại toàn bộ phần lọc thuộc tính
 const availableOptions = computed(() => {
-  const map = {};
-  if (!product.value.skus) return map;
+  const result = {};
+  if (!product.value.skus) return result;
 
-  const selectedKeys = Object.keys(selectedAttributes.value);
+  const selected = selectedAttributes.value;
+  const selectedKeys = Object.keys(selected);
 
   product.value.skus.forEach(sku => {
-    const match = selectedKeys.every(key => {
-      const attr = sku.skuAttributes.find(a => a.optionAttributeName === key);
-      return attr && attr.valueAttributeName === selectedAttributes.value[key];
+    // Kiểm tra SKU có khớp với toàn bộ các lựa chọn hiện tại không
+    const isCompatible = selectedKeys.every(key => {
+      const attr = sku.skuAttributes.find(
+        a => a.optionAttributeName === key
+      );
+      return !selected[key] || (attr && attr.valueAttributeName === selected[key]);
     });
 
-    if (match) {
+    if (isCompatible) {
       sku.skuAttributes.forEach(attr => {
-        if (!map[attr.optionAttributeName]) map[attr.optionAttributeName] = new Set();
-        map[attr.optionAttributeName].add(attr.valueAttributeName);
+        if (!result[attr.optionAttributeName])
+          result[attr.optionAttributeName] = new Set();
+        result[attr.optionAttributeName].add(attr.valueAttributeName);
       });
     }
   });
 
-  Object.keys(map).forEach(key => {
-    map[key] = Array.from(map[key]);
+  // Chuyển Set -> Array
+  Object.keys(result).forEach(k => {
+    result[k] = Array.from(result[k]);
   });
 
-  return map;
+  return result;
 });
 
+// ✅ Trả về các option hiển thị hợp lệ
+const getVisibleOptions = (attrGroup) => {
+  const selected = { ...selectedAttributes.value };
+  delete selected[attrGroup.name]; // Bỏ chính nhóm hiện tại để không tự giới hạn nó
+
+  // Lọc ra các SKU còn phù hợp
+  let filteredSkus = product.value.skus.filter((sku) =>
+    Object.entries(selected).every(([k, v]) =>
+      sku.skuAttributes.some(
+        (a) => a.optionAttributeName === k && a.valueAttributeName === v
+      )
+    )
+  );
+
+  // Lấy ra danh sách option có thể chọn cho nhóm này
+  return [
+    ...new Set(
+      filteredSkus
+        .flatMap((sku) =>
+          sku.skuAttributes
+            .filter((a) => a.optionAttributeName === attrGroup.name)
+            .map((a) => a.valueAttributeName)
+        )
+    ),
+  ];
+};
+
+
+
+// ✅ Kiểm tra option có nên bị ẩn không
+const shouldHideOption = (attrGroup, option) => {
+  const visible = getVisibleOptions(attrGroup);
+  return !visible.includes(option);
+};
 // --- Lifecycle ---
 onMounted(async () => {
   await loadProductDetail();
@@ -391,13 +455,16 @@ watch(
 );
 </script>
 
+
 <style scoped>
-/* --- CSS giống bạn gửi trước --- */
-.container {
+.product-detail {
+  box-sizing: border-box;
   max-width: 1200px;
-  margin-top: 100px;
+  margin: 100px auto 0;
+  padding: 0 16px;
 }
 
+/* Layout chính */
 .product-layout {
   display: flex;
   align-items: flex-start;
@@ -405,51 +472,88 @@ watch(
   flex-wrap: wrap;
 }
 
+/* Cột ảnh */
 .product-image-container {
-  flex: 1;
-  max-width: 45%;
+  flex: 1 1 420px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  min-width: 280px;
 }
 
-.image-wrapper {
-  width: 100%;
-  max-width: 420px;
+/* Wrapper ảnh chính */
+.main-image-wrapper {
+  padding: 16px;
+  background: #ffffff;
   border-radius: 16px;
-  overflow: hidden;
-  background: #f9f9f9;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  max-width: 520px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.product-image {
+.main-image-wrapper img.main-image {
   width: 100%;
   height: auto;
+  display: block;
   object-fit: contain;
+  border-radius: 12px;
 }
 
+/* Thumbnails */
+.thumbs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.thumbs .thumb {
+  width: 62px;
+  height: 62px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.thumbs .thumb:hover {
+  transform: translateY(-4px);
+}
+
+.thumbs .thumb.active {
+  border-color: #2563eb;
+  transform: translateY(-6px);
+}
+
+/* Info column */
 .product-info {
-  flex: 1;
-  max-width: 45%;
+  flex: 1 1 420px;
+  max-width: 720px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  box-sizing: border-box;
 }
 
+/* Title / price */
 .product-name {
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .product-price {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   color: #e53935;
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
 }
 
+/* Attributes */
 .attribute-group {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .options {
@@ -459,26 +563,36 @@ watch(
 }
 
 .option {
-  background: #f0f0f0;
+  background: #f3f4f6;
   border-radius: 8px;
   padding: 6px 12px;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.18s ease;
+  user-select: none;
+  border: 1px solid transparent;
 }
 
 .option:hover {
-  background: #e0e0e0;
+  transform: translateY(-2px);
 }
 
 .option.active {
   background: #2563eb;
-  color: white;
+  color: #fff;
+  border-color: rgba(37, 99, 235, 0.9);
 }
 
+/* 🔹 Ẩn option không hợp lệ */
+.option.hidden {
+  display: none !important;
+}
+
+/* Buttons */
 .button-group {
   display: flex;
-  gap: 20px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .btn {
@@ -489,80 +603,39 @@ watch(
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.12s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .add-cart {
   background: #2563eb;
-  color: white;
+  color: #fff;
 }
 
-.add-cart:hover {
-  background: #1d4ed8;
+.add-cart:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .buy-now {
   background: #e53935;
-  color: white;
+  color: #fff;
 }
 
-.buy-now:hover {
-  background: #c62828;
+.buy-now:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.product-list {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 20px;
-}
-
-.product-item {
-  background: #fff;
-  border: 1px solid #e5e5e5;
-  border-radius: 12px;
-  text-align: center;
-  padding: 16px;
-  transition: transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 340px;
-}
-
-.product-item img {
-  width: 100%;
-  height: 180px;
-  object-fit: contain;
-}
-
-.product-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width:1024px) {
-  .product-list {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width:768px) {
-  .product-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width:480px) {
-  .product-list {
-    grid-template-columns: repeat(1, 1fr);
-  }
-}
-
+/* Quantity selector */
 .quantity-selector {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 16px 0;
+  margin: 12px 0;
 }
 
 .quantity-label {
@@ -578,21 +651,13 @@ watch(
 }
 
 .btn-qty {
-  width: 35px;
-  height: 35px;
-  border: 1px solid #ddd;
-  background: #f9f9f9;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
   font-size: 18px;
-  font-weight: bold;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-qty:hover:not(:disabled) {
-  background: #007bff;
-  color: #fff;
-  border-color: #007bff;
 }
 
 .btn-qty:disabled {
@@ -600,12 +665,70 @@ watch(
   cursor: not-allowed;
 }
 
-.quantity-input {
-  width: 60px;
+/* Product list */
+.product-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+
+/* Product card */
+.product-item {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
   text-align: center;
-  font-weight: 600;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 6px 0;
+  padding: 12px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 280px;
+}
+
+.product-item img {
+  width: 100%;
+  height: 140px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .product-layout {
+    gap: 30px;
+  }
+
+  .product-image-container,
+  .product-info {
+    flex-basis: 100%;
+    max-width: 100%;
+    justify-content: center;
+  }
+
+  .main-image-wrapper {
+    max-width: 600px;
+  }
+
+  .product-price {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .thumbs .thumb {
+    width: 52px;
+    height: 52px;
+  }
+
+  .product-item img {
+    height: 120px;
+  }
+
+  .product-name {
+    font-size: 1.4rem;
+  }
 }
 </style>
+
