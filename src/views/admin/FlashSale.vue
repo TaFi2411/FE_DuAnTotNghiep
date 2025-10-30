@@ -87,11 +87,15 @@
                 <td>{{ formatDateTime(sale.created_date) }}</td>
                 <td>{{ formatDateTime(sale.started_date) }}</td>
                 <td>{{ formatDateTime(sale.ended_date) }}</td>
-                <td>
-                  <span class="badge" :class="sale.active ? 'bg-success' : 'bg-secondary'">
-                    {{ sale.active ? "Đang hoạt động" : "Ngưng" }}
-                  </span>
-                </td>
+               <td>
+  <span
+    class="badge"
+    :class="getStatusClass(sale)"
+  >
+    {{ getStatusLabel(sale) }}
+  </span>
+</td>
+
                 <td class="text-center">
                   <button class="btn btn-sm btn-warning me-2" @click="editSale(sale)">Sửa</button>
                   <button class="btn btn-sm btn-danger" @click="deleteSale(sale.id)">Xoá</button>
@@ -263,15 +267,78 @@ async function fetchFlashSaleSku() {
   skuList.value = data.content || data.data || data || [];
 }
 
+function isActiveNow(sale) {
+  const now = new Date();
+  const start = new Date(sale.started_date);
+  const end = new Date(sale.ended_date);
+  return now >= start && now <= end;
+}
+
+function getStatusLabel(sale) {
+  // ⚡ Ưu tiên kiểm tra active trước
+  if (!sale.active) return "Ngưng";
+  
+  // Nếu đang trong khung giờ
+  if (isActiveNow(sale)) return "Đang hoạt động";
+
+  // Nếu chưa tới thời gian bắt đầu
+  if (new Date() < new Date(sale.started_date)) return "Chưa bắt đầu";
+
+  // Nếu đã qua thời gian kết thúc
+  return "Ngưng";
+}
+
+function getStatusClass(sale) {
+  // ⚡ Nếu bị tắt kích hoạt
+  if (!sale.active) return "bg-secondary";
+  
+  // Đang hoạt động
+  if (isActiveNow(sale)) return "bg-success";
+
+  // Chưa bắt đầu
+  if (new Date() < new Date(sale.started_date)) return "bg-warning";
+
+  // Đã kết thúc
+  return "bg-secondary";
+}
+
 // --- CRUD Flash Sale ---
 function clearErrors() { for (let key in errors) errors[key] = ""; }
 function validateForm() {
   clearErrors();
   let valid = true;
-  if (!form.title) { errors.title = "Tiêu đề không được để trống"; valid = false; }
-  if (form.discount < 0 || form.discount > 100) { errors.discount = "Giảm giá phải từ 0–100"; valid = false; }
-  if (!form.started_date) { errors.started_date = "Ngày bắt đầu không được để trống"; valid = false; }
-  if (!form.ended_date) { errors.ended_date = "Ngày kết thúc không được để trống"; valid = false; }
+  const now = new Date();
+
+  if (!form.title) {
+    errors.title = "Tiêu đề không được để trống";
+    valid = false;
+  }
+
+  if (form.discount < 0 || form.discount > 100) {
+    errors.discount = "Giảm giá phải từ 0–100";
+    valid = false;
+  }
+
+  if (!form.started_date) {
+    errors.started_date = "Ngày bắt đầu không được để trống";
+    valid = false;
+  } else {
+    const start = new Date(form.started_date);
+
+  }
+
+  if (!form.ended_date) {
+    errors.ended_date = "Ngày kết thúc không được để trống";
+    valid = false;
+  } else {
+    const start = new Date(form.started_date);
+    const end = new Date(form.ended_date);
+    if (end <= start) {
+      errors.ended_date = "Ngày kết thúc phải lớn hơn ngày bắt đầu";
+      valid = false;
+    }
+  }
+
   return valid;
 }
 
@@ -328,17 +395,89 @@ function validateSku() {
 
 async function createSku() {
   if (!validateSku()) return;
-  const body = { flashSaleId:Number(skuForm.flashSaleId), skuId:Number(skuForm.skuId), discount:Number(skuForm.discount), quantity:Number(skuForm.quantity) };
-  const res = await fetch("http://localhost:8080/api/flash-sale-sku",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
-  if(res.ok){ await fetchFlashSaleSku(); cancelEditSku(); alert("Thêm SKU thành công!"); }
+
+  // 🔎 Lấy discount & quantity tối đa từ Flash Sale và SKU tương ứng
+  const flashSale = flashSales.value.find(f => f.id === Number(skuForm.flashSaleId));
+  const sku = skus.value.find(s => s.id === Number(skuForm.skuId));
+
+  const maxDiscount = flashSale ? Number(flashSale.discount) : 0;
+  const maxQuantity = sku ? Number(sku.quantity) : 0;
+
+  // ❌ Kiểm tra điều kiện discount SKU <= discount Flash Sale
+  if (Number(skuForm.discount) > maxDiscount) {
+    alert(`Giảm giá của SKU (${skuForm.discount}%) không được vượt quá giảm giá của Flash Sale (${maxDiscount}%)`);
+    return;
+  }
+
+  // ❌ Kiểm tra số lượng SKU trong Flash Sale <= tồn kho SKU
+  if (Number(skuForm.quantity) > maxQuantity) {
+    alert(`Số lượng Flash Sale SKU (${skuForm.quantity}) không được vượt quá số lượng tồn (${maxQuantity}) của SKU này!`);
+    return;
+  }
+
+  const body = {
+    flashSaleId: Number(skuForm.flashSaleId),
+    skuId: Number(skuForm.skuId),
+    discount: Number(skuForm.discount),
+    quantity: Number(skuForm.quantity),
+  };
+
+  const res = await fetch("http://localhost:8080/api/flash-sale-sku", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    await fetchFlashSaleSku();
+    cancelEditSku();
+    alert("Thêm SKU thành công!");
+  }
 }
+
 
 async function updateSku() {
   if (!validateSku()) return;
-  const body = { flashSaleId:Number(skuForm.flashSaleId), skuId:Number(skuForm.skuId), discount:Number(skuForm.discount), quantity:Number(skuForm.quantity) };
-  const res = await fetch(`http://localhost:8080/api/flash-sale-sku/${skuForm.id}`,{ method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
-  if(res.ok){ await fetchFlashSaleSku(); cancelEditSku(); alert("Cập nhật SKU thành công!"); }
+
+  // 🔎 Lấy discount & quantity tối đa
+  const flashSale = flashSales.value.find(f => f.id === Number(skuForm.flashSaleId));
+  const sku = skus.value.find(s => s.id === Number(skuForm.skuId));
+
+  const maxDiscount = flashSale ? Number(flashSale.discount) : 0;
+  const maxQuantity = sku ? Number(sku.quantity) : 0;
+
+  // ❌ Kiểm tra discount
+  if (Number(skuForm.discount) > maxDiscount) {
+    alert(`Giảm giá của SKU (${skuForm.discount}%) không được vượt quá giảm giá của Flash Sale (${maxDiscount}%)`);
+    return;
+  }
+
+  // ❌ Kiểm tra quantity
+  if (Number(skuForm.quantity) > maxQuantity) {
+    alert(`Số lượng Flash Sale SKU (${skuForm.quantity}) không được vượt quá số lượng tồn (${maxQuantity}) của SKU này!`);
+    return;
+  }
+
+  const body = {
+    flashSaleId: Number(skuForm.flashSaleId),
+    skuId: Number(skuForm.skuId),
+    discount: Number(skuForm.discount),
+    quantity: Number(skuForm.quantity),
+  };
+
+  const res = await fetch(`http://localhost:8080/api/flash-sale-sku/${skuForm.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    await fetchFlashSaleSku();
+    cancelEditSku();
+    alert("Cập nhật SKU thành công!");
+  }
 }
+
 
 async function deleteSku(id) { if(confirm("Bạn có chắc muốn xóa SKU?")){ await fetch(`http://localhost:8080/api/flash-sale-sku/${id}`,{method:"DELETE"}); await fetchFlashSaleSku(); } }
 function editSku(s){ Object.assign(skuForm,s); editModeSku.value=true; }

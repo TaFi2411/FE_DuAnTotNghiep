@@ -24,7 +24,6 @@ import Cart from "@/views/client/Cart.vue";
 import Checkout from "@/views/client/Checkout.vue";
 import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
-import FlashSaleSkuUser from '@/components/FlashSaleSku.vue';
 
 // Admin
 // --- Admin Pages --- //
@@ -51,6 +50,8 @@ import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSale from "@/views/admin/FlashSale.vue";
+import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
+import FlashSaleUser from "@/components/FlashSaleUser.vue";
 
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
@@ -61,9 +62,14 @@ const clientRouter = [
     component: Home,
   },
   {
-    path: 'flash-sale-sku-user',
-    name: 'FlashSaleSkuUser',
-    component: FlashSaleSkuUser
+    path: 'flash-sale-user-active',
+    name: 'FlashSaleUserActive',
+    component: FlashSaleUserActive
+  },
+    {
+    path: 'flash-sale-user',
+    name: 'FlashSaleUser',
+    component: FlashSaleUser
   },
   {
     path: "",
@@ -125,6 +131,7 @@ const clientRouter = [
     component: ProductDetail,
     props: true,
   },
+  
   // ✅ Route kết quả thanh toán
   {
     path: "/payment-result",
