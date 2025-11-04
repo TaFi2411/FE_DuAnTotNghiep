@@ -161,12 +161,12 @@ onMounted(async () => {
   }
 
   const payload = decodeJwtToken(token);
-  const accountId = payload?.accountId;
+  const accountId = payload?.id; // ✅ dùng 'id' thay vì 'accountId'
 
   if (accountId) {
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/orders/account/${accountId}`,
+        `http://localhost:8080/api/order/account/${accountId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       orders.value = (response.data || []).map((o) => ({
