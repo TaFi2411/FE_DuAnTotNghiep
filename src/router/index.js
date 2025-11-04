@@ -32,7 +32,7 @@ import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
 import ReviewList from '@/views/admin/ReviewList.vue';
 import Status from '@/views/admin/Status.vue';
-
+import CategoryUpdate from '@/views/admin/products/CategoryUpdate.vue';
 // Admin Voucher
 import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
 import VoucherAdd from '@/views/admin/voucher/VoucherAdd.vue';
@@ -260,11 +260,13 @@ const adminRouter = [
     path: "categories/add",
     component: CategoryAdd,
   },
-  {
-    path: "/categories/edit/:id",
-    component: CategoryAdd,
-  },
 
+{
+  path: "categories/update/:id",
+  name: "CategoryUpdate",
+  component: CategoryUpdate,
+  props: true,
+},
   {
 
     path: '/status',

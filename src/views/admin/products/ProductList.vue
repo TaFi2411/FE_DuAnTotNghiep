@@ -118,7 +118,11 @@ const fetchProducts = async () => {
         size: 1000, // ⚡ lấy tối đa 1000 sản phẩm
       },
     })
-    products.value = res.data.data || res.data.content || res.data || []
+     // Lấy dữ liệu
+    let data = res.data.data || res.data.content || res.data || []
+
+    // Sắp xếp giảm dần theo id
+    products.value = data.sort((a, b) => b.id - a.id)
   } catch (err) {
     console.error('❌ Lỗi tải sản phẩm:', err)
     Swal.fire('Lỗi', 'Không thể tải danh sách sản phẩm!', 'error')
