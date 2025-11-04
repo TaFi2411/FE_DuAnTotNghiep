@@ -49,7 +49,7 @@ import FlashSale from "@/views/admin/FlashSale.vue";
 import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
 import FlashSaleUser from "@/components/FlashSaleUser.vue";
 import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
-
+import OrderManagement from "@/views/admin/products/OrderManagement.vue";
 
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
@@ -176,13 +176,7 @@ const clientRouter = [
     component: ProductDetail,
     props: true,
   },
-<<<<<<< HEAD
-  
-  // ✅ Route kết quả thanh toán
-=======
 
-
->>>>>>> 715a5ff0f94023bf8030e7233a975c76d665d710
   {
     path: "/payment-result",
     name: "PaymentResult",
@@ -214,6 +208,11 @@ const adminRouter = [
     name: "AuthAdmin",
     component: Auth,
   },
+   {
+  path: '/admin/orders',
+  name: 'orderss',
+  component: OrderManagement
+},
   {
     path: "list-product",
     name: "ListProduct",
@@ -235,6 +234,7 @@ const adminRouter = [
     name: "AddProduct",
     component: ProductAdd,
   },
+  
   {
     path: "category",
     component: CategoryList,

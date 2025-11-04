@@ -692,7 +692,7 @@
           <h5 class="fw-bold mb-2">AirPods Pro 3</h5>
           <p class="text-muted mb-1">Giá chỉ từ</p>
           <p class="text-primary fw-bold fs-5 mb-3">6.000.000 VNĐ</p>
-          <router-link :to="`/product/airpods-${n}`" class="btn btn-primary rounded-pill px-4 py-2"/>
+        
 
           <h5 class="fw-bold mb-2">{{ product.name }}</h5>
        
