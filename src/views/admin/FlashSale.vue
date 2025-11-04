@@ -87,14 +87,11 @@
                 <td>{{ formatDateTime(sale.created_date) }}</td>
                 <td>{{ formatDateTime(sale.started_date) }}</td>
                 <td>{{ formatDateTime(sale.ended_date) }}</td>
-               <td>
-  <span
-    class="badge"
-    :class="getStatusClass(sale)"
-  >
-    {{ getStatusLabel(sale) }}
-  </span>
-</td>
+                <td>
+                  <span class="badge" :class="getStatusClass(sale)">
+                    {{ getStatusLabel(sale) }}
+                  </span>
+                </td>
 
                 <td class="text-center">
                   <button class="btn btn-sm btn-warning me-2" @click="editSale(sale)">Sửa</button>
@@ -113,12 +110,8 @@
               <li class="page-item" :class="{ disabled: currentPage === 0 }">
                 <button class="page-link" @click="changePage(currentPage - 1)">« Trước</button>
               </li>
-              <li
-                v-for="page in totalPages"
-                :key="page"
-                class="page-item"
-                :class="{ active: currentPage === page - 1 }"
-              >
+              <li v-for="page in totalPages" :key="page" class="page-item"
+                :class="{ active: currentPage === page - 1 }">
                 <button class="page-link" @click="changePage(page - 1)">{{ page }}</button>
               </li>
               <li class="page-item" :class="{ disabled: currentPage === totalPages - 1 }">
@@ -133,6 +126,7 @@
     <!-- TAB 2️⃣: FLASH SALE SKU -->
     <div v-if="activeTab === 'sku'">
       <!-- Form Flash Sale SKU -->
+      <!-- Form Flash Sale SKU -->
       <div class="card mb-4">
         <div class="card-header">Thêm / Sửa Flash Sale SKU</div>
         <div class="card-body">
@@ -142,14 +136,14 @@
                 <label class="form-label">Flash Sale</label>
                 <select v-model="skuForm.flashSaleId" class="form-select">
                   <option value="">-- Chọn Flash Sale --</option>
-                  <option v-for="f in flashSales" :key="f.id" :value="f.id">{{ f.title }}</option>
+                  <option v-for="f in flashSaleInData" :key="f.id" :value="f.id">{{ f.title }}</option>
                 </select>
                 <small class="text-danger" v-if="skuErrors.flashSaleId">{{ skuErrors.flashSaleId }}</small>
               </div>
 
               <div class="col-md-3 mb-3">
                 <label class="form-label">SKU</label>
-                <select v-model="skuForm.skuId" class="form-select">
+                <select v-model="skuForm.skuId" class="form-select" @change="validateQuantity(); validateDiscount();">
                   <option value="">-- Chọn SKU --</option>
                   <option v-for="s in skus" :key="s.id" :value="s.id">{{ s.id }} - {{ s.productName }}</option>
                 </select>
@@ -158,13 +152,13 @@
 
               <div class="col-md-3 mb-3">
                 <label class="form-label">Giảm giá (%)</label>
-                <input v-model.number="skuForm.discount" type="number" class="form-control" />
+                <input v-model.number="skuForm.discount" type="number" class="form-control" @input="validateDiscount" />
                 <small class="text-danger" v-if="skuErrors.discount">{{ skuErrors.discount }}</small>
               </div>
 
               <div class="col-md-3 mb-3">
                 <label class="form-label">Số lượng</label>
-                <input v-model.number="skuForm.quantity" type="number" class="form-control" />
+                <input v-model.number="skuForm.quantity" type="number" class="form-control" @input="validateQuantity" />
                 <small class="text-danger" v-if="skuErrors.quantity">{{ skuErrors.quantity }}</small>
               </div>
             </div>
@@ -178,6 +172,7 @@
           </form>
         </div>
       </div>
+
 
       <!-- Danh sách Flash Sale SKU -->
       <div class="card">
@@ -220,11 +215,13 @@
 <script setup>
 import { ref, reactive, onMounted } from "vue";
 
+
 // Tabs
 const activeTab = ref("flashSale");
 
 // Flash Sale
 const flashSales = ref([]);
+const flashSaleInData = ref([]);
 const currentPage = ref(0);
 const totalPages = ref(1);
 const pageSize = ref(5);
@@ -254,6 +251,12 @@ async function fetchSales(page = 0) {
   totalPages.value = data.totalPages || 1;
   currentPage.value = data.number || 0;
 }
+async function fetchflashSaleInData() {
+  const res = await fetch(`http://localhost:8080/api/flash-sale`);
+  const data = await res.json();
+  flashSaleInData.value = data.content || data.data || data || [];
+
+}
 
 async function fetchSkus() {
   const res = await fetch("http://localhost:8080/api/sku");
@@ -277,7 +280,7 @@ function isActiveNow(sale) {
 function getStatusLabel(sale) {
   // ⚡ Ưu tiên kiểm tra active trước
   if (!sale.active) return "Ngưng";
-  
+
   // Nếu đang trong khung giờ
   if (isActiveNow(sale)) return "Đang hoạt động";
 
@@ -291,7 +294,7 @@ function getStatusLabel(sale) {
 function getStatusClass(sale) {
   // ⚡ Nếu bị tắt kích hoạt
   if (!sale.active) return "bg-secondary";
-  
+
   // Đang hoạt động
   if (isActiveNow(sale)) return "bg-success";
 
@@ -345,27 +348,27 @@ function validateForm() {
 function formatDateToServer(dateString) {
   if (!dateString) return null;
   const localDate = new Date(dateString);
-  const vnDate = new Date(localDate.getTime() + 7*3600*1000);
-  return vnDate.toISOString().slice(0,19).replace("T"," ");
+  const vnDate = new Date(localDate.getTime() + 7 * 3600 * 1000);
+  return vnDate.toISOString().slice(0, 19).replace("T", " ");
 }
 
 async function createFlashSale() {
   if (!validateForm()) return;
   const body = { ...form, started_date: formatDateToServer(form.started_date), ended_date: formatDateToServer(form.ended_date) };
-  const res = await fetch("http://localhost:8080/api/flash-sale", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+  const res = await fetch("http://localhost:8080/api/flash-sale", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (res.ok) { await fetchSales(currentPage.value); resetForm(); alert("Thêm Flash Sale thành công!"); }
 }
 
 async function updateFlashSale() {
   if (!validateForm()) return;
   const body = { ...form, started_date: formatDateToServer(form.started_date), ended_date: formatDateToServer(form.ended_date) };
-  const res = await fetch(`http://localhost:8080/api/flash-sale/${editId.value}`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+  const res = await fetch(`http://localhost:8080/api/flash-sale/${editId.value}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (res.ok) { await fetchSales(currentPage.value); resetForm(); alert("Cập nhật thành công!"); }
 }
 
 async function deleteSale(id) {
   if (confirm("Bạn có chắc chắn muốn xoá flash sale này?")) {
-    await fetch(`http://localhost:8080/api/flash-sale/${id}`, { method:"DELETE" });
+    await fetch(`http://localhost:8080/api/flash-sale/${id}`, { method: "DELETE" });
     await fetchSales(currentPage.value);
   }
 }
@@ -373,47 +376,63 @@ async function deleteSale(id) {
 function editSale(sale) {
   form.title = sale.title;
   form.discount = sale.discount;
-  form.started_date = sale.started_date ? sale.started_date.substring(0,16) : "";
-  form.ended_date = sale.ended_date ? sale.ended_date.substring(0,16) : "";
+  form.started_date = sale.started_date ? sale.started_date.substring(0, 16) : "";
+  form.ended_date = sale.ended_date ? sale.ended_date.substring(0, 16) : "";
   form.active = sale.active;
   editMode.value = true;
   editId.value = sale.id;
 }
 
 function cancelEdit() { resetForm(); }
-function resetForm() { Object.assign(form,{title:"",discount:0,started_date:"",ended_date:"",active:false}); editMode.value=false; editId.value=null; }
-function changePage(page) { if(page<0||page>=totalPages.value)return; fetchSales(page); }
+function resetForm() { Object.assign(form, { title: "", discount: 0, started_date: "", ended_date: "", active: false }); editMode.value = false; editId.value = null; }
+function changePage(page) { if (page < 0 || page >= totalPages.value) return; fetchSales(page); }
 
 // --- CRUD Flash Sale SKU ---
 function validateSku() {
   skuErrors.flashSaleId = skuForm.flashSaleId ? "" : "Chưa chọn Flash Sale";
   skuErrors.skuId = skuForm.skuId ? "" : "Thiếu SKU";
-  skuErrors.discount = skuForm.discount!==""?"":"Thiếu giảm giá";
-  skuErrors.quantity = skuForm.quantity!==""?"":"Thiếu số lượng";
+  skuErrors.discount = skuForm.discount !== "" ? "" : "Thiếu giảm giá";
+  skuErrors.quantity = skuForm.quantity !== "" ? "" : "Thiếu số lượng";
   return !(skuErrors.flashSaleId || skuErrors.skuId || skuErrors.discount || skuErrors.quantity);
+}
+function validateDiscount() {
+  const flashSale = flashSales.value.find(f => f.id === Number(skuForm.flashSaleId));
+  const maxDiscount = flashSale ? Number(flashSale.discount) : 0;
+
+  if (skuForm.discount === "" || skuForm.discount === null) {
+    skuErrors.discount = "Vui lòng nhập giảm giá";
+  } else if (Number(skuForm.discount) > maxDiscount) {
+    skuErrors.discount = `Giảm giá SKU (${skuForm.discount}%) không được vượt quá Flash Sale (${maxDiscount}%)`;
+  } else if (skuForm.discount < 0) {
+    skuErrors.discount = "Giảm giá không được nhỏ hơn 0%";
+  } else {
+    skuErrors.discount = "";
+  }
+}
+
+function validateQuantity() {
+  const sku = skus.value.find(s => s.id === Number(skuForm.skuId));
+  const maxQuantity = sku ? Number(sku.quantity) : 0;
+
+  if (skuForm.quantity === "" || skuForm.quantity === null) {
+    skuErrors.quantity = "Vui lòng nhập số lượng";
+  } else if (Number(skuForm.quantity) > maxQuantity) {
+    skuErrors.quantity = `Số lượng SKU (${skuForm.quantity}) không được vượt quá tồn kho (${maxQuantity})`;
+  } else if (Number(skuForm.quantity) <= 0) {
+    skuErrors.quantity = "Số lượng phải lớn hơn 0";
+  } else {
+    skuErrors.quantity = "";
+  }
 }
 
 async function createSku() {
+  validateDiscount();
+  validateQuantity();
   if (!validateSku()) return;
 
-  // 🔎 Lấy discount & quantity tối đa từ Flash Sale và SKU tương ứng
-  const flashSale = flashSales.value.find(f => f.id === Number(skuForm.flashSaleId));
-  const sku = skus.value.find(s => s.id === Number(skuForm.skuId));
 
-  const maxDiscount = flashSale ? Number(flashSale.discount) : 0;
-  const maxQuantity = sku ? Number(sku.quantity) : 0;
 
-  // ❌ Kiểm tra điều kiện discount SKU <= discount Flash Sale
-  if (Number(skuForm.discount) > maxDiscount) {
-    alert(`Giảm giá của SKU (${skuForm.discount}%) không được vượt quá giảm giá của Flash Sale (${maxDiscount}%)`);
-    return;
-  }
 
-  // ❌ Kiểm tra số lượng SKU trong Flash Sale <= tồn kho SKU
-  if (Number(skuForm.quantity) > maxQuantity) {
-    alert(`Số lượng Flash Sale SKU (${skuForm.quantity}) không được vượt quá số lượng tồn (${maxQuantity}) của SKU này!`);
-    return;
-  }
 
   const body = {
     flashSaleId: Number(skuForm.flashSaleId),
@@ -437,26 +456,11 @@ async function createSku() {
 
 
 async function updateSku() {
+  validateDiscount();
+  validateQuantity();
   if (!validateSku()) return;
 
-  // 🔎 Lấy discount & quantity tối đa
-  const flashSale = flashSales.value.find(f => f.id === Number(skuForm.flashSaleId));
-  const sku = skus.value.find(s => s.id === Number(skuForm.skuId));
 
-  const maxDiscount = flashSale ? Number(flashSale.discount) : 0;
-  const maxQuantity = sku ? Number(sku.quantity) : 0;
-
-  // ❌ Kiểm tra discount
-  if (Number(skuForm.discount) > maxDiscount) {
-    alert(`Giảm giá của SKU (${skuForm.discount}%) không được vượt quá giảm giá của Flash Sale (${maxDiscount}%)`);
-    return;
-  }
-
-  // ❌ Kiểm tra quantity
-  if (Number(skuForm.quantity) > maxQuantity) {
-    alert(`Số lượng Flash Sale SKU (${skuForm.quantity}) không được vượt quá số lượng tồn (${maxQuantity}) của SKU này!`);
-    return;
-  }
 
   const body = {
     flashSaleId: Number(skuForm.flashSaleId),
@@ -479,22 +483,54 @@ async function updateSku() {
 }
 
 
-async function deleteSku(id) { if(confirm("Bạn có chắc muốn xóa SKU?")){ await fetch(`http://localhost:8080/api/flash-sale-sku/${id}`,{method:"DELETE"}); await fetchFlashSaleSku(); } }
-function editSku(s){ Object.assign(skuForm,s); editModeSku.value=true; }
-function cancelEditSku(){ editModeSku.value=false; Object.assign(skuForm,{id:null,flashSaleId:"",skuId:"",discount:"",quantity:""}); }
+async function deleteSku(id) { if (confirm("Bạn có chắc muốn xóa SKU?")) { await fetch(`http://localhost:8080/api/flash-sale-sku/${id}`, { method: "DELETE" }); await fetchFlashSaleSku(); } }
+function editSku(s) { Object.assign(skuForm, s); editModeSku.value = true; }
+function cancelEditSku() { editModeSku.value = false; Object.assign(skuForm, { id: null, flashSaleId: "", skuId: "", discount: "", quantity: "" }); }
 
-function getFlashSaleName(id){ const f = flashSales.value.find(x=>x.id===id); return f?f.title:"Không xác định"; }
-function getSkuName(id){ const s = skus.value.find(x=>x.id===id); return s?`${s.id} - ${s.productName}`:id; }
+function getFlashSaleName(id) { const f = flashSales.value.find(x => x.id === id); return f ? f.title : "Không xác định"; }
+function getSkuName(id) { const s = skus.value.find(x => x.id === id); return s ? `${s.id} - ${s.productName}` : id; }
 
-onMounted(async ()=>{ await fetchSales(); await fetchSkus(); await fetchFlashSaleSku(); });
+onMounted(async () => { 
+await fetchSales();
+await fetchflashSaleInData();
+ await fetchSkus(); 
+ await fetchFlashSaleSku(); });
 </script>
 
 <style scoped>
-.tabs { display:flex; justify-content:center; gap:10px; }
-.tabs button { padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:6px; }
-.tabs button.active { background:#007bff; color:white; }
-.card { box-shadow:0 0 8px rgba(0,0,0,0.05); }
-.text-danger { font-size:0.875rem; }
-.page-item.active .page-link { background-color: #0d6efd; border-color:#0d6efd; }
-.page-link { cursor:pointer; }
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.tabs button.active {
+  background: #007bff;
+  color: white;
+}
+
+.card {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.text-danger {
+  font-size: 0.875rem;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.page-link {
+  cursor: pointer;
+}
 </style>

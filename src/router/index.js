@@ -176,13 +176,6 @@ const clientRouter = [
     component: ProductDetail,
     props: true,
   },
-<<<<<<< HEAD
-  
-  // ✅ Route kết quả thanh toán
-=======
-
-
->>>>>>> 715a5ff0f94023bf8030e7233a975c76d665d710
   {
     path: "/payment-result",
     name: "PaymentResult",
