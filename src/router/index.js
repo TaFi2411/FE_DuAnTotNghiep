@@ -32,7 +32,7 @@ import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
 import ReviewList from '@/views/admin/ReviewList.vue';
 import Status from '@/views/admin/Status.vue';
-
+import CategoryUpdate from '@/views/admin/products/CategoryUpdate.vue';
 // Admin Voucher
 import ListVoucher from '@/views/admin/voucher/ListVoucher.vue';
 import VoucherAdd from '@/views/admin/voucher/VoucherAdd.vue';
@@ -176,13 +176,6 @@ const clientRouter = [
     component: ProductDetail,
     props: true,
   },
-<<<<<<< HEAD
-  
-  // ✅ Route kết quả thanh toán
-=======
-
-
->>>>>>> 715a5ff0f94023bf8030e7233a975c76d665d710
   {
     path: "/payment-result",
     name: "PaymentResult",
@@ -259,11 +252,13 @@ const adminRouter = [
     path: "categories/add",
     component: CategoryAdd,
   },
-  {
-    path: "/categories/edit/:id",
-    component: CategoryAdd,
-  },
 
+{
+  path: "categories/update/:id",
+  name: "CategoryUpdate",
+  component: CategoryUpdate,
+  props: true,
+},
   {
 
     path: '/status',

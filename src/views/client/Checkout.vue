@@ -297,13 +297,9 @@ const handleVnpayPayment = async () => {
 
     const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
     const order = orderRes.data; // ✅ chứa id thật của đơn hàng
-    localStorage.removeItem("cart");
-cartItems.value = [];
+    cartItems.value = [];
 
     console.log("🧾 Đơn hàng tạo thành công:", order);
-
-    // Lưu lại orderId để callback dùng
-    localStorage.setItem("orderId", order.id);
 
     // 2️⃣ Gọi API tạo link thanh toán VNPAY
     const vnpayRes = await axios.post("http://localhost:8080/api/vnpay/create", {
