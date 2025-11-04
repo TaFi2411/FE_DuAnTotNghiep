@@ -33,15 +33,16 @@
           class="form-control w-auto flex-grow-1"
           placeholder="Nhập tên thuộc tính..."
         />
-        <button class="btn btn-primary" @click="saveAttribute">
+        <button class="add-attr-btn" @click="saveAttribute">
+          <i class="bi" :class="isEditAttribute ? 'bi-check-lg' : 'bi-plus-lg'"></i>
           {{ isEditAttribute ? "Cập nhật" : "Thêm mới" }}
         </button>
         <button
           v-if="isEditAttribute"
-          class="btn btn-secondary"
+          class="cancel-btn"
           @click="cancelEditAttribute"
         >
-          Hủy
+          <i class="bi bi-x-lg"></i> Hủy
         </button>
       </div>
 
@@ -91,15 +92,16 @@
           placeholder="Nhập giá trị..."
         />
 
-        <button class="btn btn-primary" @click="saveValue">
+        <button class="add-attr-btn" @click="saveValue">
+          <i class="bi" :class="isEditValue ? 'bi-check-lg' : 'bi-plus-lg'"></i>
           {{ isEditValue ? "Cập nhật" : "Thêm mới" }}
         </button>
         <button
           v-if="isEditValue"
-          class="btn btn-secondary"
+          class="cancel-btn"
           @click="cancelEditValue"
         >
-          Hủy
+          <i class="bi bi-x-lg"></i> Hủy
         </button>
       </div>
 
@@ -158,7 +160,7 @@ const attrColumns = [
   { label: "Hành động", field: "actions" },
 ];
 
-// ✅ Phân trang frontend chung cho cả 2 bảng
+// ✅ Phân trang frontend chung
 const paginationOptions = {
   enabled: true,
   perPage: 10,
@@ -170,7 +172,7 @@ const paginationOptions = {
 
 const fetchAttributes = async () => {
   const res = await axios.get("/api/option-attribute", {
-    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 bản ghi
+    params: { page: 0, size: 1000 },
   });
   attributes.value = res.data.data || res.data.content || [];
   allAttributes.value = attributes.value;
@@ -213,7 +215,6 @@ const deleteAttribute = async (id) => {
     confirmButtonText: "Xóa",
     cancelButtonText: "Hủy",
   });
-
   if (!confirm.isConfirmed) return;
   await axios.delete(`/api/option-attribute/${id}`);
   Swal.fire("Đã xóa!", "Thuộc tính đã được xóa", "success");
@@ -236,7 +237,7 @@ const valColumns = [
 
 const fetchValues = async () => {
   const res = await axios.get("/api/value-attribute", {
-    params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 giá trị
+    params: { page: 0, size: 1000 },
   });
   values.value = res.data.data || res.data.content || [];
 };
@@ -309,5 +310,59 @@ onMounted(() => {
 .btn-sm {
   padding: 3px 6px;
   font-size: 13px;
+}
+
+/* ✅ Nút thêm / cập nhật giống voucher */
+.add-attr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #198754;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #198754;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-attr-btn i {
+  font-size: 13px;
+}
+
+.add-attr-btn:hover {
+  background-color: #198754;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(25, 135, 84, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ✅ Nút hủy tinh tế, đồng bộ */
+.cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 5px 12px;
+  border: 1px solid #6c757d;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #6c757d;
+  height: 32px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn i {
+  font-size: 13px;
+}
+
+.cancel-btn:hover {
+  background-color: #6c757d;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(108, 117, 125, 0.25);
+  transform: translateY(-1px);
 }
 </style>

@@ -1,6 +1,12 @@
 <template>
-  <div class="p-3">
-    <h3 class="mb-3 fw-bold text-center">Danh sách Voucher</h3>
+  <div class="voucher-page p-3">
+    <!-- ✅ Header -->
+    <div class="header-bar">
+      <h3 class="page-title mb-0">Danh sách Voucher</h3>
+      <button class="add-voucher-btn" @click="addVoucher">
+        <i class="bi bi-plus-lg"></i> Thêm voucher
+      </button>
+    </div>
 
     <!-- 🌀 Loading -->
     <div v-if="isLoading" class="text-center my-5">
@@ -80,14 +86,6 @@
               </button>
 
               <button
-                class="btn btn-outline-success btn-sm"
-                @click="addVoucher"
-                title="Thêm voucher mới"
-              >
-                <i class="bi bi-plus-circle"></i>
-              </button>
-
-              <button
                 class="btn btn-outline-danger btn-sm"
                 @click="deleteVoucher(props.row.id)"
                 title="Xóa"
@@ -135,10 +133,9 @@ const columns = [
   { label: 'Số lượng', field: 'quantity', sortable: true },
   { label: 'Loại', field: 'type' },
   { label: 'Trạng thái', field: 'active' },
-  { label: 'Hành động', field: 'actions', sortable: false, width: '160px' },
+  { label: 'Hành động', field: 'actions', sortable: false, width: '140px' },
 ]
 
-// ✅ Phân trang và tìm kiếm nội bộ (frontend)
 const paginationOptions = {
   enabled: true,
   perPage: 10,
@@ -153,7 +150,7 @@ const fetchVouchers = async () => {
   errorMessage.value = null
   try {
     const res = await apiClient.get('/api/voucher', {
-      params: { page: 0, size: 1000 }, // ✅ Lấy tối đa 1000 voucher
+      params: { page: 0, size: 1000 },
     })
     vouchers.value = res.data.data || res.data.content || []
   } catch (err) {
@@ -198,6 +195,59 @@ onMounted(fetchVouchers)
 </script>
 
 <style scoped>
+.voucher-page {
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+/* ✅ Header fix chính xác */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* ✅ Nút thêm voucher */
+/* ✅ Nút thêm voucher — nhỏ gọn hơn */
+.add-voucher-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border: 1px solid #198754;
+  border-radius: 5px;
+  background-color: #fff;
+  color: #198754;
+  height: 30px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-voucher-btn i {
+  font-size: 12px;
+}
+
+.add-voucher-btn:hover {
+  background-color: #198754;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);
+  transform: translateY(-1px);
+}
+
+
+/* Nút hành động nhỏ trong bảng */
 .d-flex button {
   width: 30px;
   height: 30px;
