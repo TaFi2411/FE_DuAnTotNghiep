@@ -1,90 +1,78 @@
 <template>
-  <div class="store-page text-dark min-vh-100">
-    <!-- 🎥 Video Banner -->
-    <section class="banner-section position-relative overflow-hidden">
-      <video autoplay muted loop playsinline class="w-100 h-100 object-fit-cover">
-        <source src="/images/banner-iphone.mp4" type="video/mp4" />
-      </video>
-      <div
-        class="banner-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center"
-      >
-        <h2 class="fw-bold mb-3">Khám phá sản phẩm Apple mới nhất</h2>
-        <p class="mb-4 fs-6">
-          Trải nghiệm công nghệ đỉnh cao cùng iPhone, iPad, MacBook và hơn thế nữa.
-        </p>
-        <button class="btn btn-primary px-4 py-2 rounded-pill fw-semibold">
-          Mua ngay
-        </button>
-      </div>
-    </section>
+  <div class="store-page bg-white text-black py-5">
+    <!-- 🏷️ Tiêu đề -->
+    <div class="text-center mb-5">
+      <h3 class="text-uppercase text-dark fw-bold section-subtitle">
+        Sản phẩm của chúng tôi
+      </h3>
+      <h2 class="fw-bold text-black section-title">
+        Khám phá các dòng sản phẩm nổi bật
+      </h2>
+    </div>
 
-    <!-- 🧭 Navbar Danh mục -->
-    <nav class="navbar navbar-expand-lg bg-none">
-      <div class="container mt-3 mb-1">
-        <div class="collapse navbar-collapse justify-content-center">
-          <ul
-            class="navbar-nav category-nav text-uppercase fw-semibold small rounded-pill px-3 py-2"
-          >
-            <li
-              v-for="cat in categories"
-              :key="cat.display"
-              class="nav-item"
-            >
-              <a
-                href="#"
-                class="nav-link"
-                :class="{ active: selectedCategory === cat.display }"
-                @click.prevent="selectCategory(cat.display)"
-              >
-                {{ cat.display }}
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <!-- 🧭 Tabs danh mục -->
+    <div class="d-flex justify-content-center flex-wrap mb-5">
+      <button
+        v-for="category in categories"
+        :key="category.id || 'all'"
+        class="btn filter-btn mx-2 my-1"
+        :class="{ active: activeCategory === category.id }"
+        @click="setCategory(category.id)"
+      >
+        {{ category.name }}
+      </button>
+    </div>
 
     <!-- 🛍️ Danh sách sản phẩm -->
-    <div class="container py-5">
-      <div class="row g-4">
-        <div
-          class="col-12 col-sm-6 col-md-4 col-lg-3"
-          v-for="product in filteredProducts"
-          :key="product.id"
-        >
+    <div class="container">
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-dark" role="status"></div>
+        <p class="mt-2 fw-semibold">Đang tải sản phẩm...</p>
+      </div>
+
+      <div v-else>
+        <div v-if="products.length > 0" class="product-grid">
           <div
-            class="card product-card h-100 border-1 shadow-sm rounded-4 overflow-hidden text-center"
+            v-for="product in products"
+            :key="product.id"
+            class="product-item"
           >
-            <!-- Ảnh sản phẩm -->
-            <div class="product-image-wrapper">
+            <div class="card product-card h-100 text-center">
               <img
                 :src="product.image"
-                class="product-image"
-                :alt="product.name"
+                class="card-img-top mx-auto"
+                alt="Ảnh sản phẩm"
               />
-            </div>
 
-            <!-- Nội dung sản phẩm -->
-            <div class="card-body">
-              <h5 class="fw-bold mb-2">{{ product.name }}</h5>
-              <p class="text-muted mb-1">
-                {{ getMemory(product) || "Không có thông tin bộ nhớ" }}
-              </p>
-              <p class="fw-semibold text-primary mb-2">
-                {{
-                  getPrice(product)
-                    ? getPrice(product).toLocaleString("vi-VN") + "₫"
-                    : "Giá: Liên hệ"
-                }}
-              </p>
-              <router-link
-                :to="`/san-pham/${product.id}`"
-                class="btn btn-primary rounded-pill px-4 py-2"
-              >
-                Mua ngay
-              </router-link>
+              <div class="card-body">
+                <h6 class="fw-bold text-dark mb-2 product-name">
+                  {{ product.name }}
+                </h6>
+
+                <p class="text-muted mb-1 fw-semibold price-text">
+                  {{ formatPrice(getMinPrice(product)) }}
+                </p>
+
+                <div class="mb-2">
+                  <span class="text-warning fs-6">★★★★★</span>
+                </div>
+                <p class="text-muted small mb-3 fw-medium">
+                  Đã bán {{ product.sold || 0 }}
+                </p>
+
+                <button
+                  class="btn btn-buy-now px-3"
+                  @click="goToDetail(product.id)"
+                >
+                  <i class="bi bi-bag me-1"></i> Mua ngay
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+
+        <div v-else class="text-center py-5 text-muted fw-semibold">
+          Không có sản phẩm nào trong danh mục này.
         </div>
       </div>
     </div>
@@ -92,142 +80,173 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import axios from "axios";
+import { ref, onMounted } from "vue";
+import axios from "@/composables/axios.js";
+import Swal from "sweetalert2";
+import { useRouter } from "vue-router";
 
-// 📦 Danh mục hiển thị và ánh xạ tên trong DB
-const categories = [
-  { display: "iPhone", db: "điện thoại" },
-  { display: "iPad", db: "ipad" },
-  { display: "MacBook", db: "mac" },
-  { display: "Watch", db: "apple watch" },
-  { display: "AirPods", db: "ipod" },
-];
-
-// ✅ Danh mục mặc định (hiển thị khi load trang)
-const selectedCategory = ref("iPhone");
-
-// 📦 Dữ liệu sản phẩm
+const router = useRouter();
+const categories = ref([{ id: "all", name: "Tất cả" }]);
 const products = ref([]);
+const activeCategory = ref("all");
+const loading = ref(false);
 
-// 🧠 Lấy danh sách sản phẩm từ API
-onMounted(async () => {
+// 🧭 Lấy danh mục
+const fetchCategories = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/api/product");
-    products.value = res.data.data || [];
+    const res = await axios.get("/api/category");
+    const list = res.data.data || res.data.content || res.data || [];
+    categories.value = [{ id: "all", name: "Tất cả" }, ...list];
   } catch (err) {
-    console.error("Lỗi khi tải sản phẩm:", err);
+    console.error("❌ Lỗi lấy danh mục:", err);
   }
-});
-
-// 🔍 Lọc sản phẩm theo danh mục đang chọn
-const filteredProducts = computed(() => {
-  const cat = categories.find((c) => c.display === selectedCategory.value);
-  if (!cat) return [];
-
-  const dbCategory = cat.db.toLowerCase();
-
-  return products.value.filter(
-    (p) =>
-      p.categoryName &&
-      p.categoryName.toLowerCase().includes(dbCategory)
-  );
-});
-
-// 🎯 Khi người dùng chọn danh mục
-const selectCategory = (category) => {
-  selectedCategory.value = category;
 };
 
-// 💰 Lấy giá đầu tiên khác 0 trong danh sách SKU
-const getPrice = (product) => {
-  if (!product.skus || product.skus.length === 0) return null;
-  const skuWithPrice = product.skus.find((sku) => sku.price > 0);
-  return skuWithPrice ? skuWithPrice.price : null;
-};
-
-// 📱 Lấy đầy đủ dung lượng (RAM / ROM), bỏ qua màu sắc
-const getMemory = (product) => {
-  if (!product.skus || product.skus.length === 0) return null;
-
-  const memorySet = new Set();
-
-  for (const sku of product.skus) {
-    for (const attr of sku.skuAttributes || []) {
-      if (
-        attr.optionAttributeName &&
-        ["ram", "bộ nhớ", "rom", "dung lượng"].includes(
-          attr.optionAttributeName.toLowerCase()
-        )
-      ) {
-        memorySet.add(attr.valueAttributeName);
-      }
-    }
+// 📦 Lấy sản phẩm
+const fetchProducts = async (categoryId = "all") => {
+  loading.value = true;
+  try {
+    const params =
+      categoryId !== "all" ? { categoryId, page: 0, size: 100 } : { page: 0, size: 100 };
+    const res = await axios.get("/api/product", { params });
+    const data = res.data.data || res.data.content || res.data || [];
+    products.value = data.sort((a, b) => b.id - a.id);
+  } catch (err) {
+    Swal.fire("Lỗi", "Không thể tải danh sách sản phẩm!", "error");
+  } finally {
+    loading.value = false;
   }
-
-  return Array.from(memorySet).join(" / ");
 };
+
+const setCategory = (id) => {
+  activeCategory.value = id;
+  fetchProducts(id);
+};
+
+const formatPrice = (price) =>
+  price ? price.toLocaleString("vi-VN") + " ₫" : "Đang chờ hàng";
+
+const getMinPrice = (product) =>
+  !product.skus || !product.skus.length
+    ? product.minPrice || 0
+    : Math.min(...product.skus.map((s) => s.price));
+
+const goToDetail = (id) => router.push(`/product/${id}`);
+
+onMounted(async () => {
+  await fetchCategories();
+  await fetchProducts();
+});
 </script>
 
 <style scoped>
-/* 🖼️ Ảnh sản phẩm */
-.product-image-wrapper {
-  width: 100%;
-  height: 220px;
-  background-color: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+/* ===== Cấu trúc tổng thể ===== */
+
+
+/* ===== Tiêu đề ===== */
+.section-subtitle {
+  letter-spacing: 1.5px;
+  font-size: 1rem;
+  color: #555;
+}
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
 }
 
-.product-image {
-  max-width: 100%;
-  max-height: 100%;
+/* ===== Tabs danh mục ===== */
+.filter-btn {
+  border: 1px solid #000;
+  color: #000;
+  border-radius: 8px;
+  font-weight: 500;
+  background: transparent;
+  padding: 8px 18px;
+  letter-spacing: 0.4px;
+  transition: all 0.3s ease;
+}
+.filter-btn:hover,
+.filter-btn.active {
+  background-color: #000;
+  color: #fff;
+}
+
+/* ===== Lưới sản phẩm (4 cột) ===== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+}
+.product-item {
+  display: flex;
+}
+
+/* ===== Card sản phẩm ===== */
+.product-card {
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  padding: 16px;
+  flex: 1;
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Ảnh sản phẩm ===== */
+.product-card img {
+  width: 80%;
+  height: 220px;
   object-fit: contain;
+  margin: 0 auto 12px;
   transition: transform 0.3s ease;
 }
-
-.product-card:hover .product-image {
+.product-card:hover img {
   transform: scale(1.05);
 }
 
-/* 🌈 Navbar danh mục */
-.category-nav .nav-link {
-  color: #555;
-  margin: 0 10px;
-  transition: all 0.3s;
+/* ===== Tên sản phẩm ===== */
+.product-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.category-nav .nav-link:hover {
-  color: #007bff;
+/* ===== Giá ===== */
+.price-text {
+  color: #000 !important;
+  font-weight: 600;
+  font-size: 20px;
 }
 
-.category-nav .nav-link.active {
+/* ===== Nút hành động ===== */
+.btn-buy-now {
+  background: #000;
+  border: none;
   color: #fff;
-  background-color: #007bff;
-  border-radius: 20px;
-  padding: 5px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  height: 42px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+.btn-buy-now:hover {
+  background: #333;
+  transform: translateY(-2px);
 }
 
-/* 🧩 Banner video */
-.banner-section {
-  height: 400px;
-  position: relative;
-}
-
-.banner-section video {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
-.banner-overlay {
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* 🔳 Card sản phẩm */
-.card-body {
-  padding: 15px;
+/* ===== Text nhỏ ===== */
+.text-muted {
+  color: #666 !important;
+  font-weight: 500;
 }
 </style>

@@ -15,14 +15,10 @@
 
           <!-- Danh sách địa chỉ -->
           <div v-if="addresses.length">
-            <div
-              v-for="a in addresses"
-              :key="a.id"
+            <div v-for="a in addresses" :key="a.id"
               class="border rounded-3 p-3 mb-2 d-flex justify-content-between align-items-center"
-              :class="{ 'border-primary bg-light': selectedAddress?.id === a.id }"
-              @click="selectAddress(a)"
-              style="cursor: pointer;"
-            >
+              :class="{ 'border-primary bg-light': selectedAddress?.id === a.id }" @click="selectAddress(a)"
+              style="cursor: pointer;">
               <div>
                 <strong>{{ a.fulladdress }}</strong>
                 <div class="text-muted small">#{{ a.id }}</div>
@@ -40,14 +36,45 @@
           <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
 
           <!-- Sản phẩm trong giỏ -->
-          <div v-for="item in cartItems" :key="item.productId" class="d-flex mb-3 align-items-center">
-            <img :src="item.image || 'https://via.placeholder.com/50'" alt="" class="me-2 rounded" width="50" height="50" />
-            <div class="flex-grow-1">
-              <div class="fw-semibold">{{ item.name || 'Sản phẩm' }}</div>
-              <div class="text-muted small">{{ (item.price || 0).toLocaleString('vi-VN') }} ₫ × {{ item.quantity }}</div>
-            </div>
-            <div class="fw-semibold">{{ ((item.price || 0) * (item.quantity || 1)).toLocaleString('vi-VN') }} ₫</div>
-          </div>
+          <!-- Sản phẩm trong giỏ -->
+<div
+  v-for="item in cartItems"
+  :key="item.skuId"
+  class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2"
+>
+  <div class="d-flex align-items-center">
+    <img
+      :src="item.image || '/images/default-product.png'"
+      alt="product image"
+      class="rounded me-3 border"
+      width="60"
+      height="60"
+      style="object-fit: cover;"
+    />
+    <div>
+      <div class="fw-semibold">{{ item.productName || 'Sản phẩm' }}</div>
+
+      <!-- Hiển thị thuộc tính SKU -->
+      <div
+        v-if="Array.isArray(item.skuAttributes) && item.skuAttributes.length > 0"
+        class="text-muted small"
+      >
+        <div v-for="attr in item.skuAttributes" :key="attr.id">
+          <strong>{{ attr.optionAttributeName }}:</strong>
+          {{ attr.valueAttributeName }}
+        </div>
+      </div>
+
+      <div class="text-muted small">
+        {{ (item.price || 0).toLocaleString('vi-VN') }} ₫ × {{ item.quantity }}
+      </div>
+    </div>
+  </div>
+  <div class="fw-semibold">
+    {{ ((item.price || 0) * (item.quantity || 1)).toLocaleString('vi-VN') }} ₫
+  </div>
+</div>
+
 
           <div class="d-flex justify-content-between mb-2">
             <span>Phí vận chuyển</span>
@@ -59,14 +86,16 @@
             <span>{{ totalPayment.toLocaleString('vi-VN') }} ₫</span>
           </div>
 
-  <button
-  class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3"
-  @click="confirmPayment"
-  :disabled="!selectedPaymentMethod"
->
-  Xác nhận thanh toán
-</button>
-
+          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handleVnpayPayment">
+            Thanh toán bằng VnPay
+          </button>
+          <!-- Nút thanh toán MoMo -->
+          <button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleMomoPayment">
+            Thanh toán bằng MoMo
+          </button>
+          <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleCODPayment">
+            Thanh toán khi nhận hàng (COD)
+          </button>
 
         </div>
       </div>
@@ -338,7 +367,7 @@ const handleVnpayPayment = async () => {
       orderPayload
     );
     const order = orderRes.data;
-    localStorage.removeItem("cart");
+    sessionStorage.removeItem("cart");
     cartItems.value = [];
 
     console.log("🧾 Đơn hàng tạo thành công:", order);
@@ -387,7 +416,7 @@ const handleMomoPayment = async () => {
 
     const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
     const order = orderRes.data;
-    localStorage.removeItem("cart");
+    sessionStorage.removeItem("cart");
     cartItems.value = [];
 
     console.log("🧾 Đơn hàng tạo thành công:", order);
@@ -450,7 +479,7 @@ const handleCODPayment = async () => {
     if (order && order.id) {
       alert(`Đặt hàng COD thành công! Mã đơn hàng: #${order.id}`);
       // Xoá giỏ hàng sau khi đặt
-      localStorage.removeItem("cart");
+      sessionStorage.removeItem("cart");
       cartItems.value = [];
       // Redirect hoặc làm gì đó nếu muốn
     } else {
@@ -462,46 +491,24 @@ const handleCODPayment = async () => {
   }
 };
 
-// ✅ Xác nhận thanh toán
-const confirmPayment = () => {
-  if (!selectedAddress.value) {
-    alert("Vui lòng chọn địa chỉ giao hàng!");
-    return;
-  }
-  if (!selectedPaymentMethod.value) {
-    alert("Vui lòng chọn phương thức thanh toán!");
-    return;
-  }
-
-  switch (selectedPaymentMethod.value) {
-    case "vnpay":
-      handleVnpayPayment();
-      break;
-    case "momo":
-      handleMomoPayment();
-      break;
-    case "cod":
-      handleCODPayment();
-      break;
-    default:
-      alert("Phương thức thanh toán không hợp lệ!");
-  }
-};
-
-
-
-const fetchCartFromLocalStorage = () => {
-  const cart = JSON.parse(localStorage.getItem("checkoutItems") || "[]");
-  cartItems.value = cart.map((item) => ({
-    ...item,
-    quantity: item.quantity || 1,
+const fetchCartFromSessionStorage = () => {
+  const stored = JSON.parse(sessionStorage.getItem("checkoutItems") || "[]");
+  cartItems.value = stored.map((item) => ({
+    id: item.id,
+    skuId: item.skuId,
+    productName: item.productName || "Sản phẩm",
     price: item.price || 0,
+    quantity: item.quantity || 1,
+    image: item.image || "/images/default-product.png",
+    skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
+    stock: item.stock || 0,
   }));
 };
 
+
 // ✅ Thêm callback VNPAY tại đây
 onMounted(async () => {
-  fetchCartFromLocalStorage();
+  fetchCartFromSessionStorage();
   fetchAccountId();
   fetchProvinces();
   fetchAddresses();
@@ -541,13 +548,23 @@ onMounted(async () => {
 
 
 <style scoped>
-.checkout-page { color: #1d1d1f; }
-.address-card:hover, .payment-method:hover { border-color: #0d6efd; background-color: #f8f9ff; transition: 0.3s; }
-.modal-content { border: none; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
-.summary-box img { object-fit: cover; }
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
+.checkout-page {
+  color: #1d1d1f;
 }
 
+.address-card:hover,
+.payment-method:hover {
+  border-color: #0d6efd;
+  background-color: #f8f9ff;
+  transition: 0.3s;
+}
+
+.modal-content {
+  border: none;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+}
+
+.summary-box img {
+  object-fit: cover;
+}
 </style>

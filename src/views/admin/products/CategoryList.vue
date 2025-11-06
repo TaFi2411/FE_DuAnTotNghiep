@@ -3,8 +3,8 @@
     <!-- 🟢 Tiêu đề và nút thêm -->
    <div class="d-flex justify-content-between align-items-center mb-3">
   <h3 class="mb-0 fw-normal">Danh sách Voucher</h3>
-  <button class="add-voucher-btn" @click="addVoucher">
-    <i class="bi bi-plus-lg"></i> Thêm voucher
+  <button class="add-voucher-btn" @click="addCategory">
+    <i class="bi bi-plus-lg"></i> Thêm danh mục
   </button>
 </div>
 

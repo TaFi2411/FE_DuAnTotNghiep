@@ -129,7 +129,7 @@ const fetchProducts = async () => {
     });
   } catch (err) {
     console.error("❌ Lỗi tải sản phẩm:", err);
-    Swal.fire("Lỗi", "Không thể tải danh sách sản phẩm!", "error");
+
   }
 };
 

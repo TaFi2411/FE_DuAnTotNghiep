@@ -177,6 +177,8 @@ onMounted(() => {
   updateCartCount();
 
   const token = localStorage.getItem('token');
+  console.log("Token nhận được:", token);
+
   if (token) {
     const payload = decodeJwtToken(token);
     if (payload) {

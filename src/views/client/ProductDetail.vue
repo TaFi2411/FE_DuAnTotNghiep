@@ -1,8 +1,7 @@
 <template>
   <div class="product-detail container py-5 mt-5">
-    <!-- --- PHẦN TRÊN: ẢNH & THÔNG TIN --- -->
     <div class="row align-items-start g-5">
-      <!-- Ảnh chính -->
+      <!-- 🔹 Ảnh sản phẩm -->
       <div class="col-lg-6 col-md-12 text-center">
         <div class="main-image-wrapper p-4 bg-white rounded-4 shadow-sm">
           <img
@@ -23,15 +22,18 @@
             @click="currentImage = thumb"
           />
         </div>
+
+
       </div>
 
-      <!-- THÔNG TIN SẢN PHẨM -->
+      <!-- 🔹 Thông tin sản phẩm -->
       <div class="col-lg-6 col-md-12">
-        <div class="product-info">
-          <h1 class="product-name">{{ product.name }}</h1>
+        <div class="product-info bg-white rounded-4 shadow-sm p-4">
+          <h1 class="product-name text-black">{{ product.name }}</h1>
 
-          <!-- Giá -->
-          <p class="product-price">{{ displayPrice.toLocaleString("vi-VN") }} ₫</p>
+          <p class="product-price mb-4 text-dark">
+            {{ displayPrice.toLocaleString("vi-VN") }} VNĐ
+          </p>
 
           <!-- CHỌN THUỘC TÍNH -->
           <div
@@ -59,38 +61,57 @@
             <label class="quantity-label">Số lượng:</label>
             <div class="quantity-controls">
               <button class="btn-qty" @click="decreaseQuantity" :disabled="quantity <= 1">
-                ➖
+                <i class="bi bi-dash"></i>
               </button>
               <input type="number" class="quantity-input" v-model="quantity" readonly />
-              <button
-                class="btn-qty"
-                @click="increaseQuantity"
-                :disabled="quantity >= selectedSku.quantity"
-              >
-                ➕
+              <button class="btn-qty" @click="increaseQuantity" :disabled="quantity >= selectedSku.quantity">
+                <i class="bi bi-plus"></i>
               </button>
             </div>
           </div>
 
-          <!-- NÚT -->
+          <!-- Nút thao tác -->
           <div class="button-group mt-4">
             <button class="btn add-cart" :disabled="!hasStock" @click="addToCart">
-              🛒 Thêm vào giỏ hàng
+              <i class="bi bi-cart"></i> Thêm vào giỏ
             </button>
             <button class="btn buy-now" :disabled="!hasStock" @click="buyNow">
-              💳 Mua ngay
+              <i class="bi bi-lightning-charge"></i> Mua ngay
             </button>
           </div>
 
-          <!-- Số lượng còn lại -->
-          <p v-if="selectedSku" class="mt-2 text-muted">
+          <!-- Tồn kho -->
+          <p v-if="selectedSku" class="mt-3 text-muted small">
             Số lượng còn lại: <strong>{{ selectedSku.quantity }}</strong>
           </p>
+
+          <!-- ⭐ Đánh giá + Đã bán -->
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="text-warning fs-5">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-half"></i>
+            </div>
+            <span class="text-muted small">(4.8/5 - 126 đánh giá)</span>
+            <span class="text-muted small">• Đã bán: <strong>1.2k</strong></span>
+          </div>
+          <div class="product-policy mt-4 pt-3 border-top">
+            <h6 class="fw-semibold mb-3 text-black">Chính sách & dịch vụ</h6>
+            <ul class="list-unstyled text-secondary small lh-lg">
+              <li><i class="bi bi-truck text-success me-2"></i> Giao hàng toàn quốc (1-3 ngày)</li>
+              <li><i class="bi bi-arrow-repeat text-info me-2"></i> Đổi trả 7 ngày nếu lỗi</li>
+              <li><i class="bi bi-shield-check text-primary me-2"></i> Bảo hành 12 tháng</li>
+              <li><i class="bi bi-credit-card text-warning me-2"></i> Trả góp 0%</li>
+            </ul>
+          </div>
+
         </div>
       </div>
     </div>
 
-    <!-- --- PHẦN DƯỚI: MÔ TẢ & ĐÁNH GIÁ --- -->
+    <!-- 🔹 Mô tả sản phẩm -->
     <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4">
       <h4 class="fw-bold mb-3">Mô tả sản phẩm</h4>
       <p class="text-secondary lh-lg">{{ product.description || "Đang cập nhật..." }}</p>
@@ -248,6 +269,10 @@ const loadProductDetail = async () => {
       sku.skuAttributes?.forEach((attr) => {
         if (!attrMap[attr.optionAttributeName])
           attrMap[attr.optionAttributeName] = new Set();
+    product.value.skus?.forEach((sku) => {
+      sku.skuAttributes?.forEach((attr) => {
+        if (!attrMap[attr.optionAttributeName])
+          attrMap[attr.optionAttributeName] = new Set();
         attrMap[attr.optionAttributeName].add(attr.valueAttributeName);
       });
     });
@@ -332,7 +357,10 @@ const updateSelectedSku = () => {
   selectedSku.value =
     product.value.skus?.find((sku) =>
       keys.every((key) =>
+    product.value.skus?.find((sku) =>
+      keys.every((key) =>
         sku.skuAttributes.find(
+          (a) =>
           (a) =>
             a.optionAttributeName === key &&
             a.valueAttributeName === selectedAttributes.value[key]
@@ -341,17 +369,17 @@ const updateSelectedSku = () => {
     ) || null;
 
   if (selectedSku.value) {
-    currentImage.value =
-      selectedSku.value.skuImages?.[0]?.path || product.value.image;
+    currentImage.value = selectedSku.value.skuImages?.[0]?.path || product.value.image;
     quantity.value = 1;
+  } else {
+    currentImage.value = product.value.image;
   }
 };
 
 const displayPrice = computed(() => {
   if (selectedSku.value?.price) return selectedSku.value.price;
   if (product.value.price) return product.value.price;
-  if (product.value.skus?.length) return product.value.skus[0].price || 0;
-  return 0;
+  return product.value.skus?.[0]?.price || 0;
 });
 
 const hasStock = computed(() => selectedSku.value?.quantity > 0);
@@ -399,7 +427,7 @@ const buyNow = () => {
   }
   const order = [
     {
-      skuId: selectedSku.value?.id || product.value.id,
+      skuId: selectedSku.value.id,
       name: product.value.name,
       price: displayPrice.value,
       image: currentImage.value,
@@ -500,191 +528,157 @@ const checkCanReview = async () => {
 
 
 <style scoped>
+
 .product-detail {
-  box-sizing: border-box;
   max-width: 1200px;
   margin: 100px auto 0;
-  padding: 0 16px;
+  color: #111;
+  font-family: "Inter", system-ui, sans-serif;
 }
 
-/* Layout chính */
-.product-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 50px;
-  flex-wrap: wrap;
+/* --- Cân bằng layout */
+.row.align-items-start {
+  align-items: stretch !important;
+  /* ensure equal column height */
 }
 
-/* Cột ảnh */
-.product-image-container {
-  flex: 1 1 420px;
-  display: flex;
-  justify-content: center;
-  min-width: 280px;
-}
-
-/* Wrapper ảnh chính */
+/* 🔹 ẢNH CHÍNH */
 .main-image-wrapper {
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  max-width: 520px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.main-image-wrapper img.main-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  border-radius: 12px;
-}
-
-/* Thumbnails */
-.thumbs {
+  overflow: hidden;
+  background: linear-gradient(145deg, #f8f9fa, #ffffff);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  min-height: 480px;
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-top: 12px;
-  flex-wrap: wrap;
+  box-shadow: 0 6px 24px rgba(17, 24, 39, 0.04);
 }
 
-.thumbs .thumb {
-  width: 62px;
-  height: 62px;
+.main-image {
+  width: 100%;
+  max-height: 460px;
+  object-fit: contain;
+  transition: transform 0.4s ease;
+}
+
+.main-image-wrapper:hover .main-image {
+  transform: scale(1.06);
+}
+
+/* 🔹 Thumbnail */
+.thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
   object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  border: 2px solid transparent;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.thumbs .thumb:hover {
+.thumb:hover {
+  transform: translateY(-3px);
+  border-color: #ddd;
+}
+
+.thumb.active {
+  border-color: #111;
   transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.thumbs .thumb.active {
-  border-color: #2563eb;
-  transform: translateY(-6px);
+/* 🔹 Swiper buttons */
+.thumb-swiper .swiper-button-prev,
+.thumb-swiper .swiper-button-next {
+  color: #111;
+  background: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
 }
 
-/* Info column */
+.thumb-swiper .swiper-button-prev:hover,
+.thumb-swiper .swiper-button-next:hover {
+  background: #f3f4f6;
+}
+
+/* 🔹 Product Info */
 .product-info {
-  flex: 1 1 420px;
-  max-width: 720px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 20px;
+  transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
+  justify-content: space-between;
+  padding: 28px;
 }
 
-/* Title / price */
+.product-info:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+}
+
 .product-name {
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: 0.5rem;
 }
 
 .product-price {
-  font-size: 1.6rem;
-  color: #e53935;
+  font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 16px;
+  color: #111;
+  margin-bottom: 1.5rem;
 }
 
-/* Attributes */
-.attribute-group {
-  margin-bottom: 14px;
-}
-
-.options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+/* 🔹 Options */
+.attribute-group h6 {
+  color: #333;
 }
 
 .option {
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.95rem;
+  background: #f6f7f8;
+  border-radius: 10px;
+  padding: 8px 16px;
   cursor: pointer;
-  transition: all 0.18s ease;
-  user-select: none;
   border: 1px solid transparent;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 6px;
 }
 
 .option:hover {
-  transform: translateY(-2px);
+  background: #ececec;
 }
 
 .option.active {
-  background: #2563eb;
+  background: #111;
   color: #fff;
-  border-color: rgba(37, 99, 235, 0.9);
+  border-color: #111;
 }
 
-/* 🔹 Ẩn option không hợp lệ */
-.option.hidden {
-  display: none !important;
-}
-
-/* Buttons */
-.button-group {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.btn {
-  flex: 1;
-  padding: 12px 0;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.12s ease;
-}
-
-.btn:active {
-  transform: translateY(1px);
-}
-
-.add-cart {
-  background: #2563eb;
-  color: #fff;
-}
-
-.add-cart:disabled {
-  opacity: 0.6;
+.option.disabled {
+  background: #f1f1f1;
+  color: #aaa;
   cursor: not-allowed;
+  border-color: #e0e0e0;
 }
 
-.buy-now {
-  background: #e53935;
-  color: #fff;
-}
-
-.buy-now:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Quantity selector */
+/* 🔹 Quantity */
 .quantity-selector {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 12px 0;
+  margin-top: 1.2rem;
 }
 
 .quantity-label {
+  margin-right: 10px;
   font-weight: 600;
-  color: #333;
-  min-width: 100px;
 }
 
 .quantity-controls {
@@ -694,84 +688,119 @@ const checkCanReview = async () => {
 }
 
 .btn-qty {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e5e7eb;
-  background: #f8fafc;
-  font-size: 18px;
-  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.btn-qty:disabled {
-  opacity: 0.5;
+.btn-qty:hover {
+  background: #111;
+  color: #fff;
+}
+
+.quantity-input {
+  width: 60px;
+  text-align: center;
+  border: none;
+  background: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* 🔹 Buttons */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.add-cart {
+  border: 1px solid #111;
+  color: #111;
+  background: #fff;
+}
+
+.add-cart:hover {
+  background: #111;
+  color: #fff;
+}
+
+.buy-now {
+  background: #111;
+  color: #fff;
+}
+
+.buy-now:hover {
+  background: #222;
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Product list */
-.product-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 18px;
-  margin-top: 12px;
+/* 🔹 Product Policy & Related */
+.product-policy {
+  margin-top: 18px;
 }
 
-/* Product card */
-.product-item {
-  background: #fff;
-  border: 1px solid #e6e6e6;
-  border-radius: 12px;
-  text-align: center;
-  padding: 12px;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+.related {
+  border-top: 1px solid #f0f0f0;
+  margin-top: 20px;
+  padding-top: 12px;
+}
+
+.related-item {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 280px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-radius: 10px;
+  transition: all 0.15s ease;
 }
 
-.product-item img {
-  width: 100%;
-  height: 140px;
-  object-fit: contain;
-  margin-bottom: 8px;
+.related-item:hover {
+  background: #fafafa;
+  transform: translateX(4px);
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .product-layout {
-    gap: 30px;
-  }
+/* 🔹 Description */
+.product-info.mt-5 {
+  line-height: 1.8;
+  color: #555;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 16px;
+}
 
-  .product-image-container,
-  .product-info {
-    flex-basis: 100%;
-    max-width: 100%;
-    justify-content: center;
-  }
-
+/* Responsive tweaks */
+@media (max-width: 992px) {
   .main-image-wrapper {
-    max-width: 600px;
+    min-height: 360px;
   }
 
-  .product-price {
-    font-size: 1.4rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .thumbs .thumb {
-    width: 52px;
-    height: 52px;
+  .main-image {
+    max-height: 320px;
   }
 
-  .product-item img {
-    height: 120px;
-  }
-
-  .product-name {
-    font-size: 1.4rem;
+  .thumb {
+    width: 64px;
+    height: 64px;
   }
 }
 </style>
-
