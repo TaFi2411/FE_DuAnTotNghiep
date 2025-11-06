@@ -46,11 +46,12 @@ import ProductAdd from "@/views/admin/products/ProductAdd.vue";
 import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
-import FlashSale from "@/views/admin/FlashSale.vue";
 import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
 import FlashSaleUser from "@/components/FlashSaleUser.vue";
 import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
 import OrderManagement from "@/views/admin/products/OrderManagement.vue";
+import FlashSaleAdmin from "@/views/admin/FlashSaleAdmin.vue";
+import FlashSaleSku from "@/views/admin/FlashSaleSku.vue";
 
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
@@ -245,16 +246,18 @@ const adminRouter = [
     name: "Attribute",
     component: Attribute,
   },
-  {
-    path: "flashsale",
-    name: "FlashSale",
-    component: FlashSale,
+ 
+   {
+    path: "flash-sale-admin",
+    name: "FlashSaleAdmin",
+    component: FlashSaleAdmin,
   },
-  {
-    path: "flashsale/:id?",
-    name: "FlashSale",
-    component: FlashSale,
+     {
+    path: "flash-sale-sku",
+    name: "FlashSaleSku",
+    component: FlashSaleSku,
   },
+
 
   {
     path: "categories/add",
