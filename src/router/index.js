@@ -40,7 +40,6 @@ import VoucherUpdate from '@/views/admin/voucher/VoucherUpdate.vue';
 
 //Admin Product
 import CategoryAdd from "@/views/admin/products/CategoryAdd.vue";
-
 import CategoryList from "@/views/admin/products/CategoryList.vue";
 import ProductAdd from "@/views/admin/products/ProductAdd.vue";
 import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
@@ -166,16 +165,6 @@ const clientRouter = [
     path: 'support',
     name: 'Support',
     component: Support
-  },
-
-  {
-    path: 'product/:id',
-    name: 'ProductDetail',
-
-    path: "/san-pham/:id",
-    name: "ProductDetail",
-    component: ProductDetail,
-    props: true,
   },
 
   {

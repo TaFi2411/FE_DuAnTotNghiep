@@ -182,22 +182,55 @@ const formatPrice = (price) =>
   price ? price.toLocaleString("vi-VN") + " VND" : "Liên hệ";
 
 // ✅ Mở trang chi tiết
-const goToDetail = (id) => router.push(`/san-pham/${id}`);
+const goToDetail = (id) => router.push(`/product/${id}`);
 
+// ✅ Thêm vào giỏ hàng
 // ✅ Thêm vào giỏ hàng
 const addToCart = async (product) => {
   try {
-    const accountId = sessionStorage.getItem("accountId");
-    if (!accountId) {
+    // 1️⃣ Lấy token từ localStorage (đúng như cart.vue)
+    const token = localStorage.getItem("token");
+    if (!token) {
       return Swal.fire("Thông báo", "Vui lòng đăng nhập để thêm vào giỏ hàng", "info");
     }
 
-    await axios.post(`/api/cart/add`, {
+    // 2️⃣ Giải mã token để lấy accountId
+    const decodeJwtToken = (token) => {
+      try {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        return JSON.parse(jsonPayload);
+      } catch {
+        return null;
+      }
+    };
+    const payload = decodeJwtToken(token);
+    const accountId = payload?.id;
+
+    if (!accountId) {
+      return Swal.fire("Thông báo", "Không xác định được tài khoản người dùng!", "error");
+    }
+
+    // 3️⃣ Xác định SKU hợp lệ để thêm
+    const firstSku = product.skus && product.skus.length > 0 ? product.skus[0] : null;
+    if (!firstSku) {
+      return Swal.fire("Thông báo", "Sản phẩm này hiện chưa có biến thể!", "info");
+    }
+
+    // 4️⃣ Gửi yêu cầu thêm vào giỏ hàng (đúng chuẩn cart.vue)
+    const res = await axios.post(`/api/cart-details`, {
       accountId,
-      productId: product.id,
+      skuId: firstSku.id,
       quantity: 1,
     });
 
+    // 5️⃣ Hiển thị thông báo thành công
     Swal.fire({
       icon: "success",
       title: "Đã thêm vào giỏ hàng!",
@@ -206,9 +239,10 @@ const addToCart = async (product) => {
     });
   } catch (error) {
     console.error("❌ Lỗi thêm vào giỏ hàng:", error);
-    Swal.fire("Lỗi", "Không thể thêm vào giỏ hàng!", "error");
+    Swal.fire("Lỗi", "Không thể thêm sản phẩm vào giỏ hàng!", "error");
   }
 };
+
 
 // Chuyển tên type thành dễ đọc
 const formatAttrType = (type) => {

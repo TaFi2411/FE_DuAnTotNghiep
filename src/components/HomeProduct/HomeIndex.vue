@@ -15,7 +15,7 @@ import FlashSale from './FlashSale.vue'
 import CategorySection from './CategorySection.vue'
 import BannerSection from './BannerSection.vue'
 import ProductSection from './ProductFeature.vue'
-import ProductCategory from '@/views/admin/products/ProductCategory.vue'
+import ProductCategory from './ProductCategory.vue'
 
 </script>
 

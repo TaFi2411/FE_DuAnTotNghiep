@@ -1,87 +1,91 @@
 <template>
-  <div class="cart container mx-auto py-12 px-6">
-    <h1 class="cart-title">🛒 Giỏ hàng của bạn</h1>
-
+  <div class="cart container py-5 mt-5">
     <!-- Có sản phẩm -->
     <div v-if="cartItems.length > 0" class="cart-list">
-      <div
-        v-for="(item, index) in cartItems"
-        :key="index"
-        class="cart-item"
-      >
-        <!-- Checkbox chọn -->
-        <input
-          type="checkbox"
-          class="form-check-input me-3"
-          v-model="item.selected"
-        />
+      <!-- Header -->
+      <div class="cart-header d-none d-md-grid">
+        <div>Thông tin sản phẩm</div>
+        <div class="text-center">Giá</div>
+        <div class="text-center">Số lượng</div>
+        <div class="text-end">Thành tiền</div>
+      </div>
 
-        <!-- Hình ảnh -->
-        <img :src="item.image || defaultImage" alt="" class="cart-item-image" />
-
-        <!-- Thông tin -->
-        <div class="cart-item-info">
-          <h2>{{ item.name || "Sản phẩm" }}</h2>
-          <p class="price">
-            {{ (item.price || 0).toLocaleString("vi-VN") }} ₫
-          </p>
-
-          <!-- Số lượng -->
-          <div class="quantity-control">
-            <button @click="decreaseQty(index)" :disabled="item.quantity <= 1">
-              -
-            </button>
-
-            <span>{{ item.quantity }}</span>
-
-            <button
-              @click="increaseQty(index)"
-              :disabled="item.quantity >= item.stock"
-            >
-              +
-            </button>
-
-            <span
-              v-if="item.quantity >= item.stock"
-              class="out-of-stock"
-              >Hết hàng</span
-            >
+      <!-- Item -->
+      <div v-for="(item, index) in cartItems" :key="item.id"
+        class="cart-item d-grid align-items-center bg-white rounded-4 shadow-sm p-3 mb-3 border border-light">
+        <!-- Cột 1: Hình & Tên -->
+        <div class="d-flex align-items-center gap-3">
+          <input type="checkbox" v-model="item.selected" class="form-check-input me-2" />
+          <img :src="item.image || defaultImage" alt="" class="cart-item-image  " />
+          <div>
+            <h6 class="fw-bold text-dark mb-1">{{ item.productName }}</h6>
+            <div v-if="
+              Array.isArray(item.skuAttributes) &&
+              item.skuAttributes.length > 0
+            " class="text-muted small">
+              <div v-for="attr in item.skuAttributes" :key="attr.id">
+                <strong>{{ attr.optionAttributeName }}:</strong>
+                {{ attr.valueAttributeName }}
+              </div>
+            </div>
+            <p class="text-muted small mt-1">Kho còn: {{ item.stock }}</p>
           </div>
-
-          <p class="stock-info">Kho còn: {{ item.stock }}</p>
         </div>
 
-        <!-- Tổng tiền & nút xóa -->
-        <div class="cart-item-total">
-          <p>
+        <!-- Cột 2: Giá -->
+        <div class="text-center fw-semibold text-dark">
+          {{ (item.price || 0).toLocaleString("vi-VN") }} ₫
+        </div>
+
+        <!-- Cột 3: Số lượng -->
+        <div class="text-center">
+          <div class="d-flex justify-content-center align-items-center gap-2">
+            <button class="btn btn-outline-dark btn-sm rounded-3" @click="updateQuantity(item, item.quantity - 1)">
+              −
+            </button>
+            <span class="fw-bold">{{ item.quantity }}</span>
+            <button class="btn btn-outline-dark btn-sm rounded-3" @click="updateQuantity(item, item.quantity + 1)">
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Cột 4: Tổng & Xóa -->
+        <div class="text-end">
+          <p class="fw-bold text-dark mb-2">
             {{
               ((item.price || 0) * (item.quantity || 1)).toLocaleString("vi-VN")
             }}
             ₫
           </p>
-          <button class="remove-btn" @click="removeItem(index)">✖</button>
+          <button class="btn btn-sm btn-outline-dark rounded-3" @click="removeItem(item)">
+            Xóa
+          </button>
         </div>
       </div>
 
-      <!-- Tổng kết -->
-      <div class="cart-summary">
-        <h2>
-          Tổng cộng: {{ selectedTotal.toLocaleString("vi-VN") }} ₫
-        </h2>
-        <button
-          class="checkout-btn"
-          :disabled="selectedItems.length === 0"
-          @click="goToCheckout"
-        >
-          💳 Thanh toán ({{ selectedItems.length }})
+      <!-- Tổng cộng -->
+      <div class="cart-summary mt-5 bg-white shadow-sm rounded-4 p-4 text-end border border-light">
+        <h4 class="fw-bold text-dark mb-3">
+          Tổng cộng:
+          <span class="text-dark">{{ selectedTotal.toLocaleString("vi-VN") }} ₫</span>
+        </h4>
+        <button class="btn btn-dark px-4 py-2 rounded-3 fw-semibold" :disabled="selectedItems.length === 0"
+          @click="goToCheckout">
+          Thanh toán ({{ selectedItems.length }})
         </button>
       </div>
     </div>
 
     <!-- Giỏ hàng trống -->
-    <div v-else class="empty-cart">
-      <p>Giỏ hàng trống 😢</p>
-      <router-link to="/" class="back-btn">← Tiếp tục mua sắm</router-link>
+    <div v-else class="empty-cart text-center py-5">
+      <h3 class="fw-bold text-dark mb-3">Giỏ hàng trống</h3>
+      <p class="text-muted fs-5 mb-4">
+        Hiện bạn chưa có sản phẩm nào trong giỏ hàng.
+      </p>
+      <router-link to="/" class="btn btn-outline-dark rounded-3 px-4 py-2 fw-semibold">
+        Tiếp tục mua sắm
+      </router-link>
     </div>
   </div>
 </template>
@@ -89,228 +93,203 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import axios from "@/composables/axios.js";
+import Swal from "sweetalert2";
 
-const cartItems = ref([]);
-const defaultImage = "https://via.placeholder.com/100";
 const router = useRouter();
+const cartItems = ref([]);
+const accountId = ref(null);
+const defaultImage = "/images/default-product.png";
 
-// 🔹 Hàm load giỏ hàng
-onMounted(() => {
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-  cartItems.value = cart.map((item) => ({
-    ...item,
-    quantity: Number(item.quantity) > 0 ? Number(item.quantity) : 1,
-    price: item.price || 0,
-    stock: item.stock || 0,
-    selected: false,
-  }));
-});
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
 
-// 🔹 Hàm lưu giỏ hàng + thông báo cho Header
-const saveCart = () => {
-  localStorage.setItem("cart", JSON.stringify(cartItems.value));
-  window.dispatchEvent(new Event("cart-updated")); // 👈 Cập nhật cho Header
-};
+const loadCart = async () => {
+  try {
+    const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
+    const data = res.data || [];
 
-// 🔹 Tăng số lượng
-const increaseQty = (index) => {
-  const item = cartItems.value[index];
-  if (item.quantity >= item.stock) return;
-  item.quantity++;
-  saveCart();
-};
-
-// 🔹 Giảm số lượng
-const decreaseQty = (index) => {
-  const item = cartItems.value[index];
-  if (item.quantity > 1) {
-    item.quantity--;
-    saveCart();
+    cartItems.value = data.map((item) => ({
+      id: item.id,
+      productName: item.skuName || "Sản phẩm",
+      price: item.price,
+      quantity: item.quantity,
+      stock: item.skuQuantity,
+      image: item.skuImage || defaultImage,
+      skuAttributes: Array.isArray(item.skuAttributes)
+        ? item.skuAttributes
+        : [],
+      selected: false,
+      skuId: item.skuId,
+    }));
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi", "Không thể tải giỏ hàng từ server", "error");
   }
 };
 
-// 🔹 Xóa sản phẩm
-const removeItem = (index) => {
-  cartItems.value.splice(index, 1);
-  saveCart();
+const updateQuantity = async (item, newQty) => {
+  console.log("Cập nhật số lượng thành công" + item.id);
+if (newQty < 1) {
+    const result = await Swal.fire({
+      title: "Xác nhận xoá sản phẩm?",
+      text: "Bạn có chắc muốn xoá sản phẩm này khỏi giỏ hàng?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Có, xoá!",
+      cancelButtonText: "Huỷ"
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`/api/cart-details/${item.id}`);
+        Swal.fire("Đã xoá!", "Sản phẩm đã được xoá khỏi giỏ hàng.", "success");
+        await loadCart(); // refresh giỏ hàng
+      } catch (err) {
+        Swal.fire("Lỗi", "Không thể xoá sản phẩm", "error");
+      }
+    }
+    return; // Dừng lại, không chạy tiếp
+  }
+  if (newQty > item.stock) {
+    Swal.fire("Thông báo", "Số lượng đã đạt giới hạn trong kho", "info");
+    return;
+  }
+
+  try {
+    const payload = {
+      accountId: accountId.value,
+      skuId: item.skuId,
+      quantity: newQty,
+    };
+
+    await axios.put(`/api/cart-details/${item.id}/quantity`, payload);
+    console.log("Cập nhật số lượng thành công" + item.id);
+
+    item.quantity = newQty;
+
+    await loadCart();
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi", "Không thể cập nhật số lượng sản phẩm", "error");
+  }
 };
 
-// 🔹 Danh sách sản phẩm được chọn
-const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
+const removeItem = async (item) => {
+  const confirm = await Swal.fire({
+    title: "Xóa sản phẩm?",
+    text: "Bạn có chắc muốn xóa sản phẩm này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  });
+  if (!confirm.isConfirmed) return;
 
-// 🔹 Tổng tiền sản phẩm đã chọn
+  try {
+    await axios.delete(`/api/cart-details/${item.id}`);
+    cartItems.value = cartItems.value.filter((i) => i.id !== item.id);
+    Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng", "success");
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi", "Không thể xóa sản phẩm", "error");
+  }
+};
+
+const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
 const selectedTotal = computed(() =>
   selectedItems.value.reduce(
-    (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+    (sum, i) => sum + (i.price || 0) * (i.quantity || 1),
     0
   )
 );
 
-// 🔹 Chuyển sang checkout
 const goToCheckout = () => {
   if (selectedItems.value.length === 0) {
-    alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán 😢");
+    Swal.fire(
+      "Chưa chọn sản phẩm",
+      "Vui lòng chọn sản phẩm để thanh toán",
+      "info"
+    );
     return;
   }
 
-  localStorage.setItem("checkoutItems", JSON.stringify(selectedItems.value));
+  sessionStorage.setItem("checkoutItems", JSON.stringify(selectedItems.value));
   router.push("/checkout");
 };
+
+
+onMounted(() => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    Swal.fire("Chưa đăng nhập", "Vui lòng đăng nhập để xem giỏ hàng", "info");
+    router.push("/auth/login");
+    return;
+  }
+
+  const payload = decodeJwtToken(token);
+  accountId.value = payload?.id || null;
+  if (accountId.value) loadCart();
+});
 </script>
 
-
 <style scoped>
-.container {
-  max-width: 900px;
-  margin-top: 100px;
-}
-
-.cart-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.cart-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.cart-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 20px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.cart-item-image {
-  width: 110px;
-  height: 110px;
-  object-fit: contain;
-  border-radius: 10px;
-  background: #fafafa;
-}
-
-.cart-item-info {
-  flex: 1;
-  margin-left: 20px;
-}
-
-.cart-item-info h2 {
-  font-size: 1.1rem;
+.cart-header {
+  display: grid;
+  grid-template-columns: 45% 15% 20% 20%;
   font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.price {
-  color: #e53935;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.quantity-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.quantity-control button {
-  width: 30px;
-  height: 30px;
-  border: none;
-  background: #eee;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.quantity-control button:hover {
-  background: #ddd;
-}
-
-.out-of-stock {
-  color: #e53935;
-  font-weight: 600;
-}
-
-.stock-info {
-  font-size: 0.9rem;
   color: #555;
-}
-
-.cart-item-total {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.remove-btn {
-  background: transparent;
-  border: none;
-  color: #888;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.remove-btn:hover {
-  color: #e53935;
-}
-
-.cart-summary {
-  margin-top: 30px;
-  text-align: right;
-  border-top: 2px solid #eee;
-  padding-top: 20px;
-}
-
-.cart-summary h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  border-bottom: 2px solid #eee;
+  padding: 10px 15px;
   margin-bottom: 15px;
 }
 
-.checkout-btn {
-  background: #2563eb;
-  color: #fff;
-  font-weight: 600;
-  padding: 12px 30px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.3s;
+.cart-item {
+  display: grid;
+  grid-template-columns: 45% 15% 20% 20%;
+  transition: all 0.2s ease-in-out;
 }
 
-.checkout-btn:hover {
-  background: #1d4ed8;
+.cart-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.cart-item-image {
+  width: 90px;
+  height: 100px;
+  object-fit: cover;
+  
+}
+
+.cart-summary {
+  border-top: 2px dashed #eaeaea;
+}
+
+.btn-outline-dark:hover {
+  background-color: #000;
+  color: #fff;
+  border-color: #000;
 }
 
 .empty-cart {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #777;
-  margin-top: 50px;
-}
-
-.back-btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #2563eb;
-  color: #fff;
-  border-radius: 6px;
-  text-decoration: none;
-}
-
-.back-btn:hover {
-  background: #1d4ed8;
+  background-color: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
 }
 </style>

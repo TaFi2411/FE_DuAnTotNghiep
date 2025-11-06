@@ -124,7 +124,7 @@ const login = async () => {
     if (token) {
       // Lưu token
       localStorage.setItem("token", token);
-
+      console.log("Token nhận được:", token);
       // Giải mã token để lấy role
       const payload = JSON.parse(atob(token.split(".")[1]));
       const roles = payload.roles || [];
