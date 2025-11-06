@@ -146,13 +146,17 @@ const computedTimeSlots = computed(() => {
 
   const slots = [...new Set(flashSales.value.map(fs => {
     const start = new Date(fs.started_date ?? fs.startedDate);
-    return start.getHours().toString().padStart(2, "0") + ":00";
+    const h = start.getHours().toString().padStart(2, "0");
+    const m = start.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`; // ✅ Lấy cả phút
   }))];
 
   return slots.map(hour => {
     const matchedSale = flashSales.value.find(fs => {
       const start = new Date(fs.started_date ?? fs.startedDate);
-      return start.getHours().toString().padStart(2, "0") + ":00" === hour;
+      const h = start.getHours().toString().padStart(2, "0");
+      const m = start.getMinutes().toString().padStart(2, "0");
+      return `${h}:${m}` === hour; // ✅ So sánh cả giờ và phút
     });
     if (!matchedSale) return null;
 
@@ -161,9 +165,10 @@ const computedTimeSlots = computed(() => {
 
     if (now >= start && now <= end) return { hour, status: "Đang diễn ra" };
     if (now < start) return { hour, status: "Sắp diễn ra" };
-    return null; // ẩn slot đã qua
+    return null;
   }).filter(Boolean);
 });
+
 
 // --- Chọn slot ---
 function selectSlot(slot) {
@@ -171,8 +176,9 @@ function selectSlot(slot) {
 
   const matchedSale = flashSales.value.find(fs => {
     const start = new Date(fs.started_date ?? fs.startedDate);
-    const hour = start.getHours().toString().padStart(2, "0") + ":00";
-    return hour === slot.hour;
+    const h = start.getHours().toString().padStart(2, "0");
+    const m = start.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}` === slot.hour; // ✅ So sánh đúng định dạng giờ:phút
   });
 
   currentSale.value = matchedSale || null;

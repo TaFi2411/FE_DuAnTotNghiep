@@ -36,7 +36,7 @@ const menu = [
     ]
   },
   { name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-box-seam' },
-  { name: 'FlashSale', path: '/admin/flashsale', icon: 'bi bi-box-seam' },
+  { name: 'FlashSale', path: '/admin/flash-sale-admin', icon: 'bi bi-box-seam' },
   { name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
   { name: 'Người dùng', path: '/admin/users', icon: 'bi bi-people' },
 ]
