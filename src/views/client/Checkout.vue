@@ -59,16 +59,14 @@
             <span>{{ totalPayment.toLocaleString('vi-VN') }} ₫</span>
           </div>
 
-          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handleVnpayPayment">
-            Thanh toán bằng VnPay
-          </button>
-          <!-- Nút thanh toán MoMo -->
-<button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleMomoPayment">
-  Thanh toán bằng MoMo
+  <button
+  class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3"
+  @click="confirmPayment"
+  :disabled="!selectedPaymentMethod"
+>
+  Xác nhận thanh toán
 </button>
-<button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleCODPayment">
-  Thanh toán khi nhận hàng (COD)
-</button>
+
 
         </div>
       </div>
@@ -116,6 +114,26 @@
         </div>
       </div>
     </div>
+    <!-- PHƯƠNG THỨC THANH TOÁN -->
+<div class="bg-white rounded-4 shadow-sm p-4">
+  <h5 class="fw-bold mb-3">Phương thức thanh toán</h5>
+
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="radio" id="vnpay" value="vnpay" v-model="selectedPaymentMethod" />
+    <label class="form-check-label" for="vnpay">Thanh toán qua VNPAY</label>
+  </div>
+
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="radio" id="momo" value="momo" v-model="selectedPaymentMethod" />
+    <label class="form-check-label" for="momo">Thanh toán qua MoMo</label>
+  </div>
+
+  <div class="form-check">
+    <input class="form-check-input" type="radio" id="cod" value="cod" v-model="selectedPaymentMethod" />
+    <label class="form-check-label" for="cod">Thanh toán khi nhận hàng (COD)</label>
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -134,6 +152,7 @@ const selectedDistrict = ref("");
 const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
+const selectedPaymentMethod = ref(null);
 
 const accountId = ref(null);
 const storeDistrictId = 1451;
@@ -443,6 +462,34 @@ const handleCODPayment = async () => {
   }
 };
 
+// ✅ Xác nhận thanh toán
+const confirmPayment = () => {
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+  if (!selectedPaymentMethod.value) {
+    alert("Vui lòng chọn phương thức thanh toán!");
+    return;
+  }
+
+  switch (selectedPaymentMethod.value) {
+    case "vnpay":
+      handleVnpayPayment();
+      break;
+    case "momo":
+      handleMomoPayment();
+      break;
+    case "cod":
+      handleCODPayment();
+      break;
+    default:
+      alert("Phương thức thanh toán không hợp lệ!");
+  }
+};
+
+
+
 const fetchCartFromLocalStorage = () => {
   const cart = JSON.parse(localStorage.getItem("checkoutItems") || "[]");
   cartItems.value = cart.map((item) => ({
@@ -498,4 +545,9 @@ onMounted(async () => {
 .address-card:hover, .payment-method:hover { border-color: #0d6efd; background-color: #f8f9ff; transition: 0.3s; }
 .modal-content { border: none; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
 .summary-box img { object-fit: cover; }
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
 </style>

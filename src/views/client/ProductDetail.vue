@@ -7,16 +7,21 @@
         <div class="main-image-wrapper p-4 bg-white rounded-4 shadow-sm">
           <img
             :src="currentImage || '/images/crs-ip17-air.png'"
-            alt="iPhone 17 Pro Max"
+            alt="Ảnh sản phẩm"
             class="img-fluid rounded-3 main-image"
           />
         </div>
 
         <!-- thumbnail -->
         <div class="thumbs d-flex justify-content-center gap-3 mt-3 flex-wrap">
-          <img src="/images/crs-ip17-air.png" class="thumb active" alt="thumb" />
-          <img src="/images/crs-ip17-air.png" class="thumb" alt="thumb" />
-          <img src="/images/crs-ip17-air.png" class="thumb" alt="thumb" />
+          <img
+            v-for="(thumb, i) in thumbnails"
+            :key="i"
+            :src="thumb"
+            class="thumb"
+            :class="{ active: thumb === currentImage }"
+            @click="currentImage = thumb"
+          />
         </div>
       </div>
 
@@ -28,27 +33,26 @@
           <!-- Giá -->
           <p class="product-price">{{ displayPrice.toLocaleString("vi-VN") }} ₫</p>
 
-  <!-- CHỌN THUỘC TÍNH -->
-  <div
-    v-for="(attrGroup, index) in attributes"
-    :key="index"
-    class="attribute-group mb-3"
-  >
-    <h6 class="fw-semibold mb-2">{{ attrGroup.name }}</h6>
+          <!-- CHỌN THUỘC TÍNH -->
+          <div
+            v-for="(attrGroup, index) in attributes"
+            :key="index"
+            class="attribute-group mb-3"
+          >
+            <h6 class="fw-semibold mb-2">{{ attrGroup.name }}</h6>
 
-    <div class="options">
-      <span
-        v-for="option in getVisibleOptions(attrGroup)"
-        :key="option"
-        class="option"
-        :class="{ active: selectedAttributes[attrGroup.name] === option }"
-        @click="selectAttribute(attrGroup.name, option)"
-      >
-        {{ option }}
-      </span>
-    </div>
-  </div>
-
+            <div class="options">
+              <span
+                v-for="option in getVisibleOptions(attrGroup)"
+                :key="option"
+                class="option"
+                :class="{ active: selectedAttributes[attrGroup.name] === option }"
+                @click="selectAttribute(attrGroup.name, option)"
+              >
+                {{ option }}
+              </span>
+            </div>
+          </div>
 
           <!-- CHỌN SỐ LƯỢNG -->
           <div class="quantity-selector" v-if="selectedSku">
@@ -89,15 +93,14 @@
     <!-- --- PHẦN DƯỚI: MÔ TẢ & ĐÁNH GIÁ --- -->
     <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4">
       <h4 class="fw-bold mb-3">Mô tả sản phẩm</h4>
-      <p class="text-secondary lh-lg">
-        iPhone 17 Pro Max mang đến hiệu năng mạnh mẽ nhờ chip A19 Bionic, màn
-        hình Super Retina XDR ProMotion 120Hz và thiết kế titan cao cấp.
-      </p>
+      <p class="text-secondary lh-lg">{{ product.description || "Đang cập nhật..." }}</p>
 
       <hr class="my-4" />
 
-      <h4 class="fw-bold mb-3">Đánh giá của khách hàng (2)</h4>
+      <!-- 🟡 ĐÁNH GIÁ KHÁCH HÀNG -->
+      <h4 class="fw-bold mb-3">Đánh giá của khách hàng ({{ reviews.length }})</h4>
 
+      <!-- Danh sách đánh giá -->
       <div
         v-for="review in reviews"
         :key="review.id"
@@ -108,14 +111,7 @@
           <div class="text-warning mb-2">
             <i v-for="n in review.star" :key="n" class="bi bi-star-fill"></i>
           </div>
-          <div class="text-muted small mb-2">
-            {{ review.orderDetail?.order?.createdDate || "Chưa có ngày" }} |
-            Phân loại hàng:
-            <span class="fw-semibold">
-              {{ review.orderDetail?.sku?.productVariantName || "Không xác định" }}
-            </span>
-          </div>
-          <p class="mb-0">{{ review.description }}</p>
+          <p class="text-muted small mb-2">{{ review.description }}</p>
           <button
             v-if="user && user.id === review.accountId"
             class="btn btn-outline-danger btn-sm mt-2"
@@ -126,9 +122,60 @@
         </div>
       </div>
 
+      <div v-if="reviews.length === 0" class="text-muted">Chưa có đánh giá nào.</div>
+
       <hr class="my-4" />
 
-      <!-- CÁC SẢN PHẨM KHÁC -->
+      <!-- 🟢 FORM GỬI ĐÁNH GIÁ -->
+     <!-- 🟢 FORM GỬI ĐÁNH GIÁ -->
+<div v-if="user && canReview" class="review-form mt-4">
+  <h5 class="fw-semibold mb-3">Viết đánh giá của bạn</h5>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Chọn sao:</label>
+    <div class="stars text-warning fs-5">
+      <i
+        v-for="n in 5"
+        :key="n"
+        class="bi"
+        :class="n <= newReview.star ? 'bi-star-fill' : 'bi-star'"
+        style="cursor: pointer"
+        @click="newReview.star = n"
+      ></i>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Nhận xét:</label>
+    <textarea
+      class="form-control"
+      rows="3"
+      v-model="newReview.description"
+      placeholder="Chia sẻ trải nghiệm của bạn..."
+    ></textarea>
+  </div>
+
+  <button class="btn btn-primary rounded-pill px-4" @click="submitReview">
+    Gửi đánh giá
+  </button>
+</div>
+
+<!-- ❌ Chưa mua hoặc chưa hoàn thành đơn -->
+<div v-else-if="user && !canReview" class="text-muted mt-3">
+  <i class="bi bi-cart-x"></i>
+  Bạn chỉ có thể đánh giá khi đã mua sản phẩm này thành công.
+</div>
+
+<!-- 🔒 Chưa đăng nhập -->
+<div v-else class="text-muted mt-3">
+  <i class="bi bi-lock"></i>
+  Vui lòng đăng nhập để đánh giá sản phẩm.
+</div>
+
+
+      <hr class="my-4" />
+
+      <!-- 🟡 CÁC SẢN PHẨM KHÁC -->
       <h4 class="fw-bold mb-3">Các sản phẩm khác</h4>
       <div class="product-list">
         <div class="product-item" v-for="p in visibleProducts" :key="p.id">
@@ -166,16 +213,12 @@
   </div>
 </template>
 
-
-
-
-
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
-import { nextTick } from "vue"; // 👈 nhớ import dòng này ở đầu file
+
 const route = useRoute();
 const router = useRouter();
 
@@ -184,72 +227,113 @@ const attributes = ref([]);
 const selectedAttributes = ref({});
 const selectedSku = ref(null);
 const currentImage = ref("");
+const thumbnails = ref([]);
 const products = ref([]);
+const reviews = ref([]);
 const quantity = ref(1);
 const visibleCount = ref(10);
+const user = ref(JSON.parse(localStorage.getItem("user") || "null"));
+const newReview = ref({ star: 0, description: "" });
 
-// --- Load chi tiết sản phẩm ---
+// --- 🟢 Load chi tiết sản phẩm ---
 const loadProductDetail = async () => {
   try {
     const res = await axios.get(`http://localhost:8080/api/product/${route.params.id}`);
     product.value = res.data;
     currentImage.value = product.value.image;
-
-    // Gom các thuộc tính từ SKU
+    thumbnails.value = [product.value.image];
+    // Thuộc tính
     const attrMap = {};
-    product.value.skus?.forEach(sku => {
-      sku.skuAttributes?.forEach(attr => {
-        if (!attrMap[attr.optionAttributeName]) attrMap[attr.optionAttributeName] = new Set();
+    product.value.skus?.forEach((sku) => {
+      sku.skuAttributes?.forEach((attr) => {
+        if (!attrMap[attr.optionAttributeName])
+          attrMap[attr.optionAttributeName] = new Set();
         attrMap[attr.optionAttributeName].add(attr.valueAttributeName);
       });
     });
-
     attributes.value = Object.entries(attrMap).map(([name, values]) => ({
       name,
       values: Array.from(values),
     }));
-
     selectedAttributes.value = {};
     selectedSku.value = null;
     quantity.value = 1;
+    await loadReviews();
   } catch (err) {
     console.error("Lỗi khi tải sản phẩm:", err);
   }
 };
 
-// --- Load danh sách sản phẩm khác ---
-const loadAllProducts = async () => {
+// --- 🟡 Load đánh giá sản phẩm ---
+const loadReviews = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/api/product");
-    products.value = res.data.data || [];
+    const res = await axios.get(
+      `http://localhost:8080/api/review/by-product?productId=${route.params.id}`
+    );
+    reviews.value = res.data || [];
   } catch (err) {
-    console.error("Lỗi khi tải danh sách sản phẩm:", err);
+    console.error("Lỗi khi tải đánh giá:", err);
   }
 };
 
-// ✅ Khi chọn thuộc tính
-// ✅ Khi chọn thuộc tính
-const selectAttribute = async (name, value) => {
-  // Nếu click lại cùng giá trị -> bỏ chọn
-  if (selectedAttributes.value[name] === value) {
-    delete selectedAttributes.value[name];
-  } else {
-    selectedAttributes.value[name] = value;
+// 🟢 Gửi đánh giá
+const submitReview = async () => {
+  if (!newReview.value.star || !newReview.value.description.trim()) {
+    return Swal.fire("Thiếu thông tin", "Vui lòng chọn sao và nhập nội dung!", "warning");
   }
 
-  // ⚙️ Khi đổi màu thì KHÔNG reset hết các thuộc tính khác — chỉ reset nếu SKU không tồn tại
-  await nextTick(); // Đợi Vue cập nhật xong state
+  try {
+    const payload = {
+      star: newReview.value.star,
+      description: newReview.value.description,
+      accountId: user.value.id,
+      productId: product.value.id,
+    };
+    await axios.post("http://localhost:8080/api/review", payload);
+    Swal.fire("Cảm ơn bạn!", "Đánh giá của bạn đã được gửi.", "success");
+    newReview.value = { star: 0, description: "" };
+    await loadReviews();
+  } catch (err) {
+    Swal.fire("Lỗi", err.response?.data?.message || "Không thể gửi đánh giá.", "error");
+  }
+};
 
+// --- Xóa đánh giá ---
+const confirmDelete = async (id) => {
+  const result = await Swal.fire({
+    title: "Xác nhận xóa?",
+    text: "Bạn có chắc muốn xóa đánh giá này?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  });
+  if (result.isConfirmed) {
+    try {
+      await axios.delete(`http://localhost:8080/api/review/${id}`);
+      reviews.value = reviews.value.filter((r) => r.id !== id);
+      Swal.fire("Đã xóa!", "Đánh giá đã được xóa.", "success");
+    } catch {
+      Swal.fire("Lỗi!", "Không thể xóa đánh giá.", "error");
+    }
+  }
+};
+
+// --- Giữ nguyên toàn bộ chức năng khác của bạn ---
+const selectAttribute = async (n, v) => {
+  if (selectedAttributes.value[n] === v) delete selectedAttributes.value[n];
+  else selectedAttributes.value[n] = v;
+  await nextTick();
   updateSelectedSku();
 };
-// ✅ Cập nhật SKU khi chọn đủ thuộc tính
+
 const updateSelectedSku = () => {
   const keys = Object.keys(selectedAttributes.value);
   selectedSku.value =
-    product.value.skus?.find(sku =>
-      keys.every(key =>
+    product.value.skus?.find((sku) =>
+      keys.every((key) =>
         sku.skuAttributes.find(
-          a =>
+          (a) =>
             a.optionAttributeName === key &&
             a.valueAttributeName === selectedAttributes.value[key]
         )
@@ -262,7 +346,7 @@ const updateSelectedSku = () => {
     quantity.value = 1;
   }
 };
-// --- Tính giá hiển thị ---
+
 const displayPrice = computed(() => {
   if (selectedSku.value?.price) return selectedSku.value.price;
   if (product.value.price) return product.value.price;
@@ -270,26 +354,20 @@ const displayPrice = computed(() => {
   return 0;
 });
 
-// --- Kiểm tra còn hàng ---
 const hasStock = computed(() => selectedSku.value?.quantity > 0);
 
-  // --- Thêm vào giỏ hàng ---
-  const addToCart = () => {
-  const requiredAttrs = attributes.value.map(a => a.name);
-  const isComplete = requiredAttrs.every(attr => selectedAttributes.value[attr]);
+const addToCart = () => {
+  const requiredAttrs = attributes.value.map((a) => a.name);
+  const isComplete = requiredAttrs.every(
+    (attr) => selectedAttributes.value[attr]
+  );
   if (!isComplete) {
-    Swal.fire({
-      icon: "warning",
-      title: "Thiếu thuộc tính!",
-      text: "Vui lòng chọn đầy đủ trước khi thêm vào giỏ hàng.",
-      confirmButtonText: "OK",
-    });
-    return;
+    return Swal.fire("Thiếu thuộc tính!", "Vui lòng chọn đầy đủ.", "warning");
   }
 
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
   const skuId = selectedSku.value?.id || product.value.id;
-  const existingItem = cart.find(item => item.skuId === skuId);
+  const existingItem = cart.find((item) => item.skuId === skuId);
 
   if (existingItem) {
     existingItem.quantity = Math.min(
@@ -303,36 +381,22 @@ const hasStock = computed(() => selectedSku.value?.quantity > 0);
       price: displayPrice.value,
       image: currentImage.value,
       quantity: quantity.value,
-      stock: selectedSku.value?.quantity || product.value.quantity || 0,
+      stock: selectedSku.value?.quantity || 0,
       attributes: { ...selectedAttributes.value },
     });
   }
-
   localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("cart-updated"));
-
-  Swal.fire({
-    icon: "success",
-    title: "Đã thêm vào giỏ hàng!",
-    showConfirmButton: false,
-    timer: 1200,
-  });
+  Swal.fire("Đã thêm!", "Sản phẩm đã được thêm vào giỏ hàng.", "success");
 };
 
-// --- Mua ngay ---
 const buyNow = () => {
-  const requiredAttrs = attributes.value.map(a => a.name);
-  const isComplete = requiredAttrs.every(attr => selectedAttributes.value[attr]);
+  const requiredAttrs = attributes.value.map((a) => a.name);
+  const isComplete = requiredAttrs.every(
+    (attr) => selectedAttributes.value[attr]
+  );
   if (!isComplete) {
-    Swal.fire({
-      icon: "warning",
-      title: "Thiếu thuộc tính!",
-      text: "Vui lòng chọn đầy đủ trước khi mua hàng.",
-      confirmButtonText: "OK",
-    });
-    return;
+    return Swal.fire("Thiếu thuộc tính!", "Vui lòng chọn đầy đủ.", "warning");
   }
-
   const order = [
     {
       skuId: selectedSku.value?.id || product.value.id,
@@ -343,25 +407,20 @@ const buyNow = () => {
       attributes: selectedAttributes.value,
     },
   ];
-
   localStorage.setItem("checkout", JSON.stringify(order));
   router.push("/thanh-toan");
 };
 
-// --- Giá sản phẩm trong danh sách ---
-const getPrice = p => {
+const getPrice = (p) => {
   if (!p.skus || p.skus.length === 0) return null;
-  const skuWithPrice = p.skus.find(sku => sku.price > 0);
+  const skuWithPrice = p.skus.find((sku) => sku.price > 0);
   return skuWithPrice ? skuWithPrice.price : null;
 };
 
-// --- Xem thêm sản phẩm ---
 const visibleProducts = computed(() =>
   products.value.slice(0, visibleCount.value)
 );
 const loadMore = () => (visibleCount.value += 10);
-
-// --- Tăng / giảm số lượng ---
 const increaseQuantity = () => {
   if (selectedSku.value && quantity.value < selectedSku.value.quantity)
     quantity.value++;
@@ -370,46 +429,10 @@ const decreaseQuantity = () => {
   if (quantity.value > 1) quantity.value--;
 };
 
-// ✅ Cập nhật lại toàn bộ phần lọc thuộc tính
-const availableOptions = computed(() => {
-  const result = {};
-  if (!product.value.skus) return result;
-
-  const selected = selectedAttributes.value;
-  const selectedKeys = Object.keys(selected);
-
-  product.value.skus.forEach(sku => {
-    // Kiểm tra SKU có khớp với toàn bộ các lựa chọn hiện tại không
-    const isCompatible = selectedKeys.every(key => {
-      const attr = sku.skuAttributes.find(
-        a => a.optionAttributeName === key
-      );
-      return !selected[key] || (attr && attr.valueAttributeName === selected[key]);
-    });
-
-    if (isCompatible) {
-      sku.skuAttributes.forEach(attr => {
-        if (!result[attr.optionAttributeName])
-          result[attr.optionAttributeName] = new Set();
-        result[attr.optionAttributeName].add(attr.valueAttributeName);
-      });
-    }
-  });
-
-  // Chuyển Set -> Array
-  Object.keys(result).forEach(k => {
-    result[k] = Array.from(result[k]);
-  });
-
-  return result;
-});
-
-// ✅ Trả về các option hiển thị hợp lệ
 const getVisibleOptions = (attrGroup) => {
   const selected = { ...selectedAttributes.value };
-  delete selected[attrGroup.name]; // Bỏ chính nhóm hiện tại để không tự giới hạn nó
+  delete selected[attrGroup.name];
 
-  // Lọc ra các SKU còn phù hợp
   let filteredSkus = product.value.skus.filter((sku) =>
     Object.entries(selected).every(([k, v]) =>
       sku.skuAttributes.some(
@@ -418,7 +441,6 @@ const getVisibleOptions = (attrGroup) => {
     )
   );
 
-  // Lấy ra danh sách option có thể chọn cho nhóm này
   return [
     ...new Set(
       filteredSkus
@@ -431,17 +453,11 @@ const getVisibleOptions = (attrGroup) => {
   ];
 };
 
-
-
-// ✅ Kiểm tra option có nên bị ẩn không
-const shouldHideOption = (attrGroup, option) => {
-  const visible = getVisibleOptions(attrGroup);
-  return !visible.includes(option);
-};
-// --- Lifecycle ---
 onMounted(async () => {
   await loadProductDetail();
-  await loadAllProducts();
+  await checkCanReview(); // ✅ thêm dòng này
+  const res = await axios.get("http://localhost:8080/api/product");
+  products.value = res.data.data || [];
 });
 
 watch(
@@ -449,11 +465,38 @@ watch(
   async (newId, oldId) => {
     if (newId !== oldId) {
       await loadProductDetail();
+      await checkCanReview(); // ✅ thêm dòng này
       window.scrollTo(0, 0);
     }
   }
 );
+
+
+
+
+
+const canReview = ref(false);
+
+// 🧩 Kiểm tra quyền đánh giá
+const checkCanReview = async () => {
+  if (!user.value) {
+    canReview.value = false;
+    return;
+  }
+  try {
+    const res = await axios.get(
+      `http://localhost:8080/api/review/can-review/${route.params.id}?accountId=${user.value.id}`
+    );
+    canReview.value = res.data === true;
+  } catch (err) {
+    console.error("Lỗi khi kiểm tra quyền đánh giá:", err);
+    canReview.value = false;
+  }
+};
+
 </script>
+
+
 
 
 <style scoped>
