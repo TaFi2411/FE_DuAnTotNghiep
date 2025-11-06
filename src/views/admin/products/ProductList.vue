@@ -59,12 +59,7 @@
             >
               <i class="bi bi-pencil"></i>
             </button>
-            <button
-              class="btn btn-outline-danger btn-sm"
-              @click="confirmDelete(props.row.id)"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
+
           </span>
 
           <!-- Cột mặc định -->
@@ -136,26 +131,7 @@ const goToAddProduct = () => router.push('/admin/product/create')
 const viewDetail = (id) => router.push(`/admin/product-detail/${id}`)
 const editProduct = (id) => router.push(`/admin/product/update/${id}`)
 
-const confirmDelete = async (id) => {
-  const confirm = await Swal.fire({
-    title: 'Xóa sản phẩm?',
-    text: 'Bạn có chắc chắn muốn xóa sản phẩm này?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Xóa',
-    cancelButtonText: 'Hủy',
-  })
-  if (!confirm.isConfirmed) return
 
-  try {
-    await axios.delete(`/api/product/${id}`)
-    Swal.fire('Đã xóa!', 'Sản phẩm đã được xóa.', 'success')
-    fetchProducts()
-  } catch (err) {
-    console.error('❌ Lỗi xóa sản phẩm:', err)
-    Swal.fire('Lỗi', 'Không thể xóa sản phẩm!', 'error')
-  }
-}
 
 // 🚀 Khi component mount
 onMounted(fetchProducts)

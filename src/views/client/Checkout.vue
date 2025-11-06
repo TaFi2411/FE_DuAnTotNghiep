@@ -36,45 +36,31 @@
           <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
 
           <!-- Sản phẩm trong giỏ -->
-          <!-- Sản phẩm trong giỏ -->
-<div
-  v-for="item in cartItems"
-  :key="item.skuId"
-  class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2"
->
-  <div class="d-flex align-items-center">
-    <img
-      :src="item.image || '/images/default-product.png'"
-      alt="product image"
-      class="rounded me-3 border"
-      width="60"
-      height="60"
-      style="object-fit: cover;"
-    />
-    <div>
-      <div class="fw-semibold">{{ item.productName || 'Sản phẩm' }}</div>
+          <div v-for="item in cartItems" :key="item.skuId"
+            class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+            <div class="d-flex align-items-center">
+              <img :src="item.image || '/images/default-product.png'" alt="product image" class="rounded me-3 border"
+                width="60" height="60" style="object-fit: cover;" />
+              <div>
+                <div class="fw-semibold">{{ item.productName || 'Sản phẩm' }}</div>
 
-      <!-- Hiển thị thuộc tính SKU -->
-      <div
-        v-if="Array.isArray(item.skuAttributes) && item.skuAttributes.length > 0"
-        class="text-muted small"
-      >
-        <div v-for="attr in item.skuAttributes" :key="attr.id">
-          <strong>{{ attr.optionAttributeName }}:</strong>
-          {{ attr.valueAttributeName }}
-        </div>
-      </div>
+                <!-- Hiển thị thuộc tính SKU -->
+                <div v-if="Array.isArray(item.skuAttributes) && item.skuAttributes.length > 0" class="text-muted small">
+                  <div v-for="attr in item.skuAttributes" :key="attr.id">
+                    <strong>{{ attr.optionAttributeName }}:</strong>
+                    {{ attr.valueAttributeName }}
+                  </div>
+                </div>
 
-      <div class="text-muted small">
-        {{ (item.price || 0).toLocaleString('vi-VN') }} ₫ × {{ item.quantity }}
-      </div>
-    </div>
-  </div>
-  <div class="fw-semibold">
-    {{ ((item.price || 0) * (item.quantity || 1)).toLocaleString('vi-VN') }} ₫
-  </div>
-</div>
-
+                <div class="text-muted small">
+                  {{ (item.price || 0).toLocaleString('vi-VN') }} ₫ × {{ item.quantity }}
+                </div>
+              </div>
+            </div>
+            <div class="fw-semibold">
+              {{ ((item.price || 0) * (item.quantity || 1)).toLocaleString('vi-VN') }} ₫
+            </div>
+          </div>
 
           <div class="d-flex justify-content-between mb-2">
             <span>Phí vận chuyển</span>
@@ -86,17 +72,19 @@
             <span>{{ totalPayment.toLocaleString('vi-VN') }} ₫</span>
           </div>
 
-          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handleVnpayPayment">
-            Thanh toán bằng VnPay
-          </button>
-          <!-- Nút thanh toán MoMo -->
-          <button class="btn btn-outline-danger w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleMomoPayment">
-            Thanh toán bằng MoMo
-          </button>
-          <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold mt-2" @click="handleCODPayment">
-            Thanh toán khi nhận hàng (COD)
-          </button>
+          <!-- Chọn phương thức thanh toán -->
+          <h5 class="fw-bold mb-2 mt-3">Phương thức thanh toán</h5>
+          <div v-for="method in paymentMethods" :key="method.id" class="form-check mb-2">
+            <input class="form-check-input" type="radio" :id="'payment-' + method.id" :value="method.id"
+              v-model="selectedPaymentMethod" />
+            <label class="form-check-label" :for="'payment-' + method.id">
+              {{ method.name }}
+            </label>
+          </div>
 
+          <button class="btn btn-dark w-100 rounded-pill py-2 fw-semibold mt-3" @click="handlePayment">
+            Thanh toán
+          </button>
         </div>
       </div>
     </div>
@@ -143,336 +131,62 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import axios from "axios";
+import axios from "@/composables/axios.js";
 
+// Địa chỉ
 const showAddressModal = ref(false);
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
 const addresses = ref([]);
-
 const selectedProvince = ref("");
 const selectedDistrict = ref("");
 const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
 
-const accountId = ref(null);
-const storeDistrictId = 1451;
-const shippingFee = ref(0);
+// Giỏ hàng
 const cartItems = ref([]);
+const shippingFee = ref(0);
+const storeDistrictId = 1451;
 
+// Account
+const accountId = ref(null);
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
   if (token) {
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      accountId.value = payload.id;
-    } catch (err) {
-      console.error("Lỗi khi giải mã token:", err);
-    }
+    try { accountId.value = JSON.parse(atob(token.split(".")[1])).id; }
+    catch (e) { console.error(e); }
   }
 };
 
-// Tổng tiền sản phẩm
+// Tổng tiền
 const totalProductPrice = computed(() =>
-  cartItems.value.reduce(
-    (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
-    0
-  )
+  cartItems.value.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0)
 );
+const totalPayment = computed(() => totalProductPrice.value + (shippingFee.value || 0));
 
-// Tổng thanh toán = sản phẩm + ship
-const totalPayment = computed(
-  () => totalProductPrice.value + (shippingFee.value || 0)
-);
-
-// Load danh sách tỉnh/huyện/xã
-const fetchProvinces = async () => {
-  const res = await axios.get("http://localhost:8080/api/ghn/provinces");
-  provinces.value = res.data;
-};
-
-const fetchDistricts = async () => {
-  if (!selectedProvince.value) return;
-  const res = await axios.get(
-    `http://localhost:8080/api/ghn/districts?provinceId=${selectedProvince.value}`
-  );
-  districts.value = res.data;
-  wards.value = [];
-  selectedDistrict.value = "";
-  selectedWard.value = "";
-};
-
-const fetchWards = async () => {
-  if (!selectedDistrict.value) return;
-  const res = await axios.get(
-    `http://localhost:8080/api/ghn/wards?districtId=${selectedDistrict.value}`
-  );
-  wards.value = res.data;
-  selectedWard.value = "";
-};
-
-// Địa chỉ
-const fetchAddresses = async () => {
+// Payment methods
+const paymentMethods = ref([]);
+const selectedPaymentMethod = ref(null);
+const fetchPaymentMethods = async () => {
   try {
-    const res = await axios.get(
-      `http://localhost:8080/api/address/account/${accountId.value}`
-    );
-    addresses.value = res.data || [];
-  } catch (err) {
-    console.error("Lỗi khi load danh sách địa chỉ:", err);
-  }
+    const res = await axios.get("/api/payment-method");
+    paymentMethods.value = res.data.data || [];
+    if (paymentMethods.value.length) selectedPaymentMethod.value = paymentMethods.value[0].id;
+  } catch (err) { console.error(err); }
 };
 
-// ✅ Lưu địa chỉ mới
-const saveAddress = async () => {
-  if (
-    !specificAddress.value ||
-    !selectedProvince.value ||
-    !selectedDistrict.value ||
-    !selectedWard.value
-  ) {
-    alert("Vui lòng nhập đầy đủ thông tin địa chỉ!");
-    return;
-  }
-
-  const provinceName =
-    provinces.value.find((p) => p.ProvinceID === selectedProvince.value)
-      ?.ProvinceName || "";
-  const districtName =
-    districts.value.find((d) => d.DistrictID === selectedDistrict.value)
-      ?.DistrictName || "";
-  const wardName =
-    wards.value.find((w) => w.WardCode === selectedWard.value)?.WardName || "";
-
-  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
-
-  try {
-    const payload = {
-      province_id: selectedProvince.value,
-      district_id: selectedDistrict.value,
-      ward_code: selectedWard.value,
-      address: specificAddress.value,
-      fulladdress: fullAddress,
-      defaultAddress: false,
-      active: true,
-      accountId: accountId.value,
-    };
-
-    await axios.post("http://localhost:8080/api/address", payload);
-    alert("Lưu địa chỉ thành công!");
-    closeModal();
-    fetchAddresses();
-  } catch (err) {
-    console.error("Lỗi lưu địa chỉ:", err);
-    alert("Không thể lưu địa chỉ. Vui lòng thử lại!");
-  }
-};
-
-const selectAddress = (a) => {
-  selectedAddress.value = a;
-};
-
-// Tính phí ship
-const fetchShippingFee = async () => {
-  if (!selectedAddress.value) return;
-  const toDistrictId = Number(selectedAddress.value.district_id);
-  const toWardCode = String(selectedAddress.value.ward_code);
-  if (!toDistrictId || !toWardCode) {
-    shippingFee.value = 0;
-    return;
-  }
-  try {
-    const res = await axios.get("http://localhost:8080/api/ghn/fee", {
-      params: {
-        fromDistrictId: storeDistrictId,
-        toDistrictId,
-        toWardCode,
-        weight: 1000,
-      },
-    });
-    shippingFee.value = res.data?.total || res.data?.data?.total || 0;
-  } catch (err) {
-    shippingFee.value = 0;
-    console.error(err);
-  }
-};
-
-watch(selectedAddress, (newVal) => {
-  if (newVal) fetchShippingFee();
-});
-
-// Modal địa chỉ
-const closeModal = () => {
-  showAddressModal.value = false;
-  selectedProvince.value = "";
-  selectedDistrict.value = "";
-  selectedWard.value = "";
-  specificAddress.value = "";
-};
-
-// ✅ Thanh toán VNPAY — tạo đơn + redirect thanh toán
-const handleVnpayPayment = async () => {
-  if (!selectedAddress.value) {
-    alert("Vui lòng chọn địa chỉ giao hàng!");
-    return;
-  }
-
-  try {
-    const orderPayload = {
-      accountId: accountId.value,
-      addressId: selectedAddress.value.id,
-      paymentMethodId: 1, // VNPAY
-      feeship: shippingFee.value,
-      total: totalPayment.value,
-      payment_status: false,
-      discount: 0,
-      voucherId: null,
-      orderDetails: cartItems.value.map((i) => ({
-        skuId: i.skuId,
-        quantity: i.quantity,
-        price: i.price,
-      })),
-    };
-
-    const orderRes = await axios.post(
-      "http://localhost:8080/api/order",
-      orderPayload
-    );
-    const order = orderRes.data;
-    sessionStorage.removeItem("cart");
-    cartItems.value = [];
-
-    console.log("🧾 Đơn hàng tạo thành công:", order);
-    localStorage.setItem("orderId", order.id);
-
-    const vnpayRes = await axios.post("http://localhost:8080/api/vnpay/create", {
-      orderId: order.id,
-      amount: order.total,
-    });
-
-    if (vnpayRes.data?.paymentUrl) {
-      window.location.href = vnpayRes.data.paymentUrl;
-    } else {
-      alert("Không tạo được link thanh toán!");
-    }
-  } catch (err) {
-    console.error("❌ Lỗi tạo đơn hàng hoặc thanh toán VNPAY:", err);
-    alert("Lỗi tạo đơn hàng hoặc thanh toán VNPAY!");
-  }
-};
-
-// ✅ Thanh toán MoMo — tạo đơn + redirect thanh toán
-const handleMomoPayment = async () => {
-  if (!selectedAddress.value) {
-    alert("Vui lòng chọn địa chỉ giao hàng!");
-    return;
-  }
-
-  try {
-    // 1️⃣ Gửi tạo đơn hàng
-    const orderPayload = {
-      accountId: accountId.value,
-      addressId: selectedAddress.value.id,
-      paymentMethodId: 3, // MoMo
-      feeship: shippingFee.value,
-      total: totalPayment.value,
-      payment_status: false,
-      discount: 0,
-      voucherId: null,
-      orderDetails: cartItems.value.map(i => ({
-        skuId: i.skuId,
-        quantity: i.quantity,
-        price: i.price
-      }))
-    };
-
-    const orderRes = await axios.post("http://localhost:8080/api/order", orderPayload);
-    const order = orderRes.data;
-    sessionStorage.removeItem("cart");
-    cartItems.value = [];
-
-    console.log("🧾 Đơn hàng tạo thành công:", order);
-
-    localStorage.setItem("orderId", order.id);
-
-    // 2️⃣ Gọi API backend để tạo link thanh toán MoMo
-    const momoRes = await axios.post("http://localhost:8080/api/momo/create", {
-      orderId: order.id,
-      amount: order.total,
-      orderInfo: "Thanh toán đơn hàng #" + order.id
-    });
-
-    console.log("🔗 MoMo response:", momoRes.data);
-
-    // 3️⃣ Nếu tạo link thành công => redirect người dùng sang trang MoMo
-    if (momoRes.data?.resultCode === 0 && momoRes.data?.payUrl) {
-      window.location.href = momoRes.data.payUrl;
-    } else {
-      alert("Không tạo được link thanh toán MoMo!");
-    }
-  } catch (err) {
-    console.error("❌ Lỗi tạo đơn hàng hoặc thanh toán MoMo:", err);
-    alert("Lỗi tạo đơn hàng hoặc thanh toán MoMo!");
-  }
-};
-
-
-
-// ✅ Thanh toán COD — tạo đơn và thông báo thành công
-const handleCODPayment = async () => {
-  if (!selectedAddress.value) {
-    alert("Vui lòng chọn địa chỉ giao hàng!");
-    return;
-  }
-
-  try {
-    // 1️⃣ Tạo payload đơn hàng
-    const orderPayload = {
-      accountId: accountId.value,
-      addressId: selectedAddress.value.id,
-      paymentMethodId: 2, // COD
-      feeship: shippingFee.value,
-      total: totalPayment.value,
-      payment_status: false,
-      discount: 0,
-      voucherId: null,
-      orderDetails: cartItems.value.map(i => ({
-        skuId: i.skuId,
-        quantity: i.quantity,
-        price: i.price
-      }))
-    };
-
-    // 2️⃣ Gọi API backend tạo đơn COD
-    const res = await axios.post("http://localhost:8080/api/order-cod", orderPayload);
-
-    const order = res.data;
-
-    if (order && order.id) {
-      alert(`Đặt hàng COD thành công! Mã đơn hàng: #${order.id}`);
-      // Xoá giỏ hàng sau khi đặt
-      sessionStorage.removeItem("cart");
-      cartItems.value = [];
-      // Redirect hoặc làm gì đó nếu muốn
-    } else {
-      alert("Đặt hàng COD thất bại!");
-    }
-  } catch (err) {
-    console.error("❌ Lỗi tạo đơn COD:", err);
-    alert("Đặt hàng COD thất bại!");
-  }
-};
-
+// Load cart
 const fetchCartFromSessionStorage = () => {
   const stored = JSON.parse(sessionStorage.getItem("checkoutItems") || "[]");
-  cartItems.value = stored.map((item) => ({
+  cartItems.value = stored.map(item => ({
     id: item.id,
     skuId: item.skuId,
     productName: item.productName || "Sản phẩm",
@@ -484,45 +198,136 @@ const fetchCartFromSessionStorage = () => {
   }));
 };
 
+// Địa chỉ API
+const fetchProvinces = async () => { provinces.value = (await axios.get("/api/ghn/provinces")).data; };
+const fetchDistricts = async () => {
+  if (!selectedProvince.value) return;
+  districts.value = (await axios.get(`/api/ghn/districts?provinceId=${selectedProvince.value}`)).data;
+  wards.value = []; selectedDistrict.value = ""; selectedWard.value = "";
+};
+const fetchWards = async () => {
+  if (!selectedDistrict.value) return;
+  wards.value = (await axios.get(`/api/ghn/wards?districtId=${selectedDistrict.value}`)).data;
+  selectedWard.value = "";
+};
+const fetchAddresses = async () => {
+  if (!accountId.value) return;
+  addresses.value = (await axios.get(`/api/address/account/${accountId.value}`)).data || [];
+};
+const selectAddress = (a) => { selectedAddress.value = a; };
+const closeModal = () => { showAddressModal.value = false; selectedProvince.value = ""; selectedDistrict.value = ""; selectedWard.value = ""; specificAddress.value = ""; };
+const saveAddress = async () => {
+  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
+    alert("Vui lòng nhập đầy đủ thông tin địa chỉ!"); return;
+  }
+  const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
+  const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
+  const wardName = wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
+  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
+  try {
+    await axios.post("/api/address", {
+      province_id: selectedProvince.value, district_id: selectedDistrict.value, ward_code: selectedWard.value,
+      address: specificAddress.value, fulladdress: fullAddress, defaultAddress: false, active: true, accountId: accountId.value
+    });
+    closeModal(); fetchAddresses();
+  } catch (err) { console.error(err); alert("Không thể lưu địa chỉ."); }
+};
 
-// ✅ Thêm callback VNPAY tại đây
-onMounted(async () => {
+// Ship fee
+const fetchShippingFee = async () => {
+  if (!selectedAddress.value) { shippingFee.value = 0; return; }
+  try {
+    const res = await axios.get("/api/ghn/fee", { params: { fromDistrictId: storeDistrictId, toDistrictId: Number(selectedAddress.value.district_id), toWardCode: String(selectedAddress.value.ward_code), weight: 1000 } });
+    shippingFee.value = res.data?.total || res.data?.data?.total || 0;
+  } catch (err) { shippingFee.value = 0; console.error(err); }
+};
+watch(selectedAddress, (newVal) => { if (newVal) fetchShippingFee(); });
+
+// Thanh toán
+const handlePayment = async () => {
+  if (!selectedAddress.value) { alert("Vui lòng chọn địa chỉ giao hàng!"); return; }
+  if (!selectedPaymentMethod.value) { alert("Vui lòng chọn phương thức thanh toán!"); return; }
+
+  const orderPayload = {
+    accountId: accountId.value,
+    addressId: selectedAddress.value.id,
+    paymentMethodId: selectedPaymentMethod.value,
+    feeship: shippingFee.value,
+    total: totalPayment.value,
+    payment_status: false,
+    discount: 0,
+    voucherId: null,
+    orderDetails: cartItems.value.map(i => ({ skuId: i.skuId, quantity: i.quantity, price: i.price }))
+  };
+
+  try {
+    const orderRes = await axios.post("/api/order", orderPayload);
+    const order = orderRes.data;
+
+    sessionStorage.removeItem("cart");
+    sessionStorage.removeItem("checkoutItems");
+    sessionStorage.setItem("orderId", order.id);
+    cartItems.value = [];
+
+    if (selectedPaymentMethod.value === 1) { // VNPAY
+      const vnpayRes = await axios.post("/api/vnpay/create", { orderId: order.id, amount: order.total });
+      if (vnpayRes.data?.paymentUrl) window.location.href = vnpayRes.data.paymentUrl;
+    } else if (selectedPaymentMethod.value === 2) { // MOMO
+      const momoRes = await axios.post("/api/momo/create", { orderId: order.id, amount: order.total, orderInfo: "Thanh toán đơn hàng #" + order.id });
+      if (momoRes.data?.resultCode === 0 && momoRes.data?.payUrl) window.location.href = momoRes.data.payUrl;
+    } else if (selectedPaymentMethod.value === 5) { // COD
+      window.location.href = "/orders";
+    }
+  } catch (err) { console.error(err); alert("Có lỗi khi thanh toán!"); }
+};
+
+// onMounted
+onMounted(() => {
   fetchCartFromSessionStorage();
   fetchAccountId();
   fetchProvinces();
   fetchAddresses();
+  fetchPaymentMethods();
 
-  // 🔹 Khi người dùng quay lại từ trang VNPAY
+  // Callback VNPAY / MoMo
   const urlParams = new URLSearchParams(window.location.search);
   const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
   const orderId = urlParams.get("orderId") || localStorage.getItem("orderId");
 
   if (vnp_ResponseCode && orderId) {
     if (vnp_ResponseCode === "00") {
-      try {
-        console.log("✅ Thanh toán VNPAY thành công, cập nhật đơn hàng...");
-        await axios.post(
-          `http://localhost:8080/api/order/vnpay-success/${orderId}`
-        );
-        alert("🎉 Thanh toán thành công! Đơn hàng của bạn đã được ghi nhận.");
-        localStorage.removeItem("cart");
-        localStorage.removeItem("checkoutItems");
-        localStorage.removeItem("orderId");
-        cartItems.value = [];
-      } catch (error) {
-        console.error("❌ Lỗi cập nhật đơn hàng sau VNPAY:", error);
-        alert("Có lỗi xảy ra khi cập nhật trạng thái đơn hàng!");
-      }
+      // Thanh toán thành công
+      axios.post(`/api/order/vnpay-success/${orderId}`)
+        .then(() => {
+          sessionStorage.removeItem("cart");
+          sessionStorage.removeItem("checkoutItems");
+          sessionStorage.removeItem("orderId");
+          cartItems.value = [];
+          window.location.href = "/orders"; // chuyển về trang đơn hàng của tôi
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Lỗi cập nhật đơn hàng!");
+        });
     } else {
-      console.warn("⚠️ Thanh toán VNPAY thất bại hoặc bị hủy!");
-      alert("Thanh toán không thành công hoặc đã bị hủy!");
+      // Thanh toán hủy hoặc thất bại
+      axios.post(`/api/order/cancel/${orderId}`)
+        .then(() => {
+          sessionStorage.removeItem("orderId");
+          alert("Thanh toán bị hủy. Đơn hàng đã được huỷ.");
+          window.location.href = "/cart"; // quay lại giỏ hàng
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Có lỗi khi hủy đơn hàng!");
+        });
     }
 
-    // Xóa query khỏi URL
-    const cleanUrl = window.location.origin + window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
+    // Xóa query params khỏi URL
+    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
   }
 });
+
 </script>
 
 
@@ -535,7 +340,7 @@ onMounted(async () => {
 .payment-method:hover {
   border-color: #0d6efd;
   background-color: #f8f9ff;
-  transition: 0.3s;
+  transition: .3s;
 }
 
 .modal-content {
