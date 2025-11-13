@@ -147,12 +147,13 @@ const skuErrors = reactive({
 // ⚙️ Cột bảng
 const columns = ref([
   { label: "ID", field: "id", width: "80px" },
-  { label: "Flash Sale", field: "flashSaleId" },
-  { label: "SKU", field: "skuId" },
+  { label: "Flash Sale", field: "flashSaleName" }, // tìm kiếm theo tên Flash Sale
+  { label: "SKU", field: "skuName" },             // tìm kiếm theo tên SKU
   { label: "Giảm giá (%)", field: "discount" },
   { label: "Số lượng", field: "quantity" },
   { label: "Hành động", field: "actions", width: "130px" },
 ])
+
 
 // 📄 Phân trang frontend
 const paginationOptions = ref({
@@ -178,13 +179,21 @@ async function fetchFlashSaleSku() {
   loading.value = true
   try {
     const res = await axios.get("/api/flash-sale-sku")
-    skuList.value = res.data.data || res.data.content || res.data || []
+    const list = res.data.data || res.data.content || res.data || []
+
+    // Thêm tên hiển thị cho Flash Sale và SKU
+    skuList.value = list.map(sku => ({
+      ...sku,
+      flashSaleName: getFlashSaleName(sku.flashSaleId),
+      skuName: getSkuName(sku.skuId),
+    }))
   } catch (err) {
     Swal.fire("Lỗi", "Không thể tải danh sách SKU!", "error")
   } finally {
     loading.value = false
   }
 }
+
 
 // ✅ Validate
 function validateDiscount() {
@@ -322,6 +331,7 @@ function goToFlashSaleAdmin() {
 
 // 🚀 onMounted
 onMounted(async () => {
+  await fetchSkus() 
   await Promise.all([fetchFlashSales(), fetchSkus(), fetchFlashSaleSku()])
 })
 </script>

@@ -100,7 +100,10 @@ const router = useRouter();
 const cartItems = ref([]);
 const accountId = ref(null);
 const defaultImage = "/images/default-product.png";
+const flashSales = ref([]);
+const flashSaleSkus = ref([]);
 
+// --- decode JWT ---
 function decodeJwtToken(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -117,71 +120,100 @@ function decodeJwtToken(token) {
   }
 }
 
+// --- Load flash sale data ---
+async function loadFlashSales() {
+  try {
+    const [fsRes, fssRes] = await Promise.all([
+      axios.get("/api/flash-sale"),
+      axios.get("/api/flash-sale-sku"),
+    ]);
+
+    const now = new Date();
+
+    // đảm bảo là mảng
+    const fsData = fsRes.data?.content || fsRes.data?.data || fsRes.data || [];
+    const fssData = fssRes.data?.content || fssRes.data?.data || fssRes.data || [];
+
+    flashSales.value = fsData.filter(f => f.active &&
+      new Date(f.started_date ?? f.startedDate) <= now &&
+      new Date(f.ended_date ?? f.endedDate) >= now
+    );
+
+    flashSaleSkus.value = fssData;
+  } catch (err) {
+    console.error("Không thể load flash sale", err);
+  }
+}
+
+// --- Load cart ---
 const loadCart = async () => {
   try {
     const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
     const data = res.data || [];
 
-    cartItems.value = data.map((item) => ({
-      id: item.id,
-      productName: item.skuName || "Sản phẩm",
-      price: item.price,
-      quantity: item.quantity,
-      stock: item.skuQuantity,
-      image: item.skuImage || defaultImage,
-      skuAttributes: Array.isArray(item.skuAttributes)
-        ? item.skuAttributes
-        : [],
-      selected: false,
-      skuId: item.skuId,
-    }));
+    cartItems.value = data.map(item => {
+      const skuId = item.skuId;
+      const flashSku = flashSaleSkus.value.find(f =>
+        (f.sku_id === skuId || f.skuId === skuId) &&
+        flashSales.value.some(fs => fs.id === (f.flash_sale_id ?? f.flashSaleId))
+      );
+
+      const discountedPrice = flashSku
+        ? Math.round(item.price * (1 - (flashSku.discount ?? 0) / 100))
+        : item.price;
+
+      const stock = flashSku
+        ? Math.max((flashSku.quantity ?? 0), 0)
+        : item.skuQuantity;
+
+      return {
+        id: item.id,
+        productName: item.skuName || "Sản phẩm",
+        price: discountedPrice,          // giá hiển thị (flash sale)
+        originalPrice: item.price,       // giá gốc
+        quantity: item.quantity,
+        stock,
+        image: item.skuImage || defaultImage,
+        skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
+        selected: false,
+        skuId: skuId,
+        flashSaleSkuId: flashSku?.id ?? null,
+      };
+    });
   } catch (err) {
     console.error(err);
     Swal.fire("Lỗi", "Không thể tải giỏ hàng từ server", "error");
   }
 };
 
+// --- Cập nhật số lượng ---
 const updateQuantity = async (item, newQty) => {
-  console.log("Cập nhật số lượng thành công" + item.id);
-if (newQty < 1) {
+  if (newQty < 1) {
     const result = await Swal.fire({
       title: "Xác nhận xoá sản phẩm?",
       text: "Bạn có chắc muốn xoá sản phẩm này khỏi giỏ hàng?",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
       confirmButtonText: "Có, xoá!",
       cancelButtonText: "Huỷ"
     });
-
-    if (result.isConfirmed) {
-      try {
-        await axios.delete(`/api/cart-details/${item.id}`);
-        Swal.fire("Đã xoá!", "Sản phẩm đã được xoá khỏi giỏ hàng.", "success");
-        await loadCart(); // refresh giỏ hàng
-      } catch (err) {
-        Swal.fire("Lỗi", "Không thể xoá sản phẩm", "error");
-      }
-    }
-    return; // Dừng lại, không chạy tiếp
+    if (!result.isConfirmed) return;
+    await removeItem(item);
+    return;
   }
+
   if (newQty > item.stock) {
     Swal.fire("Thông báo", "Số lượng đã đạt giới hạn trong kho", "info");
     return;
   }
 
   try {
-    const payload = {
+    // Chỉ cập nhật cart details thôi
+    await axios.put(`/api/cart-details/${item.id}/quantity`, {
       accountId: accountId.value,
       skuId: item.skuId,
       quantity: newQty,
-    };
-
-    await axios.put(`/api/cart-details/${item.id}/quantity`, payload);
-    console.log("Cập nhật số lượng thành công" + item.id);
-
-    item.quantity = newQty;
+    });
 
     await loadCart();
   } catch (err) {
@@ -190,6 +222,7 @@ if (newQty < 1) {
   }
 };
 
+// --- Xoá sản phẩm ---
 const removeItem = async (item) => {
   const confirm = await Swal.fire({
     title: "Xóa sản phẩm?",
@@ -203,7 +236,7 @@ const removeItem = async (item) => {
 
   try {
     await axios.delete(`/api/cart-details/${item.id}`);
-    cartItems.value = cartItems.value.filter((i) => i.id !== item.id);
+    cartItems.value = cartItems.value.filter(i => i.id !== item.id);
     Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng", "success");
   } catch (err) {
     console.error(err);
@@ -211,42 +244,39 @@ const removeItem = async (item) => {
   }
 };
 
-const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
+// --- Computed ---
+const selectedItems = computed(() => cartItems.value.filter(i => i.selected));
 const selectedTotal = computed(() =>
-  selectedItems.value.reduce(
-    (sum, i) => sum + (i.price || 0) * (i.quantity || 1),
-    0
-  )
+  selectedItems.value.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0)
 );
 
+// --- Thanh toán ---
 const goToCheckout = () => {
   if (selectedItems.value.length === 0) {
-    Swal.fire(
-      "Chưa chọn sản phẩm",
-      "Vui lòng chọn sản phẩm để thanh toán",
-      "info"
-    );
+    Swal.fire("Chưa chọn sản phẩm", "Vui lòng chọn sản phẩm để thanh toán", "info");
     return;
   }
-
   sessionStorage.setItem("checkoutItems", JSON.stringify(selectedItems.value));
   router.push("/checkout");
 };
 
-
-onMounted(() => {
+// --- Mounted ---
+onMounted(async () => {
   const token = localStorage.getItem("token");
   if (!token) {
     Swal.fire("Chưa đăng nhập", "Vui lòng đăng nhập để xem giỏ hàng", "info");
     router.push("/auth/login");
     return;
   }
-
   const payload = decodeJwtToken(token);
   accountId.value = payload?.id || null;
-  if (accountId.value) loadCart();
+
+  await loadFlashSales();
+  if (accountId.value) await loadCart();
 });
 </script>
+
+
 
 <style scoped>
 .cart-header {
