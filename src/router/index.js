@@ -12,6 +12,8 @@ import SwiperProductHome from "@/components/SwiperProductHome.vue";
 import Register from "@/views/auth/Register.vue";
 import Login from "@/views/auth/Login.vue";
 import OAuth2Success from "@/views/auth/OAuth2Success.vue";
+import ForgotPassword from "@/views/auth/ForgotPassword.vue";
+import ChangePassword from "@/views/auth/ChangePassword.vue";
 
 // Client
 // --- Client Pages --- //
@@ -48,7 +50,7 @@ import Attribute from "@/views/admin/products/Attribute.vue";
 import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
 import FlashSaleUser from "@/components/FlashSaleUser.vue";
 import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
-import OrderManagement from "@/views/admin/products/OrderManagement.vue";
+import OrderManagement from "@/views/admin/OrderManagement.vue";
 import FlashSaleAdmin from "@/views/admin/FlashSaleAdmin.vue";
 import FlashSaleSku from "@/views/admin/FlashSaleSku.vue";
 
@@ -91,6 +93,16 @@ const clientRouter = [
     path: "auth/login",
     name: "Login",
     component: Login,
+  },
+  {
+    path: "auth/forgot-password",
+    name: "ForgotPassword",
+    component:  ForgotPassword,
+  },
+  {
+    path: "auth/change-password",
+    name: "ChangePassword ",
+    component:ChangePassword,
   },
   {
     path: "/oauth2/success",
@@ -323,60 +335,60 @@ const router = createRouter({
       path: "/admin",
       component: LayoutAdmin,
       children: adminRouter,
-      // meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
+      meta: { requiresAuth: true, role: 'ROLE_ADMIN' }
     },
   ],
 });
 
-// function decodeJwtToken(token) {
-//   try {
-//     const base64Url = token.split(".")[1];
-//     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-//     return JSON.parse(window.atob(base64));
-//   } catch (e) {
-//     console.error("❌ Lỗi decode token:", e);
-//     return null;
-//   }
-// }
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(window.atob(base64));
+  } catch (e) {
+    console.error("❌ Lỗi decode token:", e);
+    return null;
+  }
+}
 
-// function isTokenExpired(token) {
-//   const payload = decodeJwtToken(token);
-//   if (!payload) return true;
-//   const now = Date.now() / 1000;
-//   return payload.exp && payload.exp < now;
-// }
+function isTokenExpired(token) {
+  const payload = decodeJwtToken(token);
+  if (!payload) return true;
+  const now = Date.now() / 1000;
+  return payload.exp && payload.exp < now;
+}
 
 
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token");
-//   const role = localStorage.getItem("role");
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
 
-//   // Nếu có token thì kiểm tra hạn
-//   if (token && isTokenExpired(token)) {
-//     console.warn("⚠️ Token hết hạn — đăng xuất tự động");
-//     localStorage.removeItem("token");
-//     localStorage.removeItem("role");
-//     return next({ name: "Login" });
-//   }
+  // Nếu có token thì kiểm tra hạn
+  if (token && isTokenExpired(token)) {
+    console.warn("⚠️ Token hết hạn — đăng xuất tự động");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    return next({ name: "Login" });
+  }
 
-//   // Nếu route yêu cầu đăng nhập
-//   if (to.meta.requiresAuth) {
-//     if (!token) {
-//       console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
-//       return next({ name: "Login" });
-//     }
+  // Nếu route yêu cầu đăng nhập
+  if (to.meta.requiresAuth) {
+    if (!token) {
+      console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
+      return next({ name: "Login" });
+    }
 
-//     // Kiểm tra quyền
-//     if (to.meta.role && to.meta.role !== role) {
-//       console.warn(
-//         `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
-//       );
-//       return next({ name: "Violate" });
-//     }
-//   }
+    // Kiểm tra quyền
+    if (to.meta.role && to.meta.role !== role) {
+      console.warn(
+        `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
+      );
+      return next({ name: "Violate" });
+    }
+  }
 
-//   next();
-// });
+  next();
+});
 
 
 export default router;

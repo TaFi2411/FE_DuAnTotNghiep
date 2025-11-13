@@ -1,9 +1,4 @@
-Tài Xế:
-Cần Thơ
-Trần Văn Tấn
-SDT:
-0706308280
-Tận tâm - Trung thực - Uy tín<template>
+<template>
   <div class="flex flex-col items-center justify-center h-screen">
     <h2 class="text-xl font-semibold">Đang xử lý đăng nhập...</h2>
   </div>

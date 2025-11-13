@@ -19,16 +19,31 @@
             />
           </div>
 
+          <!-- Mã Voucher (auto-generate) -->
           <div class="mb-3">
             <label for="code" class="form-label fw-semibold">Mã Voucher</label>
-            <input
-              type="text"
-              id="code"
-              class="form-control"
-              v-model="voucher.code"
-              placeholder="Ví dụ: MUNGLE304"
-              required
-            />
+            <div class="input-group">
+              <input
+                type="text"
+                id="code"
+                class="form-control"
+                v-model="voucher.code"
+
+                required
+                @keydown.prevent
+                disabled
+              />
+              <!-- <button
+                type="button"
+                class="btn btn-outline-secondary"
+                @click="generateVoucherCode"
+                :disabled="isLoading"
+                title="Tạo lại mã"
+              >
+                Tạo lại
+              </button> -->
+            </div>
+            
           </div>
 
           <div class="mb-3">
@@ -193,7 +208,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import apiClient from '@/composables/axios.js';
 
@@ -216,13 +231,43 @@ const voucher = ref({
 const isLoading = ref(false);
 const errorMessage = ref(null);
 
+
+function generateVoucherCode(length = 14) {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+
+  if (window.crypto?.getRandomValues) {
+    const values = new Uint32Array(length);
+    window.crypto.getRandomValues(values);
+    for (let i = 0; i < length; i++) {
+      result += charset[values[i] % charset.length];
+    }
+  } else {
+    for (let i = 0; i < length; i++) {
+      result += charset[Math.floor(Math.random() * charset.length)];
+    }
+  }
+
+  // Nếu trùng mã cũ → sinh lại để chắc chắn thay đổi
+  if (result === voucher.value.code) {
+    return generateVoucherCode(length);
+  }
+
+  voucher.value.code = result;
+}
+
+/**
+ * Chuyển ngày sang format MySQL (YYYY-MM-DD HH:mm:ss)
+ */
 function formatDateToVN(date) {
   if (!date) return null;
   const d = new Date(date);
-  const formatted = d.toISOString().slice(0, 19).replace('T', ' ');
-  return formatted;
+  return d.toISOString().slice(0, 19).replace('T', ' ');
 }
 
+/**
+ * Gửi form tạo voucher
+ */
 const handleSubmit = async () => {
   isLoading.value = true;
   errorMessage.value = null;
@@ -238,9 +283,6 @@ const handleSubmit = async () => {
     payload.started_date = formatDateToVN(payload.started_date);
     payload.ended_date = formatDateToVN(payload.ended_date);
 
-    payload.started_date = formatDateToVN(payload.started_date);
-    payload.ended_date = formatDateToVN(payload.ended_date);
-
     await apiClient.post('/api/voucher', payload);
     alert('🎉 Tạo voucher mới thành công!');
     router.push('/admin/list-voucher');
@@ -252,18 +294,26 @@ const handleSubmit = async () => {
     isLoading.value = false;
   }
 };
+
+/**
+ * Khi mở trang → tự sinh mã ban đầu
+ */
+onMounted(() => {
+  generateVoucherCode(14);
+});
 </script>
 
 <style scoped>
 h2 {
   font-size: 1.6rem;
 }
+
 .card {
   border: 1px solid #e9ecef;
 }
+
 .form-check-input:checked {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
 </style>
-

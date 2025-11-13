@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <!-- Timebar -->
+    <!-- Timebar: giờ tự động từ flash sale -->
     <div class="flashsale-timebar">
       <div
         v-for="(slot, index) in computedTimeSlots"
@@ -75,7 +75,7 @@
               }}₫
             </span>
             <span class="old-price" v-if="!isUpcoming">
-              {{ formatPrice(getSkuPrice(product.id)) }}₫
+              {{ formatPrice(getSkuPrice(product.id)) }}
             </span>
           </div>
 
@@ -86,36 +86,27 @@
                 role="progressbar"
                 :style="{
                   width:
-                    (getRemainingStock(product.id) /
-                      getTotalStock(product.id)) *
+                    (getRemainingStock(product.id) / getTotalStock(product.id)) *
                       100 +
                     '%',
                 }"
               ></div>
             </div>
             <small class="text-white">
-              Còn
-              {{ getRemainingStock(product.id) }}/{{
-                getTotalStock(product.id)
-              }}
+              Còn {{ getRemainingStock(product.id) }}/{{ getTotalStock(product.id) }}
             </small>
           </div>
 
-          <router-link
-            :to="`/san-pham/${product.id}`"
-            class="btn-detail"
-          >
-            Xem chi tiết
-          </router-link>
+        <button class="btn-detail" @click="buyNow(product)">
+  Mua ngay
+</button>
+
         </div>
       </div>
     </div>
 
     <!-- Empty -->
-    <div
-      v-if="!loading && filteredProducts.length === 0"
-      class="text-center py-4"
-    >
+    <div v-if="!loading && filteredProducts.length === 0" class="text-center py-4">
       <p>⚠️ Không có sản phẩm nào trong khung giờ này.</p>
     </div>
   </div>
@@ -123,7 +114,12 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from '@/composables/axios.js';
+import Swal from "sweetalert2"; 
 
+const accountId = ref(null);
+const router = useRouter();
 const loading = ref(true);
 const products = ref([]);
 const skus = ref([]);
@@ -134,13 +130,24 @@ const currentSale = ref(null);
 const countdown = ref({ hours: "00", minutes: "00", seconds: "00" });
 let countdownTimer = null;
 
-// --- Cấu hình khung giờ ---
-const timeSlots = ref([
-  { hour: "12:00" },
-  { hour: "15:00" },
-  { hour: "18:00" },
-  { hour: "21:00" },
-]);
+
+
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 
 // --- Fetch dữ liệu ---
 async function fetchData() {
@@ -154,52 +161,55 @@ async function fetchData() {
   products.value = p.content || p.data || p || [];
   skus.value = s.content || s.data || s || [];
   flashSaleSkus.value = fss.content || fss.data || fss || [];
-
-  // ✅ Lọc chỉ lấy flash sale active
-  const now = new Date();
-flashSales.value = (fs.content || fs.data || fs || []).filter(fs => {
-  if (!fs.active) return false;
-  const start = new Date(fs.started_date ?? fs.startedDate);
-  const end = new Date(fs.ended_date ?? fs.endedDate);
-  // Chỉ lấy flash sale còn hiệu lực hoặc sắp tới
-  return end >= now;
-});
+  flashSales.value = (fs.content || fs.data || fs || []).filter(fs => fs.active);
 }
 
-// --- Tạo danh sách khung giờ với trạng thái ---
+// --- Tạo danh sách giờ từ flash sale ---
 const computedTimeSlots = computed(() => {
   const now = new Date();
-  const currentHour = now.getHours();
 
-  return timeSlots.value.map((slot) => {
-    const slotHour = parseInt(slot.hour.split(":")[0], 10);
-    const nextSlot = slotHour + 3;
+  const slots = [...new Set(flashSales.value.map(fs => {
+    const start = new Date(fs.started_date ?? fs.startedDate);
+    const h = start.getHours().toString().padStart(2, "0");
+    const m = start.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}`; // ✅ Lấy cả phút
+  }))];
 
-    if (currentHour >= slotHour && currentHour < nextSlot) {
-      return { ...slot, status: "Đang diễn ra" };
-    } else if (currentHour < slotHour) {
-      return { ...slot, status: "Sắp diễn ra" };
-    }
-    return { ...slot, status: "Đã kết thúc" };
-  });
+  return slots.map(hour => {
+    const matchedSale = flashSales.value.find(fs => {
+      const start = new Date(fs.started_date ?? fs.startedDate);
+      const h = start.getHours().toString().padStart(2, "0");
+      const m = start.getMinutes().toString().padStart(2, "0");
+      return `${h}:${m}` === hour; // ✅ So sánh cả giờ và phút
+    });
+    if (!matchedSale) return null;
+
+    const start = new Date(matchedSale.started_date ?? matchedSale.startedDate);
+    const end = new Date(matchedSale.ended_date ?? matchedSale.endedDate);
+
+    if (now >= start && now <= end) return { hour, status: "Đang diễn ra" };
+    if (now < start) return { hour, status: "Sắp diễn ra" };
+    return null;
+  }).filter(Boolean);
 });
+
 
 // --- Chọn slot ---
 function selectSlot(slot) {
   currentSlot.value = slot.hour;
 
-  const matchedSale = flashSales.value.find((fs) => {
-    if (!fs.active) return false;
+  const matchedSale = flashSales.value.find(fs => {
     const start = new Date(fs.started_date ?? fs.startedDate);
-    const hour = start.getHours().toString().padStart(2, "0") + ":00";
-    return hour === slot.hour;
+    const h = start.getHours().toString().padStart(2, "0");
+    const m = start.getMinutes().toString().padStart(2, "0");
+    return `${h}:${m}` === slot.hour; // ✅ So sánh đúng định dạng giờ:phút
   });
 
   currentSale.value = matchedSale || null;
   if (currentSale.value) startCountdown();
 }
 
-// --- Tính trạng thái ---
+// --- Trạng thái ---
 const isOngoing = computed(() => {
   if (!currentSale.value) return false;
   const now = new Date();
@@ -249,42 +259,40 @@ const filteredProducts = computed(() => {
   const flashSaleId = currentSale.value.id;
 
   const activeSkuIds = flashSaleSkus.value
-    .filter(
-      (fss) =>
-        fss.flash_sale_id === flashSaleId || fss.flashSaleId === flashSaleId
-    )
-    .map((fss) => fss.sku_id ?? fss.skuId);
+    .filter(fss => fss.flash_sale_id === flashSaleId || fss.flashSaleId === flashSaleId)
+    .map(fss => fss.sku_id ?? fss.skuId);
 
   const productIds = skus.value
-    .filter((sku) => activeSkuIds.includes(sku.id))
-    .map((sku) => sku.productId);
+    .filter(sku => activeSkuIds.includes(sku.id))
+    .map(sku => sku.productId);
 
-  return products.value.filter((p) => productIds.includes(p.id));
+  return products.value.filter(p => productIds.includes(p.id));
 });
 
-// --- Các hàm tiện ích ---
+// --- Hàm tiện ích ---
 function getDiscountPercent(productId) {
   if (!currentSale.value) return 0;
-  const sku = skus.value.find((s) => s.productId === productId);
-  const flashSaleSku = flashSaleSkus.value.find(
-    (f) =>
-      (f.sku_id === sku.id || f.skuId === sku.id) &&
-      (f.flash_sale_id === currentSale.value.id ||
-        f.flashSaleId === currentSale.value.id)
+  const sku = skus.value.find(s => s.productId === productId);
+  const flashSaleSku = flashSaleSkus.value.find(f =>
+    (f.sku_id === sku.id || f.skuId === sku.id) &&
+    (f.flash_sale_id === currentSale.value.id || f.flashSaleId === currentSale.value.id)
   );
   if (!flashSaleSku) return 0;
   return flashSaleSku.discount || currentSale.value.discount || 0;
 }
+
 function getDiscountedPrice(productId) {
-  const sku = skus.value.find((s) => s.productId === productId);
+  const sku = skus.value.find(s => s.productId === productId);
   const discount = getDiscountPercent(productId);
   return sku ? sku.price * (1 - discount / 100) : 0;
 }
+
 function getSkuPrice(productId) {
-  const skuList = skus.value.filter((s) => s.productId === productId);
+  const skuList = skus.value.filter(s => s.productId === productId);
   if (!skuList.length) return 0;
-  return Math.min(...skuList.map((s) => s.price));
+  return Math.min(...skuList.map(s => s.price));
 }
+
 function getHiddenPrice(price) {
   if (!price) return "?";
   const str = formatPrice(price);
@@ -294,83 +302,132 @@ function getHiddenPrice(price) {
   else if (first.length === 2) return first[0] + "?." + parts.slice(1).join(".");
   else return "?" + "." + parts.slice(1).join(".");
 }
+
 function getRemainingStock(productId) {
-  const sku = skus.value.find((s) => s.productId === productId);
-  const flashSaleSku = flashSaleSkus.value.find(
-    (f) =>
-      (f.sku_id === sku.id || f.skuId === sku.id) &&
-      (f.flash_sale_id === currentSale.value.id ||
-        f.flashSaleId === currentSale.value.id)
+  const sku = skus.value.find(s => s.productId === productId);
+  const flashSaleSku = flashSaleSkus.value.find(f =>
+    (f.sku_id === sku.id || f.skuId === sku.id) &&
+    (f.flash_sale_id === currentSale.value.id || f.flashSaleId === currentSale.value.id)
   );
   if (!flashSaleSku) return 0;
   const quantity = flashSaleSku.quantity ?? 10;
   const purchased = flashSaleSku.purchased ?? 0;
   return Math.max(quantity - purchased, 0);
 }
+
+
+
+
+
+async function buyNow(product) {
+  try {
+    console.log("➡️ Mua ngay:", product);
+
+    // Kiểm tra đăng nhập
+    if (!accountId.value) {
+      Swal.fire("Chưa đăng nhập", "Vui lòng đăng nhập để mua hàng", "info");
+      router.push("/auth/login");
+      return;
+    }
+
+    // Lấy SKU
+    const sku = skus.value.find(s => s.productId === product.id);
+    if (!sku) {
+      console.error("❌ Không tìm thấy SKU cho productId:", product.id);
+      Swal.fire("Lỗi!", "Không tìm thấy biến thể sản phẩm!", "error");
+      return;
+    }
+
+    // Kiểm tra flash sale
+    const flashStock = getRemainingStock(product.id);
+    const isInFlashSale = flashStock > 0 && isOngoing.value;
+    const price = isInFlashSale
+      ? getDiscountedPrice(product.id)
+      : getSkuPrice(product.id);
+
+    console.log({
+      flashStock,
+      isInFlashSale,
+      price,
+      skuId: sku.id,
+      accountId: accountId.value,
+    });
+
+    // Gọi API
+    await axios.post("/api/cart-details", {
+      accountId: accountId.value,
+      skuId: sku.id,
+      quantity: 1,
+      price,
+    });
+
+    // Hiển thị Swal
+    Swal.fire({
+      icon: "success",
+      title: "Đã thêm vào giỏ hàng!",
+      text: isInFlashSale
+        ? "Sản phẩm được tính giá Flash Sale."
+        : "Sản phẩm được tính giá gốc.",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+
+    window.dispatchEvent(new Event("cart-updated"));
+    setTimeout(() => router.push("/cart"), 1500);
+
+  } catch (err) {
+    console.error("💥 Lỗi trong buyNow():", err);
+    Swal.fire("Lỗi!", "Đã xảy ra sự cố khi mua sản phẩm.", "error");
+  }
+}
+
+
+
 function getTotalStock(productId) {
-  const sku = skus.value.find((s) => s.productId === productId);
-  const flashSaleSku = flashSaleSkus.value.find(
-    (f) =>
-      (f.sku_id === sku.id || f.skuId === sku.id) &&
-      (f.flash_sale_id === currentSale.value.id ||
-        f.flashSaleId === currentSale.value.id)
+  const sku = skus.value.find(s => s.productId === productId);
+  const flashSaleSku = flashSaleSkus.value.find(f =>
+    (f.sku_id === sku.id || f.skuId === sku.id) &&
+    (f.flash_sale_id === currentSale.value.id || f.flashSaleId === currentSale.value.id)
   );
   return flashSaleSku?.quantity ?? 10;
 }
+
 function getImageUrl(image) {
   if (!image) return "https://placehold.co/300x300?text=No+Image";
   return image.startsWith("http") ? image : `http://localhost:8080/images/${image}`;
 }
-function setDefaultImage(e) { e.target.src = "https://placehold.co/300x300?text=Error"; }
-function formatPrice(price) { return price ? price.toLocaleString("vi-VN") : "0"; }
 
+function setDefaultImage(e) {
+  e.target.src = "https://placehold.co/300x300?text=Error";
+}
+
+function formatPrice(price) {
+  // return price ? price.toLocaleString("vi-VN") : "0";
+  return price ? price.toLocaleString("vi-VN") + " VNĐ" : "Đang chờ hàng";
+}
+
+// --- Mounted ---
 onMounted(async () => {
   await fetchData();
   loading.value = false;
-
-  const now = new Date();
-
-  // ✅ Flash sale đang diễn ra
-  const current = flashSales.value.find(fs => {
-    if (!fs.active) return false;
-    const start = new Date(fs.started_date ?? fs.startedDate);
-    const end = new Date(fs.ended_date ?? fs.endedDate);
-    return now >= start && now <= end;
-  });
-
-  if (current) {
-    currentSale.value = current;
-    const hour = new Date(current.started_date ?? current.startedDate)
-      .getHours()
-      .toString()
-      .padStart(2, "0") + ":00";
-    currentSlot.value = hour;
-    startCountdown();
-  } else {
-    const upcoming = flashSales.value
-      .filter(fs => fs.active)
-      .map(fs => ({ fs, start: new Date(fs.started_date ?? fs.startedDate) }))
-      .filter(x => x.start > now)
-      .sort((a, b) => a.start - b.start)[0];
-
-    if (upcoming) {
-      currentSale.value = upcoming.fs;
-      const hour = upcoming.start
-        .getHours()
-        .toString()
-        .padStart(2, "0") + ":00";
-      currentSlot.value = hour;
-      startCountdown();
-    }
+   const token = localStorage.getItem("token");
+  if (token) {
+    const decoded = decodeJwtToken(token);
+    accountId.value = decoded?.accountId || decoded?.id || null;
+    console.log("🔐 accountId:", accountId.value);
   }
+  
+  const nextSlot = computedTimeSlots.value.find(s => s.status === "Sắp diễn ra") 
+                   || computedTimeSlots.value[0];
+  if (nextSlot) selectSlot(nextSlot);
 });
 
-onUnmounted(() => clearInterval(countdownTimer));
+onUnmounted(() => {
+  clearInterval(countdownTimer);
+});
 </script>
 
 <style scoped>
-
-
 .flashsale-container {
   background: #2b2b2b;
   color: white;
@@ -496,7 +553,7 @@ onUnmounted(() => clearInterval(countdownTimer));
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px; /* 👈 tạo khoảng cách đều giữa các phần con */
+  gap: 8px;
 }
 
 .product-name {
@@ -542,13 +599,13 @@ onUnmounted(() => clearInterval(countdownTimer));
 }
 
 .btn-detail {
-  margin-top: 14px; /* 👈 tăng khoảng cách để nhìn thoáng hơn */
+  margin-top: 14px;
   background: #ffcc00;
   color: #000;
   font-weight: bold;
   padding: 6px 14px;
   border: none;
-  border-radius: 20px; /* 👈 bo tròn hơn cho đẹp */
+  border-radius: 20px;
   cursor: pointer;
   transition: 0.25s;
   text-decoration: none;
@@ -558,5 +615,4 @@ onUnmounted(() => clearInterval(countdownTimer));
   background: #ff9900;
   transform: translateY(-2px);
 }
-
 </style>

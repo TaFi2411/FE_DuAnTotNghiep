@@ -12,8 +12,13 @@
           type="email"
           class="form-control"
           placeholder="Nhập email"
-          required
         />
+        <small v-if="v$.email.$error" class="text-danger">
+          Email không được để trống hoặc không hợp lệ
+        </small>
+        <small v-if="serverErrors.email" class="text-danger">
+          {{ serverErrors.email }}
+        </small>
       </div>
 
       <!-- PASSWORD -->
@@ -25,7 +30,6 @@
             :type="showPassword ? 'text' : 'password'"
             class="form-control pe-5"
             placeholder="Nhập mật khẩu"
-            required
           />
           <i
             class="bi position-absolute end-0 top-50 translate-middle-y me-3"
@@ -34,6 +38,12 @@
             style="cursor: pointer; color: #777;"
           ></i>
         </div>
+        <small v-if="v$.password.$error" class="text-danger">
+          Mật khẩu không được để trống
+        </small>
+        <small v-if="serverErrors.password" class="text-danger">
+          {{ serverErrors.password }}
+        </small>
       </div>
 
       <!-- OPTIONS -->
@@ -51,8 +61,6 @@
       <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
         Đăng nhập
       </button>
-
-      <p v-if="error" class="text-danger text-center mt-3 small">{{ error }}</p>
     </form>
 
     <!-- OR DIVIDER -->
@@ -97,21 +105,43 @@
 <script setup>
 import { ref } from "vue";
 import { RouterLink } from "vue-router";
+import useVuelidate from "@vuelidate/core";
+import { required, email as emailValidator } from "@vuelidate/validators";
 import api from "@/composables/axios.js";
+import Swal from "sweetalert2";
 
+// Form data
 const email = ref("");
 const password = ref("");
-const error = ref("");
 const showPassword = ref(false);
 
+// Server errors
+const serverErrors = ref({
+  email: "",
+  password: ""
+});
 
+// Validation rules
+const rules = {
+  email: { required, email: emailValidator },
+  password: { required }
+};
+
+const v$ = useVuelidate(rules, { email, password });
+
+// Toggle password visibility
 const togglePassword = () => {
   showPassword.value = !showPassword.value;
 };
 
-
+// Login function
 const login = async () => {
-  console.log("Đang gửi:", email.value, password.value);
+  v$.value.$touch();
+  if (v$.value.$invalid) return;
+
+  // Reset server errors
+  serverErrors.value.email = "";
+  serverErrors.value.password = "";
 
   try {
     const res = await api.post("/auth/login", {
@@ -120,32 +150,44 @@ const login = async () => {
     });
 
     const token = res.data.token;
+    if (!token) throw new Error("Không nhận được token từ server");
 
-    if (token) {
-      // Lưu token
-      localStorage.setItem("token", token);
-      console.log("Token nhận được:", token);
-      // Giải mã token để lấy role
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const roles = payload.roles || [];
-      const role = roles.length > 0 ? roles[0] : null;
+    // Lưu token & role
+    localStorage.setItem("token", token);
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const roles = payload.roles || [];
+    const role = roles.length > 0 ? roles[0] : null;
+    if (role) localStorage.setItem("role", role);
 
-      if (role) {
-        localStorage.setItem("role", role);
-      }
+    // Thành công
+    await Swal.fire({
+      icon: "success",
+      title: "Đăng nhập thành công",
+      showConfirmButton: false,
+      timer: 1500
+    });
 
-      console.log("Role:", role);
-      window.location.href = "/";
-    } else {
-      error.value = "Không nhận được token từ server!";
-    }
+    window.location.href = "/";
+
   } catch (err) {
-    console.error("Lỗi khi đăng nhập:", err);
-    error.value = "Email hoặc mật khẩu không đúng!";
+    const errMsg = err.response?.data || err.message || "Đăng nhập thất bại";
+
+    // Phân loại lỗi
+    if (errMsg.toLowerCase().includes("email")) {
+      serverErrors.value.email = errMsg;
+    } else if (errMsg.toLowerCase().includes("mật khẩu")) {
+      serverErrors.value.password = errMsg;
+    } else {
+      await Swal.fire({
+        icon: "error",
+        title: "Lỗi",
+        text: errMsg
+      });
+    }
   }
 };
 
-
+// Social login
 const loginWithGoogle = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/google";
 };
@@ -154,7 +196,6 @@ const loginWithFacebook = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
 };
 </script>
-
 
 <style scoped>
 .login-page {

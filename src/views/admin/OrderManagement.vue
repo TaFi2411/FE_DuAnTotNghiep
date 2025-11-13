@@ -1,6 +1,5 @@
 <template>
-  <div class="container py-5 mt-5">
-    <h2 class="fw-bold mb-4">📦 Quản lý đơn hàng</h2>
+  <div class="container py-5">
 
     <!-- 🔹 BỘ LỌC NGANG ĐẸP -->
     <div class="filter-bar d-flex flex-wrap align-items-center gap-3 mb-4">
@@ -115,12 +114,12 @@
               🚚 Chuyển sang đang giao hàng
             </button>
 
-            <button
+            <!-- <button
               class="btn btn-sm btn-outline-danger"
               @click="deleteOrder(order.id)"
             >
               Xóa
-            </button>
+            </button> -->
           </div>
         </div>
       </div>
@@ -227,7 +226,7 @@ async function loadOrders(page = 0) {
   try {
     let url = `http://localhost:8080/api/order/admin/all?page=${page}&size=10`;
 
-    // ✅ Gửi status chữ thường, backend tự chuyển sang enum
+    
     if (selectedStatus.value) url += `&status=${selectedStatus.value}`;
 
     const response = await axios.get(url, {

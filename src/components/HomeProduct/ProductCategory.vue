@@ -10,7 +10,8 @@
       <div class="container-fluid category-banner mb-5">
         <div class="position-relative rounded-4 overflow-hidden">
           <img :src="category.banner" :alt="category.name + ' Banner'" class="w-100 rounded-4" />
-          <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
+          <div
+            class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white text-center overlay-bg">
             <h2 class="fw-bold mb-2">{{ category.name }} Series</h2>
             <p class="fs-5 mb-3">{{ category.description }}</p>
             <router-link :to="category.link" class="btn btn-light rounded-pill px-4 py-2">Khám phá ngay</router-link>
@@ -20,16 +21,20 @@
 
       <!-- Slider sản phẩm -->
       <swiper v-if="category.products.length" :modules="[Navigation, Autoplay]" navigation loop
-        :autoplay="{ delay: 3000, disableOnInteraction: false }" :slides-per-view="4" :space-between="20"
-        :breakpoints="{320:{slidesPerView:1},576:{slidesPerView:2},768:{slidesPerView:3},992:{slidesPerView:4}}"
-        class="py-3 product-swiper">
-        
+        :autoplay="{ delay: 3000, disableOnInteraction: false }" :slides-per-view="4" :space-between="20" :breakpoints="{
+          320: { slidesPerView: 1 },
+          576: { slidesPerView: 2 },
+          768: { slidesPerView: 3 },
+          992: { slidesPerView: 4 },
+        }" class="py-3 product-swiper">
         <swiper-slide v-for="product in category.products" :key="product.id">
           <div class="card product-card h-100 text-center">
             <img :src="product.image" class="card-img-top mx-auto" alt="Ảnh sản phẩm" />
 
             <div class="card-body d-flex flex-column justify-content-between">
-              <h6 class="fw-bold text-dark mb-2 product-name">{{ product.name }}</h6>
+              <h6 class="fw-bold text-dark mb-2 product-name">
+                {{ product.name }}
+              </h6>
 
               <!-- Giá thấp nhất -->
               <p class="text-muted mb-1 fw-semibold">
@@ -37,10 +42,13 @@
               </p>
 
               <!-- Thuộc tính -->
-              <div v-if="product.groupedAttributes && Object.keys(product.groupedAttributes).length" class="product-attributes mb-2">
+              <div v-if="
+                product.groupedAttributes &&
+                Object.keys(product.groupedAttributes).length
+              " class="product-attributes mb-2">
                 <div v-for="(values, type) in product.groupedAttributes" :key="type" class="attributes mb-1">
                   <strong class="attr-type">{{ formatAttrType(type) }}:</strong>
-                  <span v-for="(val, idx) in values.slice(0,3)" :key="idx" class="attr-square">{{ val }}</span>
+                  <span v-for="(val, idx) in values.slice(0, 3)" :key="idx" class="attr-square">{{ val }}</span>
                   <span v-if="values.length > 3" class="attr-more">+{{ values.length - 3 }}</span>
                 </div>
               </div>
@@ -49,7 +57,9 @@
               <div class="mb-2">
                 <span class="text-warning fs-6">★★★★★</span>
               </div>
-              <p class="text-muted small mb-3">Đã bán {{ product.sold || 0 }}</p>
+              <p class="text-muted small mb-3">
+                Đã bán {{ product.sold || 0 }}
+              </p>
 
               <!-- Nút hành động -->
               <div class="d-flex justify-content-center gap-2 mt-2">
@@ -78,42 +88,95 @@ import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 
 const categories = ref([
-  { key: 'iphone', name: 'iPhone', subtitle: 'Khám phá iPhone mới nhất', banner: '/images/banner-home-iphone.png', description: 'Hiệu năng vượt trội. Thiết kế đột phá.', link: '/category/iphone', products: [] },
-  { key: 'ipad', name: 'iPad', subtitle: 'Trải nghiệm iPad tuyệt vời', banner: '/images/banner-home-ipad.png', description: 'Màn hình lớn. Hiệu năng mạnh mẽ.', link: '/category/ipad', products: [] },
-  { key: 'macbook', name: 'MacBook', subtitle: 'Sức mạnh vượt trội cho công việc', banner: '/images/banner-home-macbook.png', description: 'Thiết kế sang trọng. Hiệu năng tối ưu.', link: '/category/macbook', products: [] },
-  { key: 'airpods', name: 'AirPods', subtitle: 'Âm thanh sống động', banner: '/images/banner-home-ipod.png', description: 'Thiết kế tiện lợi. Chất lượng âm thanh tuyệt hảo.', link: '/category/airpods', products: [] },
-  { key: 'applewatch', name: 'Apple Watch', subtitle: 'Đồng hồ thông minh', banner: '/images/banner-home-watch.png', description: 'Theo dõi sức khỏe. Tích hợp mọi tính năng.', link: '/category/applewatch', products: [] },
+  {
+    key: "iphone",
+    name: "iPhone",
+    subtitle: "Khám phá iPhone mới nhất",
+    banner: "/images/banner-home-iphone.png",
+    description: "Hiệu năng vượt trội. Thiết kế đột phá.",
+    link: "/category/iphone",
+    products: [],
+  },
+  {
+    key: "ipad",
+    name: "iPad",
+    subtitle: "Trải nghiệm iPad tuyệt vời",
+    banner: "/images/banner-home-ipad.png",
+    description: "Màn hình lớn. Hiệu năng mạnh mẽ.",
+    link: "/category/ipad",
+    products: [],
+  },
+  {
+    key: "macbook",
+    name: "MacBook",
+    subtitle: "Sức mạnh vượt trội cho công việc",
+    banner: "/images/banner-home-macbook.png",
+    description: "Thiết kế sang trọng. Hiệu năng tối ưu.",
+    link: "/category/macbook",
+    products: [],
+  },
+  {
+    key: "airpods",
+    name: "AirPods",
+    subtitle: "Âm thanh sống động",
+    banner: "/images/banner-home-ipod.png",
+    description: "Thiết kế tiện lợi. Chất lượng âm thanh tuyệt hảo.",
+    link: "/category/airpods",
+    products: [],
+  },
+  {
+    key: "applewatch",
+    name: "Apple Watch",
+    subtitle: "Đồng hồ thông minh",
+    banner: "/images/banner-home-watch.png",
+    description: "Theo dõi sức khỏe. Tích hợp mọi tính năng.",
+    link: "/category/applewatch",
+    products: [],
+  },
 ]);
 
-const formatPrice = (price) => price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price) : "Liên hệ";
+const formatPrice = (price) =>
+price ? price.toLocaleString("vi-VN") + " VNĐ" : "Đang chờ hàng";
 
 const getMinPrice = (product) => {
   if (!product.skus || !product.skus.length) return product.minPrice || 0;
-  return Math.min(...product.skus.map(s => s.price));
+  return Math.min(...product.skus.map((s) => s.price));
 };
 
 const getProductImage = (product) => {
-  if (product.skus?.length && product.skus[0].skuImages?.length) return product.skus[0].skuImages[0].path;
-  return product.image || '/images/no-image.png';
+  if (product.skus?.length && product.skus[0].skuImages?.length)
+    return product.skus[0].skuImages[0].path;
+  return product.image || "/images/no-image.png";
 };
 
 const formatAttrType = (type) => {
-  const map = { color: "Màu sắc", capacity: "Dung lượng", ram: "RAM", size: "Kích thước" };
+  const map = {
+    color: "Màu sắc",
+    capacity: "Dung lượng",
+    ram: "RAM",
+    size: "Kích thước",
+  };
   return map[type] || type;
 };
 
 const fetchProducts = async () => {
   try {
-    const res = await axios.get("/api/product", { params: { page: 0, size: 1000 } });
+    const res = await axios.get("/api/product", {
+      params: { page: 0, size: 1000 },
+    });
     const allProducts = res.data.data || res.data.content || res.data || [];
 
-    categories.value.forEach(cat => {
+    categories.value.forEach((cat) => {
       cat.products = allProducts
-        .filter(p => p.categoryName && p.categoryName.toLowerCase().includes(cat.key.toLowerCase()))
-        .map(p => {
+        .filter(
+          (p) =>
+            p.categoryName &&
+            p.categoryName.toLowerCase().includes(cat.key.toLowerCase())
+        )
+        .map((p) => {
           const grouped = {};
           if (Array.isArray(p.attributes)) {
-            p.attributes.forEach(attr => {
+            p.attributes.forEach((attr) => {
               if (!grouped[attr.type]) grouped[attr.type] = [];
               grouped[attr.type].push(attr.value || attr.name);
             });
@@ -123,13 +186,12 @@ const fetchProducts = async () => {
             groupedAttributes: grouped,
             price: getMinPrice(p),
             image: getProductImage(p),
-            sold: p.sold || 0
+            sold: p.sold || 0,
           };
         });
     });
   } catch (err) {
     console.error("❌ Lỗi tải sản phẩm:", err);
-
   }
 };
 
@@ -137,7 +199,11 @@ const addToCart = async (product) => {
   try {
     const accountId = sessionStorage.getItem("accountId");
     if (!accountId) {
-      return Swal.fire("Thông báo", "Vui lòng đăng nhập để thêm vào giỏ hàng", "info");
+      return Swal.fire(
+        "Thông báo",
+        "Vui lòng đăng nhập để thêm vào giỏ hàng",
+        "info"
+      );
     }
 
     await axios.post(`/api/cart/add`, {
@@ -176,6 +242,7 @@ onMounted(fetchProducts);
   background: transparent;
   transition: 0.3s;
 }
+
 .filter-btn:hover,
 .filter-btn.active {
   background-color: #000;
@@ -186,6 +253,7 @@ onMounted(fetchProducts);
 .product-swiper {
   padding-bottom: 30px;
 }
+
 .swiper-slide {
   display: flex;
   height: auto !important;
@@ -208,6 +276,7 @@ onMounted(fetchProducts);
   transition: all 0.3s ease;
   padding: 16px;
 }
+
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
@@ -221,6 +290,7 @@ onMounted(fetchProducts);
   margin: 0 auto 12px;
   transition: transform 0.3s ease;
 }
+
 .product-card:hover img {
   transform: scale(1.05);
 }
@@ -242,11 +312,13 @@ onMounted(fetchProducts);
 .product-attributes {
   font-size: 13px;
 }
+
 .attr-type {
   margin-right: 6px;
   color: #333;
   font-weight: 600;
 }
+
 .attributes {
   display: flex;
   align-items: center;
@@ -255,6 +327,7 @@ onMounted(fetchProducts);
   justify-content: center;
   margin-bottom: 4px;
 }
+
 .attr-square {
   border: 1px solid #000;
   border-radius: 6px;
@@ -264,10 +337,12 @@ onMounted(fetchProducts);
   transition: all 0.2s;
   cursor: default;
 }
+
 .attr-square:hover {
   background: #000;
   color: #fff;
 }
+
 .attr-more {
   font-size: 12px;
   color: #666;
@@ -284,16 +359,19 @@ onMounted(fetchProducts);
   justify-content: center;
   transition: all 0.3s;
 }
+
 .btn-cart {
   background: #fff;
   border: 1px solid #000;
   color: #000;
 }
+
 .btn-cart:hover {
   background: #000;
   color: #fff;
   transform: translateY(-2px);
 }
+
 .btn-buy-now {
   background: #000;
   border: none;
@@ -307,6 +385,7 @@ onMounted(fetchProducts);
   transition: all 0.3s;
   height: 42px;
 }
+
 .btn-buy-now:hover {
   background: #333;
   transform: translateY(-2px);

@@ -76,7 +76,7 @@
                     <router-link class="dropdown-item py-2 rounded-2 text-white" to="/admin">Quản lý hệ thống</router-link>
                   </li>
                   <li>
-                    <router-link class="dropdown-item py-2 rounded-2 text-white" to="/change-password">Đổi mật
+                    <router-link class="dropdown-item py-2 rounded-2 text-white" to="/auth/change-password">Đổi mật
                       khẩu</router-link>
                   </li>
                   <li>
@@ -113,7 +113,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-
+import axios from "@/composables/axios.js";
 const router = useRouter();
 const isScrolled = ref(false);
 const isLoggedIn = ref(false);
@@ -122,6 +122,7 @@ const isAdmin = ref(false);
 const cartCount = ref(0);
 const searchQuery = ref('');
 const showSearch = ref(false);
+const accountId = ref(null);
 
 const menu = [
   { label: 'Trang chủ', to: '/' },
@@ -134,10 +135,22 @@ function handleScroll() {
   isScrolled.value = window.scrollY > 10;
 }
 
-function updateCartCount() {
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-  cartCount.value = Array.isArray(cart) ? cart.length : 0;
-}
+const updateCartCount = async () => {
+  if (!accountId.value) {
+    cartCount.value = 0;
+    return;
+  }
+  try {
+    const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
+    const data = res.data || [];
+    const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    cartCount.value = totalQuantity;
+  } catch (err) {
+    console.error('Lỗi khi lấy giỏ hàng:', err);
+    cartCount.value = 0;
+  }
+};
+
 
 function decodeJwtToken(token) {
   try {
@@ -174,10 +187,8 @@ function logoutHandler() {
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
   window.addEventListener('cart-updated', updateCartCount);
-  updateCartCount();
 
   const token = localStorage.getItem('token');
-  console.log("Token nhận được:", token);
 
   if (token) {
     const payload = decodeJwtToken(token);
@@ -186,8 +197,11 @@ onMounted(() => {
       isLoggedIn.value = true;
       accountName.value = payload.accountName || payload.username || 'Người dùng';
       isAdmin.value = Array.isArray(roles) ? roles.includes('ROLE_ADMIN') : false;
+      accountId.value = payload.id || null;
+
     }
   }
+    updateCartCount();
 });
 
 onBeforeUnmount(() => {
