@@ -265,12 +265,12 @@ const handleSubmit = async () => {
 
     // Hiển thị thành công và tự tắt
     await Swal.fire({
-      icon: 'success',
-      title: 'Cập nhật thành công',
-      showConfirmButton: false,
-      timer: 1500,
-      timerProgressBar: true,
-    });
+        icon: "success",
+        title: "Cập nhật thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
 
     router.push("/admin/list-voucher");
   } catch (err) {

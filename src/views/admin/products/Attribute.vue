@@ -26,7 +26,7 @@
 
     <!-- ===================== BẢNG THUỘC TÍNH ===================== -->
     <div v-if="activeTab === 'attribute'">
-      <div class="d-flex gap-2 mb-3 flex-wrap">
+      <div class="d-flex gap-2 mb-1 flex-wrap">
         <input
           v-model="attributeForm.name"
           type="text"
@@ -45,6 +45,7 @@
           <i class="bi bi-x-lg"></i> Hủy
         </button>
       </div>
+      <small class="text-danger" v-if="attributeError">{{ attributeError }}</small>
 
       <vue-good-table
         :columns="attrColumns"
@@ -77,7 +78,7 @@
 
     <!-- ===================== BẢNG GIÁ TRỊ ===================== -->
     <div v-else>
-      <div class="d-flex gap-2 mb-3 flex-wrap">
+      <div class="d-flex gap-2 mb-1 flex-wrap">
         <select v-model="valueForm.optionAttributeId" class="form-select w-auto">
           <option value="">-- Chọn thuộc tính --</option>
           <option v-for="a in allAttributes" :key="a.id" :value="a.id">
@@ -104,6 +105,7 @@
           <i class="bi bi-x-lg"></i> Hủy
         </button>
       </div>
+      <small class="text-danger" v-if="valueError">{{ valueError }}</small>
 
       <vue-good-table
         :columns="valColumns"
@@ -146,21 +148,34 @@ import axios from "@/composables/axios.js";
 
 const activeTab = ref("attribute");
 
-/* =====================================================
-   =============== QUẢN LÝ THUỘC TÍNH ==================
-===================================================== */
+/* ===== THUỘC TÍNH ===== */
 const attributes = ref([]);
 const allAttributes = ref([]);
 const attributeForm = ref({ id: null, name: "" });
 const isEditAttribute = ref(false);
+const attributeError = ref("");
 
+// Columns
 const attrColumns = [
   { label: "ID", field: "id" },
   { label: "Tên thuộc tính", field: "name" },
   { label: "Hành động", field: "actions" },
 ];
 
-// ✅ Phân trang frontend chung
+/* ===== GIÁ TRỊ ===== */
+const values = ref([]);
+const valueForm = ref({ id: null, optionAttributeId: "", name: "" });
+const isEditValue = ref(false);
+const valueError = ref("");
+
+const valColumns = [
+  { label: "ID", field: "id" },
+  { label: "Thuộc tính", field: "attrName" },
+  { label: "Giá trị", field: "name" },
+  { label: "Hành động", field: "actions" },
+];
+
+/* ===== PHÂN TRANG ===== */
 const paginationOptions = {
   enabled: true,
   perPage: 10,
@@ -170,25 +185,52 @@ const paginationOptions = {
   prevLabel: "Trang trước",
 };
 
+/* ===== API ===== */
 const fetchAttributes = async () => {
-  const res = await axios.get("/api/option-attribute", {
-    params: { page: 0, size: 1000 },
-  });
+  const res = await axios.get("/api/option-attribute", { params: { page: 0, size: 1000 } });
   attributes.value = res.data.data || res.data.content || [];
   allAttributes.value = attributes.value;
 };
 
+const fetchValues = async () => {
+  const res = await axios.get("/api/value-attribute", { params: { page: 0, size: 1000 } });
+  values.value = res.data.data || res.data.content || [];
+};
+
+const findAttrName = (id) => {
+  const attr = allAttributes.value.find((a) => a.id === id);
+  return attr ? attr.name : "Không xác định";
+};
+
+/* ===== THUỘC TÍNH ===== */
 const saveAttribute = async () => {
   const name = attributeForm.value.name.trim();
-  if (!name)
-    return Swal.fire("Lỗi!", "Tên thuộc tính không được để trống", "error");
+  if (!name) return (attributeError.value = "Tên thuộc tính không được để trống");
+
+  if (attributes.value.some(a => a.name.toLowerCase() === name.toLowerCase() && a.id !== attributeForm.value.id)) {
+    return (attributeError.value = "Tên thuộc tính đã tồn tại");
+  }
+
+  attributeError.value = "";
 
   if (isEditAttribute.value) {
     await axios.put(`/api/option-attribute/${attributeForm.value.id}`, { name });
-    Swal.fire("Thành công!", "Cập nhật thuộc tính thành công", "success");
+   await Swal.fire({
+        icon: "success",
+        title: "Cập nhật thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
   } else {
     await axios.post(`/api/option-attribute`, { name });
-    Swal.fire("Thành công!", "Thêm mới thuộc tính thành công", "success");
+   await Swal.fire({
+        icon: "success",
+        title: "Thêm mới thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
   }
 
   attributeForm.value = { id: null, name: "" };
@@ -199,11 +241,13 @@ const saveAttribute = async () => {
 const editAttribute = (row) => {
   attributeForm.value = { id: row.id, name: row.name };
   isEditAttribute.value = true;
+  attributeError.value = "";
 };
 
 const cancelEditAttribute = () => {
   attributeForm.value = { id: null, name: "" };
   isEditAttribute.value = false;
+  attributeError.value = "";
 };
 
 const deleteAttribute = async (id) => {
@@ -221,46 +265,35 @@ const deleteAttribute = async (id) => {
   fetchAttributes();
 };
 
-/* =====================================================
-   =============== QUẢN LÝ GIÁ TRỊ ======================
-===================================================== */
-const values = ref([]);
-const valueForm = ref({ id: null, optionAttributeId: "", name: "" });
-const isEditValue = ref(false);
-
-const valColumns = [
-  { label: "ID", field: "id" },
-  { label: "Thuộc tính", field: "attrName" },
-  { label: "Giá trị", field: "name" },
-  { label: "Hành động", field: "actions" },
-];
-
-const fetchValues = async () => {
-  const res = await axios.get("/api/value-attribute", {
-    params: { page: 0, size: 1000 },
-  });
-  values.value = res.data.data || res.data.content || [];
-};
-
-const findAttrName = (id) => {
-  const attr = allAttributes.value.find((a) => a.id === id);
-  return attr ? attr.name : "Không xác định";
-};
-
+/* ===== GIÁ TRỊ ===== */
 const saveValue = async () => {
   const { optionAttributeId, name } = valueForm.value;
-  if (!optionAttributeId || !name.trim())
-    return Swal.fire("Lỗi!", "Vui lòng nhập đầy đủ thông tin", "error");
+  if (!optionAttributeId || !name.trim()) return (valueError.value = "Vui lòng nhập đầy đủ thông tin");
+
+  if (values.value.some(v => v.name.toLowerCase() === name.trim().toLowerCase() && v.optionAttributeId === optionAttributeId && v.id !== valueForm.value.id)) {
+    return (valueError.value = "Giá trị đã tồn tại");
+  }
+
+  valueError.value = "";
 
   if (isEditValue.value) {
-    await axios.put(`/api/value-attribute/${valueForm.value.id}`, {
-      optionAttributeId,
-      name,
-    });
-    Swal.fire("Thành công!", "Cập nhật giá trị thành công", "success");
+    await axios.put(`/api/value-attribute/${valueForm.value.id}`, { optionAttributeId, name });
+    await Swal.fire({
+        icon: "success",
+        title: "Cập nhật thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
   } else {
     await axios.post(`/api/value-attribute`, { optionAttributeId, name });
-    Swal.fire("Thành công!", "Thêm mới giá trị thành công", "success");
+    await Swal.fire({
+        icon: "success",
+        title: "Thêm mới thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
   }
 
   valueForm.value = { id: null, optionAttributeId: "", name: "" };
@@ -269,17 +302,15 @@ const saveValue = async () => {
 };
 
 const editValue = (row) => {
-  valueForm.value = {
-    id: row.id,
-    optionAttributeId: row.optionAttributeId,
-    name: row.name,
-  };
+  valueForm.value = { id: row.id, optionAttributeId: row.optionAttributeId, name: row.name };
   isEditValue.value = true;
+  valueError.value = "";
 };
 
 const cancelEditValue = () => {
   valueForm.value = { id: null, optionAttributeId: "", name: "" };
   isEditValue.value = false;
+  valueError.value = "";
 };
 
 const deleteValue = async (id) => {
@@ -297,9 +328,7 @@ const deleteValue = async (id) => {
   fetchValues();
 };
 
-/* =====================================================
-   =============== KHỞI CHẠY ===========================
-===================================================== */
+/* ===== MOUNT ===== */
 onMounted(() => {
   fetchAttributes();
   fetchValues();

@@ -213,11 +213,12 @@ const handleSubmit = async () => {
     await apiClient.post('/api/voucher', payload);
 
     await Swal.fire({
-      icon: 'success',
-      title: 'Tạo voucher thành công!',
-      showConfirmButton: false,
-      timer: 1500,
-    });
+        icon: "success",
+        title: "Thêm mới thành công",
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
 
     router.push('/admin/list-voucher');
   } catch (error) {
