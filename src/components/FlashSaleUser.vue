@@ -97,9 +97,19 @@
             </small>
           </div>
 
-        <button class="btn-detail" @click="buyNow(product)">
-  Mua ngay
+ <button 
+  class="btn-detail"
+  @click="buyNow(product)"
+  :disabled="!isOngoing"
+  :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
+>
+  <i class="bi bi-bag me-1"></i> 
+  {{ isUpcoming ? 'Chưa mở bán' : 'Mua ngay' }}
 </button>
+
+
+
+
 
         </div>
       </div>
@@ -114,7 +124,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-
+import { useRouter } from "vue-router";
+import axios from "axios";
+import Swal from "sweetalert2";
+const router = useRouter();
 const loading = ref(true);
 const products = ref([]);
 const skus = ref([]);
@@ -127,6 +140,7 @@ let countdownTimer = null;
 
 // --- Fetch dữ liệu ---
 async function fetchData() {
+  
   const [p, s, fss, fs] = await Promise.all([
     fetch("http://localhost:8080/api/product").then((r) => r.json()),
     fetch("http://localhost:8080/api/sku").then((r) => r.json()),
@@ -138,36 +152,51 @@ async function fetchData() {
   skus.value = s.content || s.data || s || [];
   flashSaleSkus.value = fss.content || fss.data || fss || [];
   flashSales.value = (fs.content || fs.data || fs || []).filter(fs => fs.active);
+
+  
 }
 
 // --- Tạo danh sách giờ từ flash sale ---
 const computedTimeSlots = computed(() => {
   const now = new Date();
 
+  // Lấy danh sách giờ flash sale
   const slots = [...new Set(flashSales.value.map(fs => {
     const start = new Date(fs.started_date ?? fs.startedDate);
     const h = start.getHours().toString().padStart(2, "0");
     const m = start.getMinutes().toString().padStart(2, "0");
-    return `${h}:${m}`; // ✅ Lấy cả phút
+    return `${h}:${m}`;
   }))];
 
-  return slots.map(hour => {
+  // Map các slot chỉ với trạng thái "Đang diễn ra" hoặc "Sắp diễn ra"
+  let mappedSlots = slots.map(hour => {
     const matchedSale = flashSales.value.find(fs => {
       const start = new Date(fs.started_date ?? fs.startedDate);
       const h = start.getHours().toString().padStart(2, "0");
       const m = start.getMinutes().toString().padStart(2, "0");
-      return `${h}:${m}` === hour; // ✅ So sánh cả giờ và phút
+      return `${h}:${m}` === hour;
     });
     if (!matchedSale) return null;
 
     const start = new Date(matchedSale.started_date ?? matchedSale.startedDate);
     const end = new Date(matchedSale.ended_date ?? matchedSale.endedDate);
 
+    if (!matchedSale.active) return null; // Bỏ flash sale ngưng
     if (now >= start && now <= end) return { hour, status: "Đang diễn ra" };
     if (now < start) return { hour, status: "Sắp diễn ra" };
-    return null;
+
+    return null; // Bỏ flash sale đã kết thúc
   }).filter(Boolean);
+
+  // Sắp xếp: đang diễn ra bên trái, sắp diễn ra bên phải
+  mappedSlots.sort((a, b) => {
+    const order = { "Đang diễn ra": 0, "Sắp diễn ra": 1 };
+    return order[a.status] - order[b.status];
+  });
+
+  return mappedSlots;
 });
+
 
 
 // --- Chọn slot ---
@@ -290,57 +319,69 @@ function getRemainingStock(productId) {
   const purchased = flashSaleSku.purchased ?? 0;
   return Math.max(quantity - purchased, 0);
 }
-import { useRouter } from "vue-router";
-const router = useRouter();
 
-function buyNow(product) {
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-  // số lượng flash sale còn lại
-  const flashStock = getRemainingStock(product.id); 
-
-  // xem sản phẩm đã có trong giỏ chưa
-  const existing = cart.find(item => item.id === product.id);
-
-  if (existing) {
-    if (existing.quantity < flashStock) {
-      // vẫn còn flash sale
-      existing.quantity++;
-      existing.price = getDiscountedPrice(product.id);
-    } else {
-      // vượt flash sale => giá gốc
-      existing.quantity++;
-      existing.price = getSkuPrice(product.id);
-    }
-  } else {
-    if (flashStock > 0) {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        image: product.image,
-        price: getDiscountedPrice(product.id), // flash sale
-        quantity: 1,
-        stock: flashStock
-      });
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        image: product.image,
-        price: getSkuPrice(product.id), // giá gốc
-        quantity: 1,
-        stock: 1000 // hoặc stock gốc của sản phẩm
-      });
-    }
+const buyNow = async (product) => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    Swal.fire("Thông báo", "Vui lòng đăng nhập để mua hàng!", "info");
+    router.push("/auth/login");
+    return;
   }
 
-  // lưu vào localStorage và cập nhật Header
-  localStorage.setItem("cart", JSON.stringify(cart));
-  window.dispatchEvent(new Event("cart-updated"));
+  // ✅ Giải mã token để lấy accountId
+  const payload = decodeJwtToken(token);
+  const accountId = payload?.id;
 
-  // chuyển sang giỏ hàng
-  router.push("/cart");
+  // ✅ Lấy SKU của sản phẩm
+  const sku = skus.value.find((s) => s.productId === product.id);
+  if (!sku) {
+    Swal.fire("Lỗi", "Không tìm thấy SKU cho sản phẩm này", "error");
+    return;
+  }
+
+  try {
+    await axios.post("http://localhost:8080/api/cart-details", {
+      accountId,
+      skuId: sku.id,
+      quantity: 1,
+    });
+
+    Swal.fire({
+      icon: "success",
+      title: "Đã thêm vào giỏ hàng!",
+      showConfirmButton: false,
+      timer: 1200,
+    });
+
+    // ✅ Chuyển sang giỏ hàng
+    router.push("/cart");
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi", "Không thể thêm vào giỏ hàng", "error");
+  }
+};
+
+// Hàm giải mã JWT
+function decodeJwtToken(token) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
 }
+
+
+
+
 
 function getTotalStock(productId) {
   const sku = skus.value.find(s => s.productId === productId);
@@ -378,6 +419,30 @@ onMounted(async () => {
 onUnmounted(() => {
   clearInterval(countdownTimer);
 });
+
+function addToCart(product) {
+  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+  // Tìm sản phẩm trong giỏ
+  const existingItem = cart.find((item) => item.id === product.id);
+
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: getDiscountedPrice(product.id),
+      quantity: 1,
+      image: getImageUrl(product.image),
+    });
+  }
+
+  localStorage.setItem("cart", JSON.stringify(cart));
+  console.log("🛒 Cart updated:", cart);
+}
+
+
 </script>
 
 <style scoped>
@@ -568,4 +633,21 @@ onUnmounted(() => {
   background: #ff9900;
   transform: translateY(-2px);
 }
+.btn-detail:disabled {
+  background: #555 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.btn-detail.upcoming {
+  background: #888;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.btn-detail.ongoing {
+  background: #ffcc00;
+}
+
 </style>
