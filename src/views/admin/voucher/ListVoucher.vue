@@ -88,7 +88,7 @@
               <button
                 class="btn btn-outline-danger btn-sm"
                 @click="deleteVoucher(props.row.id)"
-                title="Xóa"
+                title="Xóa mềm"
               >
                 <i class="bi bi-trash"></i>
               </button>
@@ -117,6 +117,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import apiClient from '@/composables/axios.js'
 import VoucherDetailModal from '@/components/admin/VoucherDetailModal.vue'
+import Swal from 'sweetalert2'
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 
 const router = useRouter()
@@ -179,20 +180,44 @@ const addVoucher = () => {
   router.push({ name: 'VoucherAdd' })
 }
 
+// 🔹 Xóa mềm voucher dùng Swal
 const deleteVoucher = async (id) => {
-  if (!confirm(`Bạn có chắc muốn xóa voucher ID: ${id}?`)) return
-  try {
-    await apiClient.delete(`/api/voucher/${id}`)
-    alert('✅ Xóa voucher thành công!')
-    fetchVouchers()
-  } catch (err) {
-    console.error('❌ Lỗi khi xóa voucher:', err)
-    alert('Xóa thất bại, vui lòng thử lại.')
+  const result = await Swal.fire({
+    title: 'Bạn có chắc?',
+    text: `Muốn xóa voucher không!`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Xóa',
+    cancelButtonText: 'Hủy',
+  })
+
+  if (result.isConfirmed) {
+    try {
+      await apiClient.put(`/api/voucher/soft-delete/${id}`)
+      vouchers.value = vouchers.value.filter(v => v.id !== id)
+
+      Swal.fire({
+        title: 'Đã xóa!',
+        text: 'Voucher đã được xóa mềm thành công.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+    } catch (err) {
+      console.error('❌ Lỗi khi xóa mềm voucher:', err)
+      console.log('📦 Phản hồi từ backend:', err.response?.data)
+      Swal.fire({
+        title: 'Lỗi!',
+        text: 'Không thể xóa mềm voucher, vui lòng thử lại!',
+        icon: 'error',
+      })
+    }
   }
 }
 
 onMounted(fetchVouchers)
 </script>
+
 
 <style scoped>
 .voucher-page {
@@ -200,7 +225,6 @@ onMounted(fetchVouchers)
   min-height: 100vh;
 }
 
-/* ✅ Header fix chính xác */
 .header-bar {
   display: flex;
   justify-content: space-between;
@@ -218,8 +242,6 @@ onMounted(fetchVouchers)
   color: #333;
 }
 
-/* ✅ Nút thêm voucher */
-/* ✅ Nút thêm voucher — nhỏ gọn hơn */
 .add-voucher-btn {
   display: inline-flex;
   align-items: center;
@@ -246,8 +268,6 @@ onMounted(fetchVouchers)
   transform: translateY(-1px);
 }
 
-
-/* Nút hành động nhỏ trong bảng */
 .d-flex button {
   width: 30px;
   height: 30px;
@@ -256,6 +276,7 @@ onMounted(fetchVouchers)
   justify-content: center;
   padding: 0;
 }
+
 .d-flex i {
   font-size: 14px;
 }

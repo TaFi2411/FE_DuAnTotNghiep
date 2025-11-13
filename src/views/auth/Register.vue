@@ -49,7 +49,7 @@
         <label class="form-label">Mật khẩu</label>
         <div class="position-relative">
           <input
-            v-model="password"
+            v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
             class="form-control pe-5"
             placeholder="Nhập mật khẩu"

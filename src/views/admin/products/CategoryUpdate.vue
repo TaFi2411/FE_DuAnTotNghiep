@@ -1,12 +1,14 @@
 <template>
   <div class="container mt-4">
-    <h2 class="page-title text-center mb-4">Cập nhật danh mục</h2>
+    <h2 class="mb-3 text-center">
+      {{ isEdit ? 'Cập nhật Category' : 'Thêm mới Category' }}
+    </h2>
 
     <div class="card shadow-sm p-4">
       <form @submit.prevent="saveCategory">
-        <!-- Slug -->
+        <!-- Slug (disabled) -->
         <div class="mb-3">
-          <label class="form-label">Slug</label>
+          <label class="form-label">Slug (tự tạo)</label>
           <input v-model="form.slug" type="text" class="form-control" disabled />
         </div>
 
@@ -19,6 +21,7 @@
             class="form-control"
             @input="onNameInput"
           />
+          <small class="text-danger" v-if="errors.name">{{ errors.name }}</small>
         </div>
 
         <!-- Status -->
@@ -32,12 +35,17 @@
           <label class="form-check-label" for="status">Hoạt động</label>
         </div>
 
-        <!-- Nút -->
-        <div class="d-flex justify-content-end">
-          <button type="button" class="btn-cancel me-2" @click="goBack">
-            Quay lại
+        <!-- Buttons -->
+        <div class="d-flex justify-content-end button-group">
+          <button type="button" class="btn-back" @click="goBack">
+            ← Quay lại danh sách
           </button>
-          <button type="submit" class="btn-save">Cập nhật</button>
+
+          <button type="submit" class="add-category-btn" :disabled="isSubmitting">
+            <i v-if="!isSubmitting" :class="isEdit ? 'bi bi-pencil' : 'bi bi-plus-lg'"></i>
+            <span v-if="isSubmitting" class="spinner-border spinner-border-sm"></span>
+            {{ isSubmitting ? (isEdit ? 'Đang lưu...' : 'Đang thêm...') : (isEdit ? 'Cập nhật' : 'Thêm mới') }}
+          </button>
         </div>
       </form>
     </div>
@@ -45,110 +53,211 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import axios from '@/composables/axios'
+import { reactive, ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import Swal from 'sweetalert2';
+import axios from '@/composables/axios';
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const form = ref({
-  id: null,
-  slug: '',
-  name: '',
-  status: true
-})
+const form = reactive({ id: null, slug: '', name: '', status: true });
+const errors = reactive({ name: '' });
+const isSubmitting = ref(false);
+const isEdit = computed(() => !!route.params.id);
 
-const toSlug = (str) =>
-  (str || '')
+// 🔹 Chuyển name sang slug
+function toSlug(str) {
+  return (str || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/đ/g, 'd')
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()
-    .replace(/\s+/g, '-')
+    .replace(/\s+/g, '-');
+}
+const onNameInput = () => {
+  form.slug = toSlug(form.name);
+};
 
+// 🔹 Load category khi edit
 const loadCategory = async (id) => {
   try {
-    const res = await axios.get(`/api/category/${id}`)
-    form.value = { ...res.data, id: res.data.id ?? id }
+    const res = await axios.get(`/api/category/${id}`);
+    Object.assign(form, res.data);
   } catch (err) {
-    console.error('❌ Không tải được danh mục:', err)
-    alert('Không tìm thấy danh mục, quay lại danh sách.')
-    router.push('/categories')
+    console.error(err);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Không tìm thấy danh mục',
+      text: 'Quay về danh sách',
+      timer: 2000,
+      showConfirmButton: false,
+      timerProgressBar: true,
+    });
+    router.push('/admin/category');
   }
-}
+};
 
 onMounted(() => {
-  const id = route.params.id
-  if (id) loadCategory(id)
-})
+  if (isEdit.value) loadCategory(route.params.id);
+});
 
-const onNameInput = () => {
-  form.value.slug = toSlug(form.value.name)
-}
+// 🔹 Quay lại
+const goBack = () => router.push('/admin/category');
 
-const saveCategory = async () => {
-  try {
-    if (!form.value.name.trim()) {
-      alert('Tên danh mục không được để trống!')
-      return
+// 🔹 Rules giống Voucher Update
+const rules = {
+  name: [
+    {
+      required: true,
+      message: 'Tên danh mục không được để trống',
+    },
+    {
+      minLength: 3,
+      message: 'Tên danh mục ít nhất 3 ký tự',
+    },
+    {
+      regex: /^[a-zA-ZÀ-ỹ0-9\s]+$/,
+      message: 'Tên danh mục không được chứa ký tự đặc biệt',
+    },
+  ],
+};
+
+// 🔹 Validate form dựa trên rules
+const validateForm = () => {
+  errors.name = '';
+
+  const value = form.name ? form.name.trim() : '';
+  for (const rule of rules.name) {
+    if (rule.required && !value) {
+      errors.name = rule.message;
+      return false;
     }
-
-    const payload = {
-      slug: form.value.slug,
-      name: form.value.name.trim(),
-      status: form.value.status
+    if (rule.minLength && value.length < rule.minLength) {
+      errors.name = rule.message;
+      return false;
     }
-
-    await axios.put(`/api/category/${form.value.id}`, payload)
-    alert('Cập nhật thành công!')
-    router.push('/admin/category') // ✅ chuyển về danh sách sau khi lưu
-  } catch (err) {
-    console.error('❌ Lỗi khi lưu category:', err)
-    alert('Lưu thất bại!')
+    if (rule.regex && !rule.regex.test(value)) {
+      errors.name = rule.message;
+      return false;
+    }
   }
-}
+  return true;
+};
 
-const goBack = () => router.push('/categories')
+// 🔹 Lưu Category
+const saveCategory = async () => {
+  if (!validateForm()) return;
+
+  isSubmitting.value = true;
+  try {
+    const payload = {
+      slug: form.slug,
+      name: form.name.trim(),
+      status: form.status,
+    };
+
+    if (isEdit.value) {
+      await axios.put(`/api/category/${form.id}`, payload);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Cập nhật thành công',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
+    } else {
+      // Check slug tồn tại trước khi thêm mới
+      const exists = await axios.get(`/api/category/check-slug/${form.slug}`)
+        .then(res => res.data?.exists)
+        .catch(() => false);
+
+      if (exists) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Slug đã tồn tại',
+          text: 'Đổi tên khác hoặc thêm số ở cuối',
+          timer: 2000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        });
+        isSubmitting.value = false;
+        return;
+      }
+
+      await axios.post('/api/category', payload);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Thêm mới thành công',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+      });
+    }
+
+    router.push('/admin/category');
+  } catch (err) {
+    console.error(err);
+    await Swal.fire({
+      icon: 'error',
+      title: 'Lưu thất bại',
+      text: err.response?.data?.message || 'Đã có lỗi xảy ra',
+      confirmButtonColor: '#dc3545',
+    });
+  } finally {
+    isSubmitting.value = false;
+  }
+};
 </script>
 
 <style scoped>
-.page-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #333;
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
 }
 
-/* 🟢 Nút Quay lại */
-.btn-cancel {
-  background-color: #f8f9fa;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+.button-group button {
+  min-width: 140px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   font-size: 13px;
-  font-weight: 400;
-  padding: 6px 14px;
+  border-radius: 6px;
   transition: all 0.2s ease;
-}
-.btn-cancel:hover {
-  background-color: #e9ecef;
 }
 
-/* 🟢 Nút Lưu/Cập nhật */
-.btn-save {
-  background-color: #198754;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 400;
-  padding: 6px 14px;
-  transition: all 0.2s ease;
+/* 🔙 Quay lại */
+.btn-back {
+  border: 1px solid #6c757d;
+  background-color: #fff;
+  color: #6c757d;
 }
-.btn-save:hover {
-  background-color: #157347;
+.btn-back:hover {
+  background-color: #6c757d;
+  color: #fff;
   transform: translateY(-1px);
+}
+
+/* 🟢 Thêm / Cập nhật */
+.add-category-btn {
+  border: 1px solid #198754;
+  background-color: #fff;
+  color: #198754;
+}
+.add-category-btn:hover {
+  background-color: #198754;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.add-category-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
