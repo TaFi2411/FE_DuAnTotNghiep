@@ -57,6 +57,7 @@
         <div v-if="expandedOrder === order.id" class="card-body fade-in">
           <div class="mb-3">
             <p><strong>Khách hàng:</strong> {{ order.accountName || 'N/A' }}</p>
+             <p><strong>Số điện thoại:</strong> {{ order.NumberFormat }}</p>
             <p><strong>Địa chỉ giao hàng:</strong> {{ order.addressName }}</p>
             <p><strong>Phương thức thanh toán:</strong> {{ order.paymentMethodName }}</p>
             <p>
@@ -236,6 +237,8 @@ async function loadOrders(page = 0) {
     orders.value = response.data.data || response.data.content || [];
     totalPages.value = response.data.totalPages || 1;
     currentPage.value = response.data.currentPage || page;
+    console.log(response.data);
+
   } catch (err) {
     console.error("Lỗi khi tải đơn hàng:", err);
   } finally {

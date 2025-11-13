@@ -161,8 +161,12 @@ const accountId = ref(null);
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
   if (token) {
-    try { accountId.value = JSON.parse(atob(token.split(".")[1])).id; }
-    catch (e) { console.error(e); }
+    try { 
+      accountId.value = JSON.parse(atob(token.split(".")[1])).id; 
+      console.log("Account ID:", accountId.value); // Kiểm tra giá trị ngay sau khi gán
+    } catch (e) { 
+      console.error(e); 
+    }
   }
 };
 
@@ -244,42 +248,80 @@ const fetchShippingFee = async () => {
 watch(selectedAddress, (newVal) => { if (newVal) fetchShippingFee(); });
 
 // Thanh toán
+// Thanh toán
 const handlePayment = async () => {
-  if (!selectedAddress.value) { alert("Vui lòng chọn địa chỉ giao hàng!"); return; }
-  if (!selectedPaymentMethod.value) { alert("Vui lòng chọn phương thức thanh toán!"); return; }
+  // 🧭 1️⃣ Tạo orderId chung
+const uniqueOrderId = 'DH' + Date.now();
+  if (!selectedAddress.value) {
+    alert("Vui lòng chọn địa chỉ giao hàng!");
+    return;
+  }
+  if (!selectedPaymentMethod.value) {
+    alert("Vui lòng chọn phương thức thanh toán!");
+    return;
+  }
 
   const orderPayload = {
+   orderId: uniqueOrderId,
     accountId: accountId.value,
     addressId: selectedAddress.value.id,
     paymentMethodId: selectedPaymentMethod.value,
     feeship: shippingFee.value,
     total: totalPayment.value,
-    payment_status: false,
     discount: 0,
     voucherId: null,
-    orderDetails: cartItems.value.map(i => ({ skuId: i.skuId, quantity: i.quantity, price: i.price }))
+    orderDetails: cartItems.value.map(i => ({
+      skuId: i.skuId,
+      quantity: i.quantity,
+      price: i.price
+    }))
   };
+console.log("Order Payload:", orderPayload); 
 
   try {
-    const orderRes = await axios.post("/api/order", orderPayload);
-    const order = orderRes.data;
+    // 🔹 Nếu thanh toán qua VNPAY
+    if (selectedPaymentMethod.value === 1) {
+      const res = await axios.post("/api/vnpay/create", {
+        amount: orderPayload.total,
+        orderInfo: "Thanh toán đơn hàng qua VNPAY"
+      });
+      if (res.data?.paymentUrl) {
+        // 👉 Lưu orderPayload tạm ở sessionStorage để tạo đơn sau khi thanh toán xong
+        sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
+        window.location.href = res.data.paymentUrl;
+      }
 
-    sessionStorage.removeItem("cart");
-    sessionStorage.removeItem("checkoutItems");
-    sessionStorage.setItem("orderId", order.id);
-    cartItems.value = [];
+    // 🔹 Nếu thanh toán qua MOMO
+    } else if (selectedPaymentMethod.value === 3) {
+      
+      const res = await axios.post("/api/momo/create", {
+        orderId:orderPayload.orderId,
+        amount: orderPayload.total,
+        orderInfo: "Thanh toán đơn hàng qua MOMO"
+      });
+      if (res.data?.paymentUrl){
 
-    if (selectedPaymentMethod.value === 1) { // VNPAY
-      const vnpayRes = await axios.post("/api/vnpay/create", { orderId: order.id, amount: order.total });
-      if (vnpayRes.data?.paymentUrl) window.location.href = vnpayRes.data.paymentUrl;
-    } else if (selectedPaymentMethod.value === 2) { // MOMO
-      const momoRes = await axios.post("/api/momo/create", { orderId: order.id, amount: order.total, orderInfo: "Thanh toán đơn hàng #" + order.id });
-      if (momoRes.data?.resultCode === 0 && momoRes.data?.payUrl) window.location.href = momoRes.data.payUrl;
-    } else if (selectedPaymentMethod.value === 5) { // COD
+        sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
+   window.location.href = res.data.paymentUrl
+
+      }
+
+    // 🔹 Nếu COD thì tạo luôn
+    } else if (selectedPaymentMethod.value === 2) {
+      const orderRes = await axios.post("/api/order", orderPayload);
+      sessionStorage.removeItem("cart");
+      sessionStorage.removeItem("checkoutItems");
+      cartItems.value = [];
       window.location.href = "/orders";
     }
-  } catch (err) { console.error(err); alert("Có lỗi khi thanh toán!"); }
+
+  } catch (err) {
+    console.error(err);
+    
+    alert("Có lỗi khi thanh toán!");
+  }
 };
+
 
 // onMounted
 onMounted(() => {
@@ -288,45 +330,54 @@ onMounted(() => {
   fetchProvinces();
   fetchAddresses();
   fetchPaymentMethods();
-
+});
   // Callback VNPAY / MoMo
+onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
-  const orderId = urlParams.get("orderId") || localStorage.getItem("orderId");
+  const momoResultCode = urlParams.get("resultCode"); // MOMO trả về resultCode
+  const paymentSuccess =
+    vnp_ResponseCode === "00" || momoResultCode === "0"; // Kiểm tra cả hai
 
-  if (vnp_ResponseCode && orderId) {
-    if (vnp_ResponseCode === "00") {
-      // Thanh toán thành công
-      axios.post(`/api/order/vnpay-success/${orderId}`)
-        .then(() => {
-          sessionStorage.removeItem("cart");
-          sessionStorage.removeItem("checkoutItems");
-          sessionStorage.removeItem("orderId");
-          cartItems.value = [];
-          window.location.href = "/orders"; // chuyển về trang đơn hàng của tôi
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Lỗi cập nhật đơn hàng!");
-        });
-    } else {
-      // Thanh toán hủy hoặc thất bại
-      axios.post(`/api/order/cancel/${orderId}`)
-        .then(() => {
-          sessionStorage.removeItem("orderId");
-          alert("Thanh toán bị hủy. Đơn hàng đã được huỷ.");
-          window.location.href = "/cart"; // quay lại giỏ hàng
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Có lỗi khi hủy đơn hàng!");
-        });
+  const pendingOrder = sessionStorage.getItem("pendingOrder");
+
+  if (pendingOrder && paymentSuccess) {
+    try {
+      // Dữ liệu đơn hàng tạm
+      const orderPayload = JSON.parse(pendingOrder);
+      
+      // Gọi API để tạo đơn hàng và cập nhật trạng thái thanh toán
+      const createdOrder = await axios.post("/api/order", orderPayload); // 👉 Tạo đơn hàng nếu chưa có
+      
+      // Sau khi đơn hàng đã được tạo, gửi thêm request để cập nhật trạng thái thanh toán
+      const orderId = createdOrder.data.id; // Lấy ID của đơn hàng vừa tạo
+      
+      // Cập nhật trạng thái thanh toán sau khi thanh toán thành công
+      await axios.post(`/api/order/vnpay-success/${orderId}`);
+
+      // Dọn session + giỏ hàng
+      sessionStorage.removeItem("pendingOrder");
+      sessionStorage.removeItem("cart");
+      sessionStorage.removeItem("checkoutItems");
+      cartItems.value = [];
+
+      alert("🎉 Thanh toán thành công! Đơn hàng của bạn đã được ghi nhận.");
+      window.location.href = "/orders"; // Chuyển đến trang đơn hàng
+    } catch (err) {
+      console.error(err);
+      alert("❌ Lỗi khi lưu đơn hàng hoặc cập nhật trạng thái thanh toán!");
     }
-
-    // Xóa query params khỏi URL
-    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+  } else if (vnp_ResponseCode || momoResultCode) {
+    // Thanh toán thất bại hoặc bị hủy
+    alert("Thanh toán thất bại hoặc đã bị hủy!");
+    sessionStorage.removeItem("pendingOrder");
+    window.location.href = "/cart"; // Quay lại giỏ hàng
   }
+
+  // Xóa query params khỏi URL
+  window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
 });
+
 
 </script>
 

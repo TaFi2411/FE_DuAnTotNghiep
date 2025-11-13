@@ -266,7 +266,7 @@ async function cancelOrder(orderId) {
     await axios.put(`/api/order/${orderId}/cancel`, { status: "CANCELLED" });
     const order = orders.value.find((o) => o.id === orderId);
     if (order) order.statusName = "CANCELLED";
-    alert("Đơn hàng đã được hủy thành công!");
+    alert("Đơn hàng đã được hủy thành công! Chúng tôi đã gửi email xác nhận đến bạn.");
   } catch (err) {
     console.error(err);
     alert("Không thể hủy đơn hàng!");
