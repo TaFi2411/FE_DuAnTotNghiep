@@ -75,7 +75,7 @@ const isOpen = (item) => item.children && openItem.value === item.name
 .sidebar {
   width: 240px;
   background: linear-gradient(180deg, #1e1e1e, #111);
-  color: #ccc;
+  color: #ffffff;
   height: 100vh;
   transition: width 0.3s ease;
   overflow: hidden;

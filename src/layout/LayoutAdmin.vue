@@ -31,10 +31,10 @@ const menu = [
     children: [
       { name: 'Danh sách sản phẩm', path: '/admin/list-product' },
       { name: 'Thêm sản phẩm', path: '/admin/product/create' },
-      { name: 'Loại sản phẩm', path: '/admin/category' },
-      { name: 'Thêm thuộc tính', path: '/admin/attribute' },
     ]
   },
+  { name: 'Loại sản phẩm', path: '/admin/category', icon: 'bi bi-journal-bookmark' },
+  { name: 'Thuộc tính sản phẩm', path: '/admin/attribute', icon: 'bi bi-segmented-nav' },
   { name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-ticket-detailed' },
   { name: 'FlashSale', path: '/admin/flash-sale-admin', icon: 'bi bi-lightning-charge-fill' },
   { name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
