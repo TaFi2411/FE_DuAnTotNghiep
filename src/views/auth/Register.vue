@@ -49,11 +49,10 @@
         <label class="form-label">Mật khẩu</label>
         <div class="position-relative">
           <input
-            v-model="password"
+            v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
             class="form-control pe-5"
             placeholder="Nhập mật khẩu"
-            required
           />
           <i
             class="bi position-absolute end-0 top-50 translate-middle-y me-3"
@@ -106,7 +105,7 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
-import { useRouter, RouterLink } from "vue-router";
+import { useRouter} from "vue-router";
 
 const router = useRouter();
 const API_URL = "http://localhost:8080/auth/register";
@@ -120,6 +119,7 @@ const form = ref({
   role: false,
   active: true,
 });
+
 
 const showPassword = ref(false);
 const togglePassword = () => {

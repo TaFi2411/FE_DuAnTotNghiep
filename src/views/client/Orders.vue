@@ -110,7 +110,6 @@
                 <div class="text-dark mb-1">
                   Giá: {{ formatCurrency(item.price) }}
                 </div>
-                
               </div>
 
               <div class="ms-3 text-end fw-bold">
@@ -140,13 +139,114 @@
               Đã nhận hàng
             </button>
 
-            <span
-              v-if="['COMPLETED', 'CANCELLED', 'PROCESSING'].includes(order.statusName)"
-              class="text-muted fst-italic"
+            <button
+              v-if="order.statusName === 'COMPLETED'"
+              class="btn btn-dark ms-2"
+              @click="openReviewModal(order.items[0].id)"
             >
-              Không thể thao tác
-            </span>
+              Đánh giá
+            </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL ĐÁNH GIÁ -->
+    <div v-if="reviewModal" class="modal-backdrop">
+      <div
+        class="modal-content p-4 rounded-4 shadow-lg bg-white position-relative"
+      >
+        <button
+          class="btn-close position-absolute top-0 end-0 m-3"
+          @click="closeReviewModal"
+        ></button>
+
+        <h4 class="fw-bold mb-3 text-center">Đánh giá sản phẩm</h4>
+
+        <!-- Chọn sao -->
+        <div class="mb-3 text-center">
+          <span
+            v-for="n in 5"
+            :key="n"
+            @click="reviewForm.star = n"
+            class="fs-3 mx-1"
+            :class="n <= reviewForm.star ? 'text-warning' : 'text-secondary'"
+            style="cursor: pointer"
+            >★</span
+          >
+          <div class="small text-muted mt-1">Chọn số sao (1-5)</div>
+        </div>
+
+        <!-- Nhập mô tả -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Cảm nhận của bạn:</label>
+          <textarea
+            v-model="reviewForm.description"
+            rows="3"
+            class="form-control"
+            placeholder="Viết cảm nhận của bạn..."
+          ></textarea>
+        </div>
+
+        <!-- Upload ảnh -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold"
+            >Ảnh minh họa (tối đa 3 ảnh)</label
+          >
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <div
+              v-for="(img, i) in reviewForm.images"
+              :key="i"
+              class="image-upload border rounded-3 position-relative bg-light border-dark-subtle"
+              style="
+                width: 80px;
+                height: 80px;
+                cursor: pointer;
+                overflow: hidden;
+              "
+            >
+              <img
+                :src="img.path"
+                alt="Ảnh review"
+                class="position-absolute top-0 start-0 w-100 h-100"
+                style="object-fit: cover; object-position: center"
+              />
+              <button
+                type="button"
+                class="btn btn-sm btn-danger position-absolute"
+                style="top: 2px; right: 2px; padding: 0 4px"
+                @click="removeImage(i)"
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              v-if="reviewForm.images.length < 3"
+              class="image-upload border rounded-3 d-flex flex-column align-items-center justify-content-center bg-light border-dark-subtle text-muted"
+              style="width: 80px; height: 80px; cursor: pointer"
+              @click="openFilePicker"
+            >
+              <i class="bi bi-plus-circle fs-5"></i>
+            </div>
+          </div>
+          <div v-if="isUploading" class="mt-2 small text-primary">
+            Đang tải ảnh lên...
+          </div>
+          <input
+            type="file"
+            class="d-none"
+            ref="fileInput"
+            accept="image/*"
+            multiple
+            @change="handleAutoUpload"
+          />
+        </div>
+
+        <div class="text-center mt-4">
+          <button class="btn btn-success px-4" @click="submitReview">
+            Gửi đánh giá
+          </button>
         </div>
       </div>
     </div>
@@ -156,11 +256,23 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios.js";
+import Swal from "sweetalert2";
 
 const orders = ref([]);
 const loading = ref(true);
 const expandedOrder = ref(null);
 const currentFilter = ref("ALL");
+
+// Modal đánh giá
+const reviewModal = ref(false);
+const reviewForm = ref({
+  star: 0,
+  description: "",
+  orderDetailId: null,
+  images: [],
+});
+const isUploading = ref(false);
+const fileInput = ref(null);
 
 const filters = [
   { label: "Chờ xác nhận", value: "PENDING" },
@@ -222,13 +334,14 @@ function decodeJwtToken(token) {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+    return JSON.parse(
+      decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      )
     );
-    return JSON.parse(jsonPayload);
   } catch {
     return null;
   }
@@ -286,11 +399,68 @@ async function completeOrder(orderId) {
   }
 }
 
+// Review modal
+function openReviewModal(orderDetailId) {
+  reviewForm.value = { star: 0, description: "", orderDetailId, images: [] };
+  reviewModal.value = true;
+}
+function closeReviewModal() {
+  reviewModal.value = false;
+}
+
+function openFilePicker() {
+  fileInput.value?.click();
+}
+
+async function handleAutoUpload(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  isUploading.value = true;
+  try {
+    for (const file of files.slice(0, 3 - reviewForm.value.images.length)) {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      reviewForm.value.images.push({ path: res.data });
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Lỗi", "Không thể tải ảnh lên", "error");
+  } finally {
+    isUploading.value = false;
+    event.target.value = "";
+  }
+}
+
+function removeImage(index) {
+  reviewForm.value.images.splice(index, 1);
+}
+
+async function submitReview() {
+  if (reviewForm.value.star === 0) {
+    return Swal.fire("Thiếu thông tin", "Vui lòng chọn số sao!", "warning");
+  }
+  try {
+    await axios.post("/api/review", reviewForm.value);
+    Swal.fire("🎉 Thành công", "Cảm ơn bạn đã đánh giá!", "success");
+    closeReviewModal();
+  } catch (err) {
+    console.error(err);
+    Swal.fire(
+      "Lỗi 😥",
+      err.response?.data?.message || "Không thể gửi đánh giá",
+      "error"
+    );
+  }
+}
+
 onMounted(loadOrders);
 </script>
 
 <style scoped>
-/* giữ nguyên toàn bộ CSS của bạn */
+/* giữ nguyên CSS cũ */
 .order-page {
   min-height: 100vh;
   padding-bottom: 60px;
@@ -306,51 +476,66 @@ onMounted(loadOrders);
     transform: translateY(0);
   }
 }
+
 .filter-bar {
   position: sticky;
   top: 70px;
   z-index: 5;
-  padding: 12px 0;
+  padding: 10px 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  border-bottom: 1px solid #ccc;
+  gap: 12px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
 }
+
 .btn-filter {
-  padding: 6px 14px;
+  padding: 8px 16px;
   font-weight: 600;
-  color: #111;
+  color: #555;
   font-size: 14px;
   border: 1px solid #ccc;
+  border-radius: 20px;
   background: transparent;
-  transition: all 0.2s ease;
+
 }
+
 .btn-filter:hover {
-  background: #f0f0f0;
+  background: #f5f5f5;
+
 }
+
 .btn-filter.active {
-  color: #000;
+  color: #ffffff;
+  background-color: #000;
+  font-weight: 700;
   border-color: #000;
+
 }
+
 .count-badge {
-  background-color: #111;
+  background-color: #525252;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   padding: 2px 6px;
-  border-radius: 8px;
+  border-radius: 12px;
+  margin-left: 6px;
 }
+
 .order-card {
-  border: 1px solid #ddd;
+  border: 1px solid #cacacaaa;
   margin-bottom: 10px;
-  background: transparent;
+  background: white;
 }
 .order-header {
-  padding: 10px 12px;
+  padding: 12px 12px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
+  background-color: #ffffff;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 .order-header:hover {
   background: #f5f5f5;
@@ -396,5 +581,23 @@ onMounted(loadOrders);
 .btn-outline-success:hover {
   background-color: #111;
   color: #fff;
+}
+
+/* Modal review */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+}
+.modal-content {
+  width: 100%;
+  max-width: 500px;
 }
 </style>

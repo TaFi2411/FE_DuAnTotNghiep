@@ -91,7 +91,7 @@ const products = ref([]);
 const activeCategory = ref("all");
 const loading = ref(false);
 
-// 🧭 Lấy danh mục
+
 const fetchCategories = async () => {
   try {
     const res = await axios.get("/api/category");
@@ -102,7 +102,7 @@ const fetchCategories = async () => {
   }
 };
 
-// 📦 Lấy sản phẩm
+
 const fetchProducts = async (categoryId = "all") => {
   loading.value = true;
   try {
@@ -124,7 +124,7 @@ const setCategory = (id) => {
 };
 
 const formatPrice = (price) =>
-  price ? price.toLocaleString("vi-VN") + " ₫" : "Đang chờ hàng";
+  price ? price.toLocaleString("vi-VN") + " VNĐ" : "Đang chờ hàng";
 
 const getMinPrice = (product) =>
   !product.skus || !product.skus.length

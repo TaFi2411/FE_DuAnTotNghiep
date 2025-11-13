@@ -125,6 +125,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
+
 const route = useRoute();
 const router = useRouter();
 
@@ -134,10 +135,10 @@ const selectedAttributes = ref({});
 const selectedSku = ref(null);
 const currentImage = ref("");
 const quantity = ref(1);
-const accountId = ref(null); // 🟢 Lưu ID người dùng từ token
+const accountId = ref(null); 
 const relatedProducts = ref([]);
 
-// 🟢 Decode JWT Token (giữ nguyên logic gốc)
+
 function decodeJwtToken(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -154,7 +155,6 @@ function decodeJwtToken(token) {
   }
 }
 
-// 🟢 Load chi tiết sản phẩm (giữ nguyên logic gốc, thêm gọi related)
 const loadProductDetail = async () => {
   try {
     const res = await axios.get(`http://localhost:8080/api/product/${route.params.id}`);
@@ -281,7 +281,7 @@ const getVisibleOptions = (attrGroup) => {
   }));
 };
 
-// 🟢 Thêm giỏ hàng (giữ nguyên)
+
 const addToCart = async () => {
   if (!selectedSku.value) {
     Swal.fire("Chọn biến thể!", "Vui lòng chọn đủ thuộc tính sản phẩm", "warning");
@@ -318,7 +318,7 @@ const addToCart = async () => {
   }
 };
 
-// 🟢 Mua ngay (giữ nguyên)
+
 const buyNow = () => {
   if (!selectedSku.value) {
     Swal.fire("Chọn biến thể!", "Vui lòng chọn đủ thuộc tính sản phẩm", "warning");
