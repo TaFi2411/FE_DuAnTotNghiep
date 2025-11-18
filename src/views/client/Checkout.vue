@@ -412,7 +412,7 @@ const selectedDistrict = ref("");
 const selectedWard = ref("");
 const specificAddress = ref("");
 const selectedAddress = ref(null);
-const shippingPhone = ref("");
+const selectedPaymentMethod = ref(null);
 
 const cartItems = ref([]);
 const shippingFee = ref(0);

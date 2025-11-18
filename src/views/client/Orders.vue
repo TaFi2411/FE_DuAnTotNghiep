@@ -16,11 +16,15 @@
       </button>
     </div>
 
-    <!-- LOADING -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary"></div>
-    </div>
+      <!-- LOADING -->
+      <div v-if="loading" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
 
+      <!-- KHÔNG CÓ ĐƠN -->
+      <div v-else-if="filteredOrders.length === 0" class="alert alert-light border text-center">
+        😕 Không có đơn hàng nào thuộc trạng thái này.
+      </div>
     <!-- KHÔNG CÓ ĐƠN -->
     <div
       v-else-if="filteredOrders.length === 0"
@@ -77,6 +81,36 @@
             </p>
           </div>
 
+            <!-- DANH SÁCH SẢN PHẨM -->
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th style="width: 60%">Sản phẩm</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Giá</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in order.items" :key="item.id || item.productName">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img
+                          v-if="item.productImage"
+                          :src="item.productImage"
+                          alt="Ảnh sản phẩm"
+                          class="me-3 rounded border"
+                          style="width: 60px; height: 60px; object-fit: cover"
+                        />
+                        <div>{{ item.productName }}</div>
+                      </div>
+                    </td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ formatCurrency(item.price) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           <!-- DANH SÁCH SẢN PHẨM -->
           <div class="product-list">
             <div
@@ -139,140 +173,28 @@
               Đã nhận hàng
             </button>
 
-            <button
-              v-if="order.statusName === 'COMPLETED'"
-              class="btn btn-dark ms-2"
-              @click="openReviewModal(order.items[0].id)"
-            >
-              Đánh giá
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL ĐÁNH GIÁ -->
-    <div v-if="reviewModal" class="modal-backdrop">
-      <div
-        class="modal-content p-4 rounded-4 shadow-lg bg-white position-relative"
-      >
-        <button
-          class="btn-close position-absolute top-0 end-0 m-3"
-          @click="closeReviewModal"
-        ></button>
-
-        <h4 class="fw-bold mb-3 text-center">Đánh giá sản phẩm</h4>
-
-        <!-- Chọn sao -->
-        <div class="mb-3 text-center">
-          <span
-            v-for="n in 5"
-            :key="n"
-            @click="reviewForm.star = n"
-            class="fs-3 mx-1"
-            :class="n <= reviewForm.star ? 'text-warning' : 'text-secondary'"
-            style="cursor: pointer"
-            >★</span
-          >
-          <div class="small text-muted mt-1">Chọn số sao (1-5)</div>
-        </div>
-
-        <!-- Nhập mô tả -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">Cảm nhận của bạn:</label>
-          <textarea
-            v-model="reviewForm.description"
-            rows="3"
-            class="form-control"
-            placeholder="Viết cảm nhận của bạn..."
-          ></textarea>
-        </div>
-
-        <!-- Upload ảnh -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold"
-            >Ảnh minh họa (tối đa 3 ảnh)</label
-          >
-          <div class="d-flex flex-wrap gap-2 mt-2">
-            <div
-              v-for="(img, i) in reviewForm.images"
-              :key="i"
-              class="image-upload border rounded-3 position-relative bg-light border-dark-subtle"
-              style="
-                width: 80px;
-                height: 80px;
-                cursor: pointer;
-                overflow: hidden;
-              "
-            >
-              <img
-                :src="img.path"
-                alt="Ảnh review"
-                class="position-absolute top-0 start-0 w-100 h-100"
-                style="object-fit: cover; object-position: center"
-              />
-              <button
-                type="button"
-                class="btn btn-sm btn-danger position-absolute"
-                style="top: 2px; right: 2px; padding: 0 4px"
-                @click="removeImage(i)"
+              <span
+                v-if="['COMPLETED', 'CANCELLED', 'PROCESSING'].includes(order.statusName)"
+                class="text-muted fst-italic"
               >
-                ×
-              </button>
-            </div>
-
-            <div
-              v-if="reviewForm.images.length < 3"
-              class="image-upload border rounded-3 d-flex flex-column align-items-center justify-content-center bg-light border-dark-subtle text-muted"
-              style="width: 80px; height: 80px; cursor: pointer"
-              @click="openFilePicker"
-            >
-              <i class="bi bi-plus-circle fs-5"></i>
+                Không thể thao tác
+              </span>
             </div>
           </div>
-          <div v-if="isUploading" class="mt-2 small text-primary">
-            Đang tải ảnh lên...
-          </div>
-          <input
-            type="file"
-            class="d-none"
-            ref="fileInput"
-            accept="image/*"
-            multiple
-            @change="handleAutoUpload"
-          />
-        </div>
-
-        <div class="text-center mt-4">
-          <button class="btn btn-success px-4" @click="submitReview">
-            Gửi đánh giá
-          </button>
         </div>
       </div>
     </div>
-  </div>
-</template>
+  </template>
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 
-const orders = ref([]);
-const loading = ref(true);
-const expandedOrder = ref(null);
-const currentFilter = ref("ALL");
-
-// Modal đánh giá
-const reviewModal = ref(false);
-const reviewForm = ref({
-  star: 0,
-  description: "",
-  orderDetailId: null,
-  images: [],
-});
-const isUploading = ref(false);
-const fileInput = ref(null);
+  const orders = ref([]);
+  const loading = ref(true);
+  const expandedOrder = ref(null);
+  const currentFilter = ref("ALL");
 
 const filters = [
   { label: "Chờ xác nhận", value: "PENDING" },
@@ -282,6 +204,16 @@ const filters = [
   { label: "Đã hủy", value: "CANCELLED" },
 ];
 
+  // ✅ Tính số lượng từng trạng thái
+  const filtersWithCount = computed(() =>
+    filters.map(f => ({
+      ...f,
+      count:
+        f.value === "ALL"
+          ? orders.value.length
+          : orders.value.filter(o => o.statusName === f.value).length,
+    }))
+  );
 const filtersWithCount = computed(() =>
   filters.map((f) => ({
     ...f,
@@ -292,6 +224,10 @@ const filtersWithCount = computed(() =>
   }))
 );
 
+  const filteredOrders = computed(() => {
+    if (currentFilter.value === "ALL") return orders.value;
+    return orders.value.filter(o => o.statusName === currentFilter.value);
+  });
 const filteredOrders = computed(() =>
   currentFilter.value === "ALL"
     ? orders.value
@@ -347,20 +283,32 @@ function decodeJwtToken(token) {
   }
 }
 
-async function loadOrders() {
-  loading.value = true;
-  const token = localStorage.getItem("token");
-  if (!token) {
-    loading.value = false;
-    return;
-  }
-  const payload = decodeJwtToken(token);
-  const accountId = payload?.id;
-  if (!accountId) {
-    loading.value = false;
-    return;
-  }
+  async function loadOrders() {
+    loading.value = true;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      loading.value = false;
+      return;
+    }
+    const payload = decodeJwtToken(token);
+    const accountId = payload?.id;
+    if (!accountId) {
+      loading.value = false;
+      return;
+    }
 
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/order/account/${accountId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      orders.value = (response.data || []).map(o => ({ ...o, items: o.items || [] }));
+    } catch (err) {
+      console.error("Lỗi khi tải đơn hàng:", err);
+    } finally {
+      loading.value = false;
+    }
+  }
   try {
     const response = await axios.get(`/api/order/account/${accountId}`);
     orders.value = (response.data || [])
@@ -373,6 +321,24 @@ async function loadOrders() {
   }
 }
 
+  // ❌ Hủy đơn
+  async function cancelOrder(orderId) {
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `http://localhost:8080/api/order/${orderId}/status`,
+        { status: "CANCELLED" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const order = orders.value.find(o => o.id === orderId);
+      if (order) order.statusName = "CANCELLED";
+      alert("Đơn hàng đã được hủy thành công!");
+    } catch (err) {
+      console.error("Lỗi khi hủy đơn:", err);
+      alert("Không thể hủy đơn hàng!");
+    }
+  }
 async function cancelOrder(orderId) {
   if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
   try {
@@ -386,6 +352,24 @@ async function cancelOrder(orderId) {
   }
 }
 
+  // ✅ Hoàn thành đơn
+  async function completeOrder(orderId) {
+    if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      await axios.put(
+        `http://localhost:8080/api/order/${orderId}/complete`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const order = orders.value.find(o => o.id === orderId);
+      if (order) order.statusName = "COMPLETED";
+      alert("Cảm ơn bạn! Đơn hàng đã hoàn tất.");
+    } catch (err) {
+      console.error("Lỗi khi cập nhật trạng thái:", err);
+      alert("Không thể cập nhật trạng thái!");
+    }
+  }
 async function completeOrder(orderId) {
   if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
   try {
@@ -456,8 +440,8 @@ async function submitReview() {
   }
 }
 
-onMounted(loadOrders);
-</script>
+  onMounted(loadOrders);
+  </script>
 
 <style scoped>
 /* giữ nguyên CSS cũ */
