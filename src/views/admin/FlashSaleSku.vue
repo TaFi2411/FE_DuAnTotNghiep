@@ -195,6 +195,7 @@ async function fetchFlashSaleSku() {
 }
 
 
+
 // ✅ Validate
 function validateDiscount() {
   if (skuForm.discount === "" || skuForm.discount === null) {

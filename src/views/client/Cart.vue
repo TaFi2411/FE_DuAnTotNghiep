@@ -11,40 +11,89 @@
       </div>
 
       <!-- Item -->
-      <div v-for="(item, index) in cartItems" :key="item.id"
-        class="cart-item d-grid align-items-center bg-white rounded-4 shadow-sm p-3 mb-3 border border-light">
+      <div
+        v-for="(item, index) in cartItems"
+        :key="item.id"
+        class="cart-item d-grid align-items-center bg-white rounded-4 shadow-sm p-3 mb-3 border border-light"
+      >
         <!-- Cột 1: Hình & Tên -->
         <div class="d-flex align-items-center gap-3">
           <input type="checkbox" v-model="item.selected" class="form-check-input me-2" />
-          <img :src="item.image || defaultImage" alt="" class="cart-item-image  " />
+          <img :src="item.image || defaultImage" alt="" class="cart-item-image" />
           <div>
             <h6 class="fw-bold text-dark mb-1">{{ item.productName }}</h6>
-            <div v-if="
-              Array.isArray(item.skuAttributes) &&
-              item.skuAttributes.length > 0
-            " class="text-muted small">
+            <div
+              v-if="Array.isArray(item.skuAttributes) && item.skuAttributes.length > 0"
+              class="text-muted small"
+            >
               <div v-for="attr in item.skuAttributes" :key="attr.id">
                 <strong>{{ attr.optionAttributeName }}:</strong>
                 {{ attr.valueAttributeName }}
               </div>
             </div>
-            <p class="text-muted small mt-1">Kho còn: {{ item.stock }}</p>
+
+            <!-- 🔹 Hiển thị số lượng trong kho & Flash Sale -->
+            <div class="mt-2">
+              <p class="text-muted small mb-1">
+                🏢 <strong>Số lượng trong kho:</strong>
+                {{ item.normalStock ?? 0 }}
+              </p>
+              <p v-if="item.flashSaleStock !== null" class="text-danger small mb-0">
+                ⚡ <strong>Số lượng Flash Sale còn:</strong>
+                {{ item.flashSaleStock }}
+              </p>
+            </div>
           </div>
         </div>
 
         <!-- Cột 2: Giá -->
         <div class="text-center fw-semibold text-dark">
-          {{ (item.price || 0).toLocaleString("vi-VN") }} ₫
+          <!-- Nếu sản phẩm có Flash Sale -->
+          <div v-if="item.flashSaleStock !== null">
+            <!-- Nếu số lượng vượt Flash Sale -->
+            <div v-if="item.normalCount > 0">
+              <!-- Giá gốc dòng trên -->
+              <p class="mb-1 text-dark fw-bold" style="font-size: 15px">
+                {{ item.originalPrice.toLocaleString("vi-VN") }} ₫
+              </p>
+              <!-- Giá Sale dòng dưới -->
+              <p class="mb-0 text-danger" style="font-size: 13px">
+                {{ (item.flashSalePrice ?? item.price).toLocaleString("vi-VN") }} ₫
+                <span class="text-muted">(Flash Sale)</span>
+              </p>
+            </div>
+
+            <!-- Chỉ hiển thị giá Sale -->
+            <div v-else>
+              <p class="mb-0 text-danger" style="font-size: 13px">
+                {{ (item.flashSalePrice ?? item.price).toLocaleString("vi-VN") }} ₫
+                <span class="text-muted">(Flash Sale)</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Nếu sản phẩm không có Flash Sale -->
+          <div v-else>
+            <p class="mb-0 text-dark fw-bold" style="font-size: 15px">
+              {{ item.price.toLocaleString("vi-VN") }} ₫
+            </p>
+          </div>
         </div>
 
         <!-- Cột 3: Số lượng -->
         <div class="text-center">
           <div class="d-flex justify-content-center align-items-center gap-2">
-            <button class="btn btn-outline-dark btn-sm rounded-3" @click="updateQuantity(item, item.quantity - 1)">
+            <button
+              class="btn btn-outline-dark btn-sm rounded-3"
+              @click="updateQuantity(item, item.quantity - 1)"
+            >
               −
             </button>
             <span class="fw-bold">{{ item.quantity }}</span>
-            <button class="btn btn-outline-dark btn-sm rounded-3" @click="updateQuantity(item, item.quantity + 1)">
+            <button
+              class="btn btn-outline-dark btn-sm rounded-3"
+              @click="updateQuantity(item, item.quantity + 1)"
+            >
               +
             </button>
           </div>
@@ -54,7 +103,10 @@
         <div class="text-end">
           <p class="fw-bold text-dark mb-2">
             {{
-              ((item.price || 0) * (item.quantity || 1)).toLocaleString("vi-VN")
+              (
+                item.saleCount * (item.flashSalePrice ?? item.price) +
+                item.normalCount * item.originalPrice
+              ).toLocaleString("vi-VN")
             }}
             ₫
           </p>
@@ -65,13 +117,18 @@
       </div>
 
       <!-- Tổng cộng -->
-      <div class="cart-summary mt-5 bg-white shadow-sm rounded-4 p-4 text-end border border-light">
+      <div
+        class="cart-summary mt-5 bg-white shadow-sm rounded-4 p-4 text-end border border-light"
+      >
         <h4 class="fw-bold text-dark mb-3">
           Tổng cộng:
           <span class="text-dark">{{ selectedTotal.toLocaleString("vi-VN") }} ₫</span>
         </h4>
-        <button class="btn btn-dark px-4 py-2 rounded-3 fw-semibold" :disabled="selectedItems.length === 0"
-          @click="goToCheckout">
+        <button
+          class="btn btn-dark px-4 py-2 rounded-3 fw-semibold"
+          :disabled="selectedItems.length === 0"
+          @click="goToCheckout"
+        >
           Thanh toán ({{ selectedItems.length }})
         </button>
       </div>
@@ -80,9 +137,7 @@
     <!-- Giỏ hàng trống -->
     <div v-else class="empty-cart text-center py-5">
       <h3 class="fw-bold text-dark mb-3">Giỏ hàng trống</h3>
-      <p class="text-muted fs-5 mb-4">
-        Hiện bạn chưa có sản phẩm nào trong giỏ hàng.
-      </p>
+      <p class="text-muted fs-5 mb-4">Hiện bạn chưa có sản phẩm nào trong giỏ hàng.</p>
       <router-link to="/" class="btn btn-outline-dark rounded-3 px-4 py-2 fw-semibold">
         Tiếp tục mua sắm
       </router-link>
@@ -129,14 +184,14 @@ async function loadFlashSales() {
     ]);
 
     const now = new Date();
-
-    // đảm bảo là mảng
     const fsData = fsRes.data?.content || fsRes.data?.data || fsRes.data || [];
     const fssData = fssRes.data?.content || fssRes.data?.data || fssRes.data || [];
 
-    flashSales.value = fsData.filter(f => f.active &&
-      new Date(f.started_date ?? f.startedDate) <= now &&
-      new Date(f.ended_date ?? f.endedDate) >= now
+    flashSales.value = fsData.filter(
+      (f) =>
+        f.active &&
+        new Date(f.started_date ?? f.startedDate) <= now &&
+        new Date(f.ended_date ?? f.endedDate) >= now
     );
 
     flashSaleSkus.value = fssData;
@@ -151,33 +206,43 @@ const loadCart = async () => {
     const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
     const data = res.data || [];
 
-    cartItems.value = data.map(item => {
+    cartItems.value = data.map((item) => {
       const skuId = item.skuId;
-      const flashSku = flashSaleSkus.value.find(f =>
-        (f.sku_id === skuId || f.skuId === skuId) &&
-        flashSales.value.some(fs => fs.id === (f.flash_sale_id ?? f.flashSaleId))
+
+      const flashSku = flashSaleSkus.value.find(
+        (f) =>
+          (f.sku_id === skuId || f.skuId === skuId) &&
+          flashSales.value.some((fs) => fs.id === (f.flash_sale_id ?? f.flashSaleId))
       );
 
       const discountedPrice = flashSku
         ? Math.round(item.price * (1 - (flashSku.discount ?? 0) / 100))
         : item.price;
 
-      const stock = flashSku
-        ? Math.max((flashSku.quantity ?? 0), 0)
-        : item.skuQuantity;
+      const normalStock = item.skuQuantity ?? 0;
+      const flashSaleStock = flashSku ? flashSku.quantity ?? 0 : null;
+
+      // --- Tính sẵn saleCount & normalCount khi load ---
+      const quantity = item.quantity;
+      const saleCount = Math.min(quantity, flashSaleStock ?? 0);
+      const normalCount = Math.max(0, quantity - saleCount);
 
       return {
         id: item.id,
         productName: item.skuName || "Sản phẩm",
-        price: discountedPrice,          // giá hiển thị (flash sale)
-        originalPrice: item.price,       // giá gốc
-        quantity: item.quantity,
-        stock,
+        price: discountedPrice,
+        flashSalePrice: discountedPrice,
+        originalPrice: item.price,
+        quantity,
+        normalStock,
+        flashSaleStock,
         image: item.skuImage || defaultImage,
         skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
         selected: false,
-        skuId: skuId,
+        skuId,
         flashSaleSkuId: flashSku?.id ?? null,
+        saleCount,
+        normalCount,
       };
     });
   } catch (err) {
@@ -195,27 +260,45 @@ const updateQuantity = async (item, newQty) => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Có, xoá!",
-      cancelButtonText: "Huỷ"
+      cancelButtonText: "Huỷ",
     });
     if (!result.isConfirmed) return;
     await removeItem(item);
     return;
   }
 
-  if (newQty > item.stock) {
-    Swal.fire("Thông báo", "Số lượng đã đạt giới hạn trong kho", "info");
-    return;
+  // Nếu vượt quá Flash Sale
+  if (item.flashSaleStock) {
+    if (newQty > item.flashSaleStock && !item.flashSaleAlerted) {
+      Swal.fire({
+        icon: "info",
+        title: "Vượt số lượng khuyến mãi",
+        text: `Chỉ ${item.flashSaleStock} sản phẩm được áp dụng giá Flash Sale. Hết số lượng sale sẽ tính giá gốc.`,
+        confirmButtonText: "Đã hiểu",
+      });
+      item.flashSaleAlerted = true; // đánh dấu đã thông báo
+    } else if (newQty <= item.flashSaleStock) {
+      item.flashSaleAlerted = false; // reset nếu giảm số lượng về <= flashSaleStock
+    }
   }
 
+  // Giới hạn theo kho
+  if (newQty > item.normalStock) {
+    Swal.fire("Thông báo", "Số lượng đã vượt quá số lượng trong kho", "info");
+    newQty = item.normalStock;
+  }
+
+  // Cập nhật
+  item.quantity = newQty;
+  item.saleCount = Math.min(newQty, item.flashSaleStock ?? 0);
+  item.normalCount = Math.max(0, newQty - item.saleCount);
+
   try {
-    // Chỉ cập nhật cart details thôi
     await axios.put(`/api/cart-details/${item.id}/quantity`, {
       accountId: accountId.value,
       skuId: item.skuId,
       quantity: newQty,
     });
-
-    await loadCart();
   } catch (err) {
     console.error(err);
     Swal.fire("Lỗi", "Không thể cập nhật số lượng sản phẩm", "error");
@@ -236,7 +319,7 @@ const removeItem = async (item) => {
 
   try {
     await axios.delete(`/api/cart-details/${item.id}`);
-    cartItems.value = cartItems.value.filter(i => i.id !== item.id);
+    cartItems.value = cartItems.value.filter((i) => i.id !== item.id);
     Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng", "success");
   } catch (err) {
     console.error(err);
@@ -245,9 +328,13 @@ const removeItem = async (item) => {
 };
 
 // --- Computed ---
-const selectedItems = computed(() => cartItems.value.filter(i => i.selected));
+const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
 const selectedTotal = computed(() =>
-  selectedItems.value.reduce((sum, i) => sum + (i.price || 0) * (i.quantity || 1), 0)
+  selectedItems.value.reduce(
+    (sum, i) =>
+      sum + i.saleCount * (i.flashSalePrice ?? i.price) + i.normalCount * i.originalPrice,
+    0
+  )
 );
 
 // --- Thanh toán ---
@@ -276,8 +363,6 @@ onMounted(async () => {
 });
 </script>
 
-
-
 <style scoped>
 .cart-header {
   display: grid;
@@ -304,7 +389,6 @@ onMounted(async () => {
   width: 90px;
   height: 100px;
   object-fit: cover;
-  
 }
 
 .cart-summary {

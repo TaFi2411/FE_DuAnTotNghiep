@@ -47,7 +47,6 @@ import ProductAdd from "@/views/admin/products/ProductAdd.vue";
 import ProductUpdate from "@/views/admin/products/ProductUpdate.vue";
 import ProductList from "@/views/admin/products/ProductList.vue";
 import Attribute from "@/views/admin/products/Attribute.vue";
-import FlashSaleUserActive from "@/components/FlashSaleUserActive.vue";
 import FlashSaleUser from "@/components/FlashSaleUser.vue";
 import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
 import OrderManagement from "@/views/admin/OrderManagement.vue";
@@ -63,15 +62,11 @@ const clientRouter = [
     component: Home,
   },
   {
-    path: 'flash-sale-user-active',
-    name: 'FlashSaleUserActive',
-    component: FlashSaleUserActive
-  },
-    {
     path: 'flash-sale-user',
     name: 'FlashSaleUser',
     component: FlashSaleUser
   },
+  
   {
   path: '/orders',
   name: 'orders',
