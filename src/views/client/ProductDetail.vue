@@ -3,24 +3,26 @@
     <div class="row align-items-start g-5">
       <!-- 🔹 Ảnh sản phẩm -->
       <div class="col-lg-6 col-md-12 text-center">
-        <div class="main-image-wrapper p-4 bg-white rounded-4 shadow-sm">
-          <img
-            :src="currentImage || '/images/crs-ip17-air.png'"
-            alt="Ảnh sản phẩm"
-            class="img-fluid rounded-3 main-image"
-          />
+        <div class="main-image-wrapper position-relative bg-white rounded-4 shadow-lg p-4">
+          <img :src="currentImage || '/images/default-product.png'" alt="Ảnh sản phẩm"
+            class="img-fluid rounded-3 main-image" />
         </div>
 
-        <!-- thumbnail -->
-        <div class="thumbs d-flex justify-content-center gap-3 mt-3 flex-wrap">
-          <img
-            v-for="(thumb, i) in thumbnails"
-            :key="i"
-            :src="thumb"
-            class="thumb"
-            :class="{ active: thumb === currentImage }"
-            @click="currentImage = thumb"
-          />
+        <!-- 🔸 Thumbnail -->
+        <!-- Nếu có hơn 6 ảnh thì hiển thị bằng Swiper -->
+        <div v-if="getAllImages().length > 6" class="thumbs mt-4">
+          <Swiper :modules="[Navigation]" :slides-per-view="6" :space-between="10" navigation class="thumb-swiper">
+            <SwiperSlide v-for="(img, idx) in getAllImages()" :key="idx">
+              <img :src="img" class="thumb" :class="{ active: img === currentImage }" @click="currentImage = img"
+                alt="thumb" />
+            </SwiperSlide>
+          </Swiper>
+        </div>
+
+        <!-- Nếu có 6 ảnh trở xuống thì hiển thị dạng lưới -->
+        <div v-else class="thumbs d-flex justify-content-center gap-3 mt-4 flex-wrap">
+          <img v-for="(img, idx) in getAllImages()" :key="idx" :src="img" class="thumb"
+            :class="{ active: img === currentImage }" @click="currentImage = img" alt="thumb" />
         </div>
       </div>
 
@@ -33,14 +35,9 @@
             {{ displayPrice.toLocaleString("vi-VN") }} VNĐ
           </p>
 
-          <!-- CHỌN THUỘC TÍNH -->
-          <div
-            v-for="(attrGroup, index) in attributes"
-            :key="index"
-            class="attribute-group mb-3"
-          >
-            <h6 class="fw-semibold mb-2">{{ attrGroup.name }}</h6>
-
+          <!-- Thuộc tính -->
+          <div v-for="(attrGroup, index) in attributes" :key="index" class="attribute-group mb-3">
+            <h6 class="fw-semibold mb-2 text-black">{{ attrGroup.name }}</h6>
             <div class="options">
               <span v-for="option in getVisibleOptions(attrGroup)" :key="option.name" class="option" :class="{
                 active: selectedAttributes[attrGroup.name] === option.name,
@@ -54,9 +51,9 @@
             </div>
           </div>
 
-          <!-- CHỌN SỐ LƯỢNG -->
-          <div class="quantity-selector" v-if="selectedSku">
-            <label class="quantity-label">Số lượng:</label>
+          <!-- Số lượng -->
+          <div class="quantity-selector mt-4" v-if="selectedSku">
+            <label class="quantity-label text-black">Số lượng:</label>
             <div class="quantity-controls">
               <button class="btn-qty" @click="decreaseQuantity" :disabled="quantity <= 1">
                 <i class="bi bi-dash"></i>
@@ -151,11 +148,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch, nextTick } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "@/composables/axios.js";
-
+import axios from "axios";
 import Swal from "sweetalert2";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 
 const route = useRoute();
 const router = useRouter();
@@ -165,9 +165,6 @@ const attributes = ref([]);
 const selectedAttributes = ref({});
 const selectedSku = ref(null);
 const currentImage = ref("");
-const thumbnails = ref([]);
-const products = ref([]);
-const reviews = ref([]);
 const quantity = ref(1);
 const accountId = ref(null);
 const relatedProducts = ref([]);
@@ -205,13 +202,9 @@ const loadProductDetail = async () => {
     );
     product.value = res.data;
     currentImage.value = product.value.image;
-    thumbnails.value = [product.value.image];
-    // Thuộc tính
+
+    // Nhóm thuộc tính (giữ nguyên)
     const attrMap = {};
-    product.value.skus?.forEach((sku) => {
-      sku.skuAttributes?.forEach((attr) => {
-        if (!attrMap[attr.optionAttributeName])
-          attrMap[attr.optionAttributeName] = new Set();
     product.value.skus?.forEach((sku) => {
       sku.skuAttributes?.forEach((attr) => {
         if (!attrMap[attr.optionAttributeName])
@@ -219,6 +212,7 @@ const loadProductDetail = async () => {
         attrMap[attr.optionAttributeName].add(attr.valueAttributeName);
       });
     });
+
     attributes.value = Object.entries(attrMap).map(([name, values]) => ({
       name,
       values: Array.from(values),
@@ -262,15 +256,13 @@ const selectAttribute = async (name, value) => {
   updateSelectedSku();
 };
 
+// 🟢 Xác định SKU được chọn (giữ nguyên)
 const updateSelectedSku = () => {
   const keys = Object.keys(selectedAttributes.value);
   selectedSku.value =
     product.value.skus?.find((sku) =>
       keys.every((key) =>
-    product.value.skus?.find((sku) =>
-      keys.every((key) =>
         sku.skuAttributes.find(
-          (a) =>
           (a) =>
             a.optionAttributeName === key &&
             a.valueAttributeName === selectedAttributes.value[key]
@@ -287,82 +279,29 @@ const updateSelectedSku = () => {
   }
 };
 
+// 🟢 Ảnh hiển thị (giữ nguyên)
+const getAllImages = () => {
+  const images = new Set();
+  if (selectedSku.value && selectedSku.value.skuImages?.length > 0) {
+    selectedSku.value.skuImages.forEach((img) => images.add(img.path));
+    return Array.from(images);
+  }
+  if (product.value.image) images.add(product.value.image);
+  return Array.from(images);
+};
+
+// 🟢 Giá hiển thị (giữ nguyên)
 const displayPrice = computed(() => {
   if (selectedSku.value?.price) return selectedSku.value.price;
   if (product.value.price) return product.value.price;
   return product.value.skus?.[0]?.price || 0;
 });
 
+// 🟢 Còn hàng (giữ nguyên)
 const hasStock = computed(() => selectedSku.value?.quantity > 0);
 
-const addToCart = () => {
-  const requiredAttrs = attributes.value.map((a) => a.name);
-  const isComplete = requiredAttrs.every(
-    (attr) => selectedAttributes.value[attr]
-  );
-  if (!isComplete) {
-    return Swal.fire("Thiếu thuộc tính!", "Vui lòng chọn đầy đủ.", "warning");
-  }
-
-  const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-  const skuId = selectedSku.value?.id || product.value.id;
-  const existingItem = cart.find((item) => item.skuId === skuId);
-
-  if (existingItem) {
-    existingItem.quantity = Math.min(
-      existingItem.quantity + quantity.value,
-      selectedSku.value.quantity
-    );
-  } else {
-    cart.push({
-      skuId,
-      name: product.value.name,
-      price: displayPrice.value,
-      image: currentImage.value,
-      quantity: quantity.value,
-      stock: selectedSku.value?.quantity || 0,
-      attributes: { ...selectedAttributes.value },
-    });
-  }
-  localStorage.setItem("cart", JSON.stringify(cart));
-  Swal.fire("Đã thêm!", "Sản phẩm đã được thêm vào giỏ hàng.", "success");
-};
-
-const buyNow = () => {
-  const requiredAttrs = attributes.value.map((a) => a.name);
-  const isComplete = requiredAttrs.every(
-    (attr) => selectedAttributes.value[attr]
-  );
-  if (!isComplete) {
-    return Swal.fire("Thiếu thuộc tính!", "Vui lòng chọn đầy đủ.", "warning");
-  }
-  const order = [
-    {
-      skuId: selectedSku.value.id,
-      name: product.value.name,
-      price: displayPrice.value,
-      image: currentImage.value,
-      quantity: quantity.value,
-      attributes: selectedAttributes.value,
-    },
-  ];
-  localStorage.setItem("checkout", JSON.stringify(order));
-  router.push("/thanh-toan");
-};
-
-const getPrice = (p) => {
-  if (!p.skus || p.skus.length === 0) return null;
-  const skuWithPrice = p.skus.find((sku) => sku.price > 0);
-  return skuWithPrice ? skuWithPrice.price : null;
-};
-
-const visibleProducts = computed(() =>
-  products.value.slice(0, visibleCount.value)
-);
-const loadMore = () => (visibleCount.value += 10);
+// 🟢 Số lượng (giữ nguyên)
 const increaseQuantity = () => {
-  if (selectedSku.value && quantity.value < selectedSku.value.quantity)
-    quantity.value++;
   if (selectedSku.value && quantity.value < selectedSku.value.quantity)
     quantity.value++;
 };
@@ -370,11 +309,12 @@ const decreaseQuantity = () => {
   if (quantity.value > 1) quantity.value--;
 };
 
+// 🟢 Hiển thị option khả dụng (giữ nguyên)
 const getVisibleOptions = (attrGroup) => {
   const selected = { ...selectedAttributes.value };
   delete selected[attrGroup.name];
 
-  let filteredSkus = product.value.skus.filter((sku) =>
+  const filteredSkus = product.value.skus.filter((sku) =>
     Object.entries(selected).every(([k, v]) =>
       sku.skuAttributes.some(
         (a) => a.optionAttributeName === k && a.valueAttributeName === v
@@ -415,6 +355,7 @@ const addToCart = async () => {
     router.push("/auth/login");
     return;
   }
+
   try {
     const res = await axios.post("http://localhost:8080/api/cart-details", {
       accountId: accountId.value,
@@ -474,12 +415,9 @@ onMounted(() => {
     accountId.value = payload?.id || null;
     console.log("🧩 Account ID:", accountId.value);
   }
-};
-
+  loadProductDetail();
+});
 </script>
-
-
-
 
 <style scoped>
 .policy-premium-row {

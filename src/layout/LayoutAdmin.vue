@@ -38,8 +38,8 @@ const menu = [
   { name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-ticket-detailed' },
   { name: 'FlashSale', path: '/admin/flash-sale-admin', icon: 'bi bi-lightning-charge-fill' },
   { name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
-  { name: 'Người dùng', path: '/admin/users', icon: 'bi bi-people' },
-    { name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-people' },
+  { name: 'Người dùng', path: '/admin/account-management', icon: 'bi bi-people' },
+  { name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-people' },
 ]
 </script>
 

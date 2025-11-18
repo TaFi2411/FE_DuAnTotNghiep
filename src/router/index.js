@@ -30,7 +30,7 @@ import PaymentResult from "@/views/client/PaymentResult.vue";
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
 import AccountManagement from "@/views/admin/AccountManagement.vue";
-import Auth from '@/views/admin/Auth.vue';
+
 import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
 import ReviewList from '@/views/admin/ReviewList.vue';
@@ -54,7 +54,7 @@ import OrderManagement from "@/views/admin/OrderManagement.vue";
 import FlashSaleAdmin from "@/views/admin/FlashSaleAdmin.vue";
 import FlashSaleSku from "@/views/admin/FlashSaleSku.vue";
 import statistical from "@/views/admin/statistical.vue";
-// --- Định nghĩa các route con ---
+
 // --- CLIENT ROUTER --- //
 const clientRouter = [
   {
@@ -207,11 +207,7 @@ const adminRouter = [
     name: "AccountManagement",
     component: AccountManagement,
   },
-  {
-    path: "auth",
-    name: "AuthAdmin",
-    component: Auth,
-  },
+
    {
   path: '/admin/orders',
   name: 'orderss',
