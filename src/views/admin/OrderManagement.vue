@@ -56,8 +56,8 @@
         <div v-if="expandedOrder === order.id" class="card-body fade-in">
           <div class="mb-3">
             <p><strong>Khách hàng:</strong> {{ order.accountName || 'N/A' }}</p>
-             <p><strong>Số điện thoại:</strong> {{ order.NumberFormat }}</p>
-            <p><strong>Địa chỉ giao hàng:</strong> {{ order.addressName }}</p>
+                 <p><strong>Địa chỉ giao hàng:</strong> {{ order.shipping_address }}</p>
+           <p><strong>Số điện thoại:</strong> {{ order.shippingPhone }}</p>
             <p><strong>Phương thức thanh toán:</strong> {{ order.paymentMethodName }}</p>
             <p>
               <strong>Trạng thái thanh toán:</strong>
@@ -113,6 +113,14 @@
             >
               🚚 Chuyển sang đang giao hàng
             </button>
+<!-- Nút quản lý đánh dấu đã giao -->
+<button
+  v-if="order.statusName === 'SHIPPING'"
+  class="btn btn-sm btn-outline-secondary me-2"
+  @click="markDelivered(order.id)"
+>
+  ✅ Đã giao
+</button>
 
             <!-- <button
               class="btn btn-sm btn-outline-danger"
@@ -169,17 +177,21 @@ const statusList = [
   { key: "pending", label: "Chờ xác nhận" },
   { key: "processing", label: "Đang xử lý" },
   { key: "shipping", label: "Đang giao hàng" },
+  { key: "delivered", label: "Đã giao" },
   { key: "completed", label: "Hoàn thành" },
   { key: "cancelled", label: "Đã hủy" },
 ];
+
 
 const statusIdMap = {
   pending: 1,
   processing: 2,
   shipping: 3,
+  delivered: 6,   
   completed: 4,
   cancelled: 5,
 };
+
 
 function selectStatus(status) {
   selectedStatus.value = status;
@@ -195,6 +207,7 @@ function getStatusClass(status) {
     case "PENDING": return "bg-warning text-dark";
     case "PROCESSING": return "bg-info text-dark";
     case "SHIPPING": return "bg-primary text-white";
+    case "DELIVERED": return "bg-secondary text-white"; // ✅ màu cho đã giao
     case "COMPLETED": return "bg-success";
     case "CANCELLED": return "bg-danger";
     default: return "bg-secondary";
@@ -206,11 +219,14 @@ function getStatusText(status) {
     case "PENDING": return "Chờ xác nhận";
     case "PROCESSING": return "Đang xử lý";
     case "SHIPPING": return "Đang giao hàng";
+    case "DELIVERED": return "Đã giao"; // ✅ hiển thị text
     case "COMPLETED": return "Hoàn thành";
     case "CANCELLED": return "Đã hủy";
     default: return status;
   }
 }
+
+
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
@@ -222,6 +238,8 @@ function formatDate(dateStr) {
 
 async function loadOrders(page = 0) {
   loading.value = true;
+  console.log("📦 Orders loaded:", orders.value);
+
   const token = localStorage.getItem("token");
   try {
     let url = `http://localhost:8080/api/order/admin/all?page=${page}&size=10`;
@@ -233,8 +251,11 @@ async function loadOrders(page = 0) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    orders.value = response.data.data || response.data.content || [];
-    totalPages.value = response.data.totalPages || 1;
+ // Lấy danh sách đơn
+    let data = response.data.data || response.data.content || [];
+
+    // Sắp xếp theo ngày tạo, mới nhất lên đầu
+    orders.value = data.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));    totalPages.value = response.data.totalPages || 1;
     currentPage.value = response.data.currentPage || page;
     console.log(response.data);
 
@@ -277,15 +298,37 @@ async function processOrder(orderId) {
 }
 
 async function shippingOrder(orderId) {
+ console.log("🚚 FE CALL shippingOrder(orderId) =", orderId);
+
   if (!confirm("Chuyển đơn sang trạng thái Đang giao hàng?")) return;
   const token = localStorage.getItem("token");
+  
+
   try {
     await axios.put(
+      
       `http://localhost:8080/api/order/${orderId}/shipping`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
     alert("Đơn hàng đã chuyển sang đang giao hàng!");
+    loadOrders(currentPage.value);
+    loadOrderCounts();
+  } catch (err) {
+    console.error(err);
+    alert("Lỗi khi cập nhật trạng thái!");
+  }
+}
+async function markDelivered(orderId) {
+  if (!confirm("Xác nhận đơn hàng đã giao xong?")) return;
+  const token = localStorage.getItem("token");
+  try {
+    await axios.put(
+      `http://localhost:8080/api/order/${orderId}/delivered`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    alert("Đơn hàng đã được đánh dấu là đã giao!");
     loadOrders(currentPage.value);
     loadOrderCounts();
   } catch (err) {

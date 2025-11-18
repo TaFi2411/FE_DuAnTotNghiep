@@ -118,7 +118,8 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
+import axios from "@/composables/axios.js";
+
 import Swal from "sweetalert2";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation } from "swiper/modules";
@@ -158,6 +159,7 @@ function decodeJwtToken(token) {
 const loadProductDetail = async () => {
   try {
     const res = await axios.get(`http://localhost:8080/api/product/${route.params.id}`);
+    console.log("🔍 API trả về:", res.data);
     product.value = res.data;
     currentImage.value = product.value.image;
 
