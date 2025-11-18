@@ -83,10 +83,18 @@
                 </div>
               </div>
 
-              <div class="text-muted small">
-                {{ (Number(item.price) || 0).toLocaleString("vi-VN") }} VNĐ ×
-                {{ item.quantity }}
+              <div class="order-price-details mt-1">
+                <div v-if="item.saleCount > 0" class="text-danger small">
+                  {{ (item.flashSalePrice ?? item.price).toLocaleString("vi-VN") }} ₫ × {{ item.saleCount }}
+                  <span class="text-muted">(Flash Sale)</span>
+                </div>
+
+                <div v-if="item.normalCount > 0" class="text-dark small">
+                  {{ item.originalPrice.toLocaleString("vi-VN") }} ₫ × {{ item.normalCount }}
+                  <span class="text-muted">(Giá gốc)</span>
+                </div>
               </div>
+
             </div>
           </div>
           <div class="fw-semibold">
@@ -108,6 +116,7 @@
             VNĐ</strong
           >
         </div>
+
 
         <!-- Voucher -->
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -374,6 +383,9 @@
                   {{
                     (Number(v.usage_condition) || 0).toLocaleString("vi-VN")
                   }}
+                  {{
+                    (Number(v.usage_condition) || 0).toLocaleString("vi-VN")
+                  }}
                   ₫
                 </div>
                 <hr />
@@ -398,9 +410,11 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 
+// --- Refs ---
 // --- Refs ---
 const showAddressModal = ref(false);
 const provinces = ref([]);
@@ -427,7 +441,12 @@ const showSelectAddressModal = ref(false);
 
 const paymentMethods = ref([]);
 const selectedPaymentMethod = ref(null);
+const showSelectAddressModal = ref(false);
 
+const paymentMethods = ref([]);
+const selectedPaymentMethod = ref(null);
+
+// --- Helpers ---
 // --- Helpers ---
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
@@ -453,16 +472,22 @@ const totalPayment = computed(() => {
     (totalProductPrice.value || 0) +
     (Number(shippingFee.value) || 0) -
     (Number(discountAmount.value) || 0)
+    (totalProductPrice.value || 0) +
+    (Number(shippingFee.value) || 0) -
+    (Number(discountAmount.value) || 0)
   );
 });
+
 
 const fetchPaymentMethods = async () => {
   try {
     const res = await axios.get("/api/payment-method");
     paymentMethods.value = res.data?.data || [];
+    paymentMethods.value = res.data?.data || [];
     if (paymentMethods.value.length)
       selectedPaymentMethod.value = paymentMethods.value[0].id;
   } catch (err) {
+    console.error("fetchPaymentMethods error", err);
     console.error("fetchPaymentMethods error", err);
   }
 };
@@ -506,6 +531,7 @@ const applyVoucher = (v) => {
 
   selectedVoucher.value = v;
   const discount = v?.type
+  const discount = v?.type
     ? (totalProductPrice.value * (Number(v.discount) || 0)) / 100
     : Number(v.discount) || 0;
   discountAmount.value = Math.min(
@@ -515,6 +541,7 @@ const applyVoucher = (v) => {
   showVoucherModal.value = false;
 };
 
+// --- Address APIs ---
 // --- Address APIs ---
 const closeSelectAddressModal = () => {
   showSelectAddressModal.value = false;
@@ -540,7 +567,14 @@ const fetchProvinces = async () => {
   } catch (err) {
     console.error("fetchProvinces", err);
   }
+  try {
+    const res = await axios.get("/api/ghn/provinces");
+    provinces.value = res.data || [];
+  } catch (err) {
+    console.error("fetchProvinces", err);
+  }
 };
+
 
 const fetchDistricts = async () => {
   if (!selectedProvince.value) return;
@@ -555,7 +589,19 @@ const fetchDistricts = async () => {
   } catch (err) {
     console.error("fetchDistricts", err);
   }
+  try {
+    const res = await axios.get(
+      `/api/ghn/districts?provinceId=${selectedProvince.value}`
+    );
+    districts.value = res.data || [];
+    wards.value = [];
+    selectedDistrict.value = "";
+    selectedWard.value = "";
+  } catch (err) {
+    console.error("fetchDistricts", err);
+  }
 };
+
 
 const fetchWards = async () => {
   if (!selectedDistrict.value) return;
@@ -568,7 +614,17 @@ const fetchWards = async () => {
   } catch (err) {
     console.error("fetchWards", err);
   }
+  try {
+    const res = await axios.get(
+      `/api/ghn/wards?districtId=${selectedDistrict.value}`
+    );
+    wards.value = res.data || [];
+    selectedWard.value = "";
+  } catch (err) {
+    console.error("fetchWards", err);
+  }
 };
+
 
 const fetchAddresses = async () => {
   if (!accountId.value) return;
@@ -578,7 +634,14 @@ const fetchAddresses = async () => {
   } catch (err) {
     console.error("fetchAddresses", err);
   }
+  try {
+    const res = await axios.get(`/api/address/account/${accountId.value}`);
+    addresses.value = (res.data || []).sort((a, b) => b.id - a.id);
+  } catch (err) {
+    console.error("fetchAddresses", err);
+  }
 };
+
 
 const selectAddress = (a) => {
   selectedAddress.value = a;
@@ -590,6 +653,7 @@ const closeModal = () => {
   selectedWard.value = "";
   specificAddress.value = "";
 };
+
 
 const saveAddress = async () => {
   if (
@@ -623,12 +687,14 @@ const saveAddress = async () => {
     });
     closeModal();
     await fetchAddresses();
+    await fetchAddresses();
   } catch (err) {
     console.error(err);
     alert("Không thể lưu địa chỉ.");
   }
 };
 
+// --- Shipping fee ---
 // --- Shipping fee ---
 const fetchShippingFee = async () => {
   if (!selectedAddress.value || !selectedAddress.value.district_id) {
@@ -655,7 +721,10 @@ watch(selectedAddress, (newVal) => {
 });
 
 // --- Payment flow ---
+// --- Payment flow ---
 const handlePayment = async () => {
+  const uniqueOrderId = "DH" + Date.now();
+
   const uniqueOrderId = "DH" + Date.now();
 
   if (!selectedAddress.value) {
@@ -673,6 +742,11 @@ const handlePayment = async () => {
       title: "Vui lòng chọn phương thức thanh toán!",
       confirmButtonText: "Đã hiểu",
     });
+    Swal.fire({
+      icon: "warning",
+      title: "Vui lòng chọn phương thức thanh toán!",
+      confirmButtonText: "Đã hiểu",
+    });
     return;
   }
   if (!shippingPhone.value) {
@@ -684,12 +758,23 @@ const handlePayment = async () => {
     });
     return;
   }
+    Swal.fire({
+      icon: "warning",
+      title: "Thiếu số điện thoại!",
+      text: "Vui lòng nhập số điện thoại người nhận trước khi thanh toán.",
+      confirmButtonText: "Đã hiểu",
+    });
+    return;
+  }
 
   const orderPayload = {
+    orderId: uniqueOrderId,
     orderId: uniqueOrderId,
     accountId: accountId.value,
     addressId: selectedAddress.value.id,
     paymentMethodId: selectedPaymentMethod.value,
+    feeship: Number(shippingFee.value) || 0,
+    total: Number(totalPayment.value) || 0,
     feeship: Number(shippingFee.value) || 0,
     total: Number(totalPayment.value) || 0,
     payment_status: false,
@@ -705,34 +790,52 @@ const handlePayment = async () => {
 
   console.log("Order Payload:", orderPayload);
 
+  console.log("Order Payload:", orderPayload);
+
   try {
+    // VNPAY
     // VNPAY
     if (selectedPaymentMethod.value === 1) {
       const res = await axios.post("/api/vnpay/create", {
         amount: orderPayload.total,
+        orderInfo: "Thanh toán đơn hàng qua VNPAY",
         orderInfo: "Thanh toán đơn hàng qua VNPAY",
       });
       if (res.data?.paymentUrl) {
         sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
         window.location.href = res.data.paymentUrl;
         return;
+        return;
       }
+    }
+
+    // MOMO
+    if (selectedPaymentMethod.value === 3) {
     }
 
     // MOMO
     if (selectedPaymentMethod.value === 3) {
       const res = await axios.post("/api/momo/create", {
         orderId: orderPayload.orderId,
+        orderId: orderPayload.orderId,
         amount: orderPayload.total,
         orderInfo: "Thanh toán đơn hàng qua MOMO",
+        orderInfo: "Thanh toán đơn hàng qua MOMO",
       });
+      if (res.data?.paymentUrl) {
       if (res.data?.paymentUrl) {
         sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
         window.location.href = res.data.paymentUrl;
         return;
       }
     }
+        window.location.href = res.data.paymentUrl;
+        return;
+      }
+    }
 
+    // COD
+    if (selectedPaymentMethod.value === 2) {
     // COD
     if (selectedPaymentMethod.value === 2) {
       const orderRes = await axios.post("/api/order", orderPayload);
@@ -741,8 +844,14 @@ const handlePayment = async () => {
       cartItems.value = [];
       window.location.href = "/orders";
       return;
+      return;
     }
 
+    Swal.fire({
+      icon: "error",
+      title: "Không thể khởi tạo thanh toán",
+      text: "Vui lòng thử lại sau.",
+    });
     Swal.fire({
       icon: "error",
       title: "Không thể khởi tạo thanh toán",
@@ -755,13 +864,23 @@ const handlePayment = async () => {
       title: "Có lỗi khi thanh toán!",
       text: "Vui lòng thử lại sau.",
     });
+    console.error("handlePayment error", err);
+    Swal.fire({
+      icon: "error",
+      title: "Có lỗi khi thanh toán!",
+      text: "Vui lòng thử lại sau.",
+    });
   }
 };
 
 // Handle callback from payment gateways
 const handlePaymentCallback = async () => {
+// Handle callback from payment gateways
+const handlePaymentCallback = async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
+  const momoResultCode = urlParams.get("resultCode");
+  const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
   const momoResultCode = urlParams.get("resultCode");
   const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
   const pendingOrder = sessionStorage.getItem("pendingOrder");
@@ -769,6 +888,15 @@ const handlePaymentCallback = async () => {
   if (pendingOrder && paymentSuccess) {
     try {
       const orderPayload = JSON.parse(pendingOrder);
+      const createdOrder = await axios.post("/api/order", orderPayload);
+      const orderId = createdOrder.data?.id || createdOrder.data;
+
+      // call vnpay-success endpoint if exists
+      try {
+        await axios.post(`/api/order/vnpay-success/${orderId}`);
+      } catch (e) {
+        console.warn("Could not call vnpay-success", e);
+      }
       const createdOrder = await axios.post("/api/order", orderPayload);
       const orderId = createdOrder.data?.id || createdOrder.data;
 
@@ -789,7 +917,18 @@ const handlePaymentCallback = async () => {
         title: "Thanh toán thành công!",
         text: "Đơn hàng của bạn đã được ghi nhận.",
       }).then(() => (window.location.href = "/orders"));
+      Swal.fire({
+        icon: "success",
+        title: "Thanh toán thành công!",
+        text: "Đơn hàng của bạn đã được ghi nhận.",
+      }).then(() => (window.location.href = "/orders"));
     } catch (err) {
+      console.error("Error creating order after payment", err);
+      Swal.fire({
+        icon: "error",
+        title: "Lỗi khi lưu đơn hàng",
+        text: "Vui lòng liên hệ quản trị viên.",
+      });
       console.error("Error creating order after payment", err);
       Swal.fire({
         icon: "error",
@@ -799,7 +938,30 @@ const handlePaymentCallback = async () => {
     }
   } else if (vnp_ResponseCode || momoResultCode) {
     // failed or canceled
+    // failed or canceled
     sessionStorage.removeItem("pendingOrder");
+    Swal.fire({
+      icon: "error",
+      title: "Thanh toán thất bại hoặc đã bị hủy!",
+    }).then(() => (window.location.href = "/cart"));
+  }
+
+  // Clean query params
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.origin + window.location.pathname
+  );
+};
+
+onMounted(async () => {
+  fetchCartFromSessionStorage();
+  fetchAccountId();
+  await fetchProvinces();
+  await fetchAddresses();
+  await fetchPaymentMethods();
+  await fetchVouchers();
+  await handlePaymentCallback();
     Swal.fire({
       icon: "error",
       title: "Thanh toán thất bại hoặc đã bị hủy!",
