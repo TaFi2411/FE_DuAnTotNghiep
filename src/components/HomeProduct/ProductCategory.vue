@@ -63,9 +63,7 @@
 
               <!-- Nút hành động -->
               <div class="d-flex justify-content-center gap-2 mt-2">
-                <button class="btn btn-square btn-cart" @click="addToCart(product)">
-                  <i class="bi bi-cart3"></i>
-                </button>
+              
                 <router-link :to="`/product/${product.id}`" class="btn btn-buy-now px-3">
                   <i class="bi bi-bag me-1"></i> Mua ngay
                 </router-link>

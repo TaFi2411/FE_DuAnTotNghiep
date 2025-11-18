@@ -1,119 +1,113 @@
 <template>
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h3 class="fw-bold mb-0">Chi tiết sản phẩm</h3>
-      <button class="btn btn-outline-secondary" @click="router.back()">
+  <div class="p-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-0">Chi tiết sản phẩm</h3>
+      <button class="btn btn-outline-secondary btn-sm" @click="router.back()">
         <i class="bi bi-arrow-left"></i> Quay lại
       </button>
     </div>
+
 
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="mt-2">Đang tải dữ liệu...</p>
     </div>
 
-    <div v-else-if="product" class="bg-white p-4 rounded shadow-sm">
-      <!-- THÔNG TIN SẢN PHẨM -->
+    <div v-else-if="product" class="content-box">
+
       <div class="row">
         <div class="col-lg-4 text-center mb-4">
-          <img
-            :src="product.image"
-            class="rounded-4 shadow-sm border"
-            style="width: 100%; max-width: 300px; height: 300px; object-fit: cover;"
-            alt="Ảnh sản phẩm"
-          />
+          <img :src="product.image" class="main-image" alt="Ảnh sản phẩm" />
         </div>
 
         <div class="col-lg-8">
-          <h4 class="fw-bold">{{ product.name }}</h4>
-          <p><strong>Slug:</strong> {{ product.slug }}</p>
-          <p><strong>Danh mục:</strong> {{ product.categoryName }}</p>
-          <p>
+          <div class="row">
+            <h4 class="fw-bold mb-2">{{ product.name }}</h4>
+            <div class="col-lg-6">
+              
+
+              <div class="info-row">
+                <strong>Slug:</strong> {{ product.slug }}
+              </div>
+
+              <div class="info-row">
+                <strong>Danh mục:</strong> {{ product.categoryName }}
+              </div>
+            </div>
+            <div class="col-lg-6">
+                        <div class="info-row">
+            <strong>Giá:</strong>
+            <span class="text-primary fw-bold">
+              {{ minPrice && maxPrice ? formatCurrency(minPrice) + ' - ' + formatCurrency(maxPrice) : '—' }}
+            </span>
+          </div>
+
+          <div class="info-row">
+            <strong>Tổng tồn kho:</strong>
+            <span class="text-info fw-bold">{{ totalStock }}</span>
+          </div>
+
+          <div class="info-row">
             <strong>Trạng thái:</strong>
-            <span
-              class="badge"
-              :class="product.status ? 'bg-success' : 'bg-danger'"
-            >
+            <span class="badge-status">
               {{ product.status ? 'Đang bán' : 'Ngừng bán' }}
             </span>
-          </p>
-          <p><strong>Mô tả:</strong></p>
-          <p>{{ product.description || 'Không có mô tả' }}</p>
+          </div>
+
+          <div class="mt-3">
+            <strong>Mô tả sản phẩm:</strong>
+            <p class="mt-1">{{ product.description || 'Không có mô tả' }}</p>
+          </div>
+            </div>
+          </div>
+
+
+
         </div>
       </div>
 
       <hr />
 
-      <!-- DANH SÁCH SKU -->
-      <div>
-        <h5 class="fw-bold mb-3">Danh sách biến thể (SKU)</h5>
+      <!-- ====== DANH SÁCH SKU ====== -->
+      <h5 class="fw-bold mb-3">Danh sách biến thể </h5>
 
-        <div
-          v-for="sku in product.skus"
-          :key="sku.id"
-          class="border rounded p-3 mb-3 bg-light"
-        >
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="fw-bold mb-0">SKU #{{ sku.id }}</h6>
+      <div v-for="sku in product.skus" :key="sku.id" class="sku-card">
+
+        <div class="row">
+
+          <div class="col-lg-3">
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <img v-for="img in sku.skuImages" :key="img.id" :src="img.path" class="sku-image"
+                @click="openImage(img.path)" />
+            </div>
           </div>
 
-          <div class="row mb-2">
-            <div class="col-md-6">
+          <span class="col-lg-3" v-for="attr in sku.skuAttributes" :key="attr.id">
+            {{ attr.optionAttributeName }}:<strong>{{ attr.valueAttributeName }}</strong>
+          </span>
+
+          <div class="col-lg-3">
+            <div>
               <strong>Giá:</strong> {{ formatCurrency(sku.price) }}
             </div>
-            <div class="col-md-6">
-              <strong>Số lượng:</strong> {{ sku.quantity }}
+            <div>
+              <strong>Tồn kho:</strong> {{ sku.quantity }}
             </div>
           </div>
 
-          <!-- ẢNH SKU -->
-          <div class="mb-3">
-            <strong>Ảnh biến thể:</strong>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-              <img
-                v-for="img in sku.skuImages"
-                :key="img.id"
-                :src="img.path"
-                class="rounded border"
-                style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;"
-                @click="openImage(img.path)"
-              />
-            </div>
-          </div>
-
-          <!-- THUỘC TÍNH SKU -->
-          <div>
-            <strong>Thuộc tính:</strong>
-            <ul class="mt-2 mb-0">
-              <li
-                v-for="attr in sku.skuAttributes"
-                :key="attr.id"
-              >
-                {{ attr.optionAttributeName }}:
-                <strong>{{ attr.valueAttributeName }}</strong>
-              </li>
-            </ul>
-          </div>
         </div>
+
       </div>
     </div>
 
+    <!-- KHÔNG TÌM THẤY -->
     <div v-else class="text-center py-5 text-muted">
       <p>Không tìm thấy sản phẩm.</p>
     </div>
 
     <!-- POPUP XEM ẢNH -->
-    <div
-      v-if="previewImage"
-      class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-flex justify-content-center align-items-center"
-      style="z-index: 9999;"
-      @click="previewImage = null"
-    >
-      <img
-        :src="previewImage"
-        class="rounded shadow-lg"
-        style="max-width: 80%; max-height: 80%; object-fit: contain;"
-      />
+    <div v-if="previewImage" class="image-popup" @click="previewImage = null">
+      <img :src="previewImage" class="popup-img" />
     </div>
   </div>
 </template>
@@ -123,22 +117,30 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/composables/axios.js'
 
-
 const route = useRoute()
 const router = useRouter()
+
 const product = ref(null)
 const loading = ref(false)
 const previewImage = ref(null)
 
-
-
+const minPrice = ref(null)
+const maxPrice = ref(null)
+const totalStock = ref(0)
 
 onMounted(async () => {
   const id = route.params.id
   loading.value = true
+
   try {
     const res = await axios.get(`/api/product/${id}`)
     product.value = res.data
+
+    const prices = product.value.skus.map(s => s.price)
+    minPrice.value = Math.min(...prices)
+    maxPrice.value = Math.max(...prices)
+
+    totalStock.value = product.value.skus.reduce((sum, s) => sum + s.quantity, 0)
   } catch (err) {
     console.error('❌ Lỗi khi tải sản phẩm:', err)
     alert('Không thể tải chi tiết sản phẩm!')
@@ -148,7 +150,7 @@ onMounted(async () => {
 })
 
 function formatCurrency(value) {
-  if (value == null) return '—'
+  if (!value) return '—'
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND'
@@ -161,107 +163,70 @@ function openImage(url) {
 </script>
 
 <style scoped>
-.container {
-  max-width: 1000px;
+.p-3 {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* ----------- TIÊU ĐỀ & THANH TRÊN ----------- */
-h3.fw-bold {
-  font-size: 1.75rem;
-  color: #2c3e50;
+.content-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* ----------- ẢNH SẢN PHẨM CHÍNH ----------- */
 .main-image {
-  width: 100%;
   max-width: 320px;
+  width: 100%;
   height: 320px;
   object-fit: cover;
-  border-radius: 1rem;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease;
+  border-radius: 10px;
+  border: 1px solid #eee;
 }
 
-.main-image:hover {
-  transform: scale(1.03);
-}
-
-/* ----------- KHỐI SKU ----------- */
-.bg-light {
-  background-color: #f8f9fa !important;
+.info-row {
+  margin-bottom: 6px;
 }
 
 .sku-card {
-  border: 1px solid #e3e6ea;
-  border-radius: 12px;
-  background-color: #fdfdfd;
-  transition: all 0.2s ease-in-out;
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #eee;
+  margin-bottom: 15px;
 }
 
-.sku-card:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  transform: translateY(-3px);
+.badge-status {
+  background: #eaeaea;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #000;
 }
 
-/* ----------- ẢNH SKU ----------- */
 .sku-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
+  width: 70px;
+  height: 70px;
   border: 1px solid #ddd;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.sku-image:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ----------- THUỘC TÍNH ----------- */
-ul {
-  list-style: none;
-  padding-left: 0;
-  margin-bottom: 0;
-}
-
-li {
-  padding: 4px 0;
-  border-bottom: 1px dashed #e2e2e2;
-}
-
-li:last-child {
-  border-bottom: none;
-}
-
-/* ----------- TRẠNG THÁI ----------- */
-.badge {
-  font-size: 0.9rem;
-  padding: 0.5em 0.8em;
   border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
 }
 
-/* ----------- POPUP ẢNH ----------- */
-.position-fixed img {
+.image-popup {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.popup-img {
+  max-width: 80%;
+  max-height: 80%;
   border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease;
-}
-
-.position-fixed img:hover {
-  transform: scale(1.02);
-}
-
-/* ----------- TEXT ----------- */
-p {
-  margin-bottom: 0.5rem;
-  color: #555;
-}
-
-strong {
-  color: #2d3436;
 }
 </style>
-

@@ -29,6 +29,7 @@ import PaymentResult from "@/views/client/PaymentResult.vue";
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
+import AccountManagement from "@/views/admin/AccountManagement.vue";
 import Auth from '@/views/admin/Auth.vue';
 import paymentMethod from '@/views/admin/PaymentMethod.vue';
 import ReviewDetail from '@/views/admin/ReviewDetail.vue';
@@ -205,6 +206,11 @@ const adminRouter = [
     path: "",
     name: "Dashboard",
     component: Dashboard,
+  },
+  {
+    path: "account-management",
+    name: "AccountManagement",
+    component: AccountManagement,
   },
   {
     path: "auth",

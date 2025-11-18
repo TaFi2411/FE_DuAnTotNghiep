@@ -24,8 +24,6 @@
           <img v-for="(img, idx) in getAllImages()" :key="idx" :src="img" class="thumb"
             :class="{ active: img === currentImage }" @click="currentImage = img" alt="thumb" />
         </div>
-
-
       </div>
 
       <!-- 🔹 Thông tin sản phẩm -->
@@ -43,8 +41,11 @@
             <div class="options">
               <span v-for="option in getVisibleOptions(attrGroup)" :key="option.name" class="option" :class="{
                 active: selectedAttributes[attrGroup.name] === option.name,
-                disabled: option.disabled
-              }" @click="!option.disabled && selectAttribute(attrGroup.name, option.name)">
+                disabled: option.disabled,
+              }" @click="
+                !option.disabled &&
+                selectAttribute(attrGroup.name, option.name)
+                ">
                 {{ option.name }}
               </span>
             </div>
@@ -89,28 +90,59 @@
               <i class="bi bi-star-half"></i>
             </div>
             <span class="text-muted small">(4.8/5 - 126 đánh giá)</span>
-            <span class="text-muted small">• Đã bán: <strong>1.2k</strong></span>
           </div>
-          <div class="product-policy mt-4 pt-3 border-top">
-            <h6 class="fw-semibold mb-3 text-black">Chính sách & dịch vụ</h6>
-            <ul class="list-unstyled text-secondary small lh-lg">
-              <li><i class="bi bi-truck text-success me-2"></i> Giao hàng toàn quốc (1-3 ngày)</li>
-              <li><i class="bi bi-arrow-repeat text-info me-2"></i> Đổi trả 7 ngày nếu lỗi</li>
-              <li><i class="bi bi-shield-check text-primary me-2"></i> Bảo hành 12 tháng</li>
-              <li><i class="bi bi-credit-card text-warning me-2"></i> Trả góp 0%</li>
-            </ul>
-          </div>
-
         </div>
       </div>
     </div>
 
-    <!-- 🔹 Mô tả sản phẩm -->
-    <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4">
-      <h4 class="fw-bold mb-3 text-black">Mô tả sản phẩm</h4>
-      <p class="text-secondary lh-lg">
-        {{ product.description || "Mô tả sản phẩm chưa có." }}
-      </p>
+    <div class="policy-premium-row mt-4">
+      <div class="policy-premium-item">
+        <i class="bi bi-shield-lock"></i>
+        <span>Bảo hành chính hãng</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-award"></i>
+        <span>Hàng mới 100%</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-truck"></i>
+        <span>Giao nhanh toàn quốc</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-box"></i>
+        <span>Đóng gói chống sốc</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-credit-card"></i>
+        <span>Hỗ trợ trả góp</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Đổi trả 7 ngày</span>
+      </div>
+
+      <div class="policy-premium-item">
+        <i class="bi bi-chat-dots"></i>
+        <span>Tư vấn 24/7</span>
+      </div>
+    </div>
+
+    <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper">
+      <h4 class="fw-bold mb-3 text-black text-center">Mô tả sản phẩm</h4>
+
+      <div class="description-text text-secondary lh-lg mx-auto">
+        <div v-html="showFullDescription ? product.description : shortDescription"></div>
+
+        <button v-if="product.description && product.description.length > 300"
+          class="btn btn-link p-0 mt-3 description-toggle" @click="showFullDescription = !showFullDescription">
+          {{ showFullDescription ? "Thu gọn ▲" : "Xem thêm ▼" }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -125,7 +157,6 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-
 const route = useRoute();
 const router = useRouter();
 
@@ -135,9 +166,18 @@ const selectedAttributes = ref({});
 const selectedSku = ref(null);
 const currentImage = ref("");
 const quantity = ref(1);
-const accountId = ref(null); 
+const accountId = ref(null);
 const relatedProducts = ref([]);
 
+const showFullDescription = ref(false);
+
+const shortDescription = computed(() => {
+  if (!product.value.description) return "<i>Mô tả sản phẩm chưa có.</i>";
+  const text = product.value.description;
+
+  // Rút gọn còn 300 ký tự (tuỳ chỉnh)
+  return text.length > 0 ? text.substring(0, 0) : text;
+});
 
 function decodeJwtToken(token) {
   try {
@@ -157,7 +197,9 @@ function decodeJwtToken(token) {
 
 const loadProductDetail = async () => {
   try {
-    const res = await axios.get(`http://localhost:8080/api/product/${route.params.id}`);
+    const res = await axios.get(
+      `http://localhost:8080/api/product/${route.params.id}`
+    );
     product.value = res.data;
     currentImage.value = product.value.image;
 
@@ -176,12 +218,12 @@ const loadProductDetail = async () => {
       values: Array.from(values),
     }));
 
-    // Mặc định chọn SKU đầu tiên (giữ nguyên)
     if (product.value.skus?.length > 0) {
       const firstSku = product.value.skus[0];
       selectedAttributes.value = {};
-      firstSku.skuAttributes.forEach(attr => {
-        selectedAttributes.value[attr.optionAttributeName] = attr.valueAttributeName;
+      firstSku.skuAttributes.forEach((attr) => {
+        selectedAttributes.value[attr.optionAttributeName] =
+          attr.valueAttributeName;
       });
       updateSelectedSku();
     }
@@ -193,11 +235,22 @@ const loadProductDetail = async () => {
   }
 };
 
+const selectedSectionIndex = ref(0);
 
+const currentSectionContent = computed(() => {
+  if (
+    !product.value.descriptionSections ||
+    !product.value.descriptionSections.length
+  ) {
+    return "<i>Mô tả sản phẩm chưa có.</i>";
+  }
+  return product.value.descriptionSections[selectedSectionIndex.value].content;
+});
 
 // 🟢 Khi chọn thuộc tính (giữ nguyên)
 const selectAttribute = async (name, value) => {
-  if (selectedAttributes.value[name] === value) delete selectedAttributes.value[name];
+  if (selectedAttributes.value[name] === value)
+    delete selectedAttributes.value[name];
   else selectedAttributes.value[name] = value;
   await nextTick();
   updateSelectedSku();
@@ -218,7 +271,8 @@ const updateSelectedSku = () => {
     ) || null;
 
   if (selectedSku.value) {
-    currentImage.value = selectedSku.value.skuImages?.[0]?.path || product.value.image;
+    currentImage.value =
+      selectedSku.value.skuImages?.[0]?.path || product.value.image;
     quantity.value = 1;
   } else {
     currentImage.value = product.value.image;
@@ -248,7 +302,8 @@ const hasStock = computed(() => selectedSku.value?.quantity > 0);
 
 // 🟢 Số lượng (giữ nguyên)
 const increaseQuantity = () => {
-  if (selectedSku.value && quantity.value < selectedSku.value.quantity) quantity.value++;
+  if (selectedSku.value && quantity.value < selectedSku.value.quantity)
+    quantity.value++;
 };
 const decreaseQuantity = () => {
   if (quantity.value > 1) quantity.value--;
@@ -281,15 +336,22 @@ const getVisibleOptions = (attrGroup) => {
   }));
 };
 
-
 const addToCart = async () => {
   if (!selectedSku.value) {
-    Swal.fire("Chọn biến thể!", "Vui lòng chọn đủ thuộc tính sản phẩm", "warning");
+    Swal.fire(
+      "Chọn biến thể!",
+      "Vui lòng chọn đủ thuộc tính sản phẩm",
+      "warning"
+    );
     return;
   }
 
   if (!accountId.value) {
-    Swal.fire("Chưa đăng nhập", "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "info");
+    Swal.fire(
+      "Chưa đăng nhập",
+      "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng",
+      "info"
+    );
     router.push("/auth/login");
     return;
   }
@@ -311,17 +373,23 @@ const addToCart = async () => {
 
     // Cập nhật lại event giỏ hàng
     window.dispatchEvent(new Event("cart-updated"));
-
   } catch (err) {
     console.error("Lỗi khi thêm vào giỏ hàng:", err);
-    Swal.fire("Lỗi!", "Số lượng sản phẩm đã đạt tối đa bạn không thể thêm sản phẩm vào giỏ hàng nữa.", "error");
+    Swal.fire(
+      "Lỗi!",
+      "Số lượng sản phẩm đã đạt tối đa bạn không thể thêm sản phẩm vào giỏ hàng nữa.",
+      "error"
+    );
   }
 };
 
-
 const buyNow = () => {
   if (!selectedSku.value) {
-    Swal.fire("Chọn biến thể!", "Vui lòng chọn đủ thuộc tính sản phẩm", "warning");
+    Swal.fire(
+      "Chọn biến thể!",
+      "Vui lòng chọn đủ thuộc tính sản phẩm",
+      "warning"
+    );
     return;
   }
   const order = [
@@ -352,6 +420,83 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.policy-premium-row {
+  width: 100%;
+  padding: 22px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0;
+}
+
+.policy-premium-item {
+  flex: 1;
+  text-align: center;
+  color: #111;
+  font-size: 1rem;
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.policy-premium-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: #e2e2e2;
+}
+
+.policy-premium-item i {
+  font-size: 2rem;
+  color: #000;
+  opacity: 0.9;
+  /* sang trọng */
+}
+
+.policy-premium-item span {
+  font-weight: 500;
+  opacity: 0.95;
+}
+
+.description-wrapper {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.description-text {
+  max-width: 750px;
+  font-size: 1.05rem;
+  text-align: justify;
+}
+
+.description-toggle {
+  font-weight: 600;
+  color: #111;
+}
+
+.description-toggle:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+.btn-link {
+  font-weight: 600;
+  color: #111;
+  text-decoration: none;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+  color: #000;
+}
 
 .product-detail {
   max-width: 1200px;

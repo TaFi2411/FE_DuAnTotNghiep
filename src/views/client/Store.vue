@@ -12,13 +12,8 @@
 
     <!-- 🧭 Tabs danh mục -->
     <div class="d-flex justify-content-center flex-wrap mb-5">
-      <button
-        v-for="category in categories"
-        :key="category.id || 'all'"
-        class="btn filter-btn mx-2 my-1"
-        :class="{ active: activeCategory === category.id }"
-        @click="setCategory(category.id)"
-      >
+      <button v-for="category in categories" :key="category.id || 'all'" class="btn filter-btn mx-2 my-1"
+        :class="{ active: activeCategory === category.id }" @click="setCategory(category.id)">
         {{ category.name }}
       </button>
     </div>
@@ -32,17 +27,9 @@
 
       <div v-else>
         <div v-if="products.length > 0" class="product-grid">
-          <div
-            v-for="product in products"
-            :key="product.id"
-            class="product-item"
-          >
+          <div v-for="product in products" :key="product.id" class="product-item">
             <div class="card product-card h-100 text-center">
-              <img
-                :src="product.image"
-                class="card-img-top mx-auto"
-                alt="Ảnh sản phẩm"
-              />
+              <img :src="product.image" class="card-img-top mx-auto" alt="Ảnh sản phẩm" />
 
               <div class="card-body">
                 <h6 class="fw-bold text-dark mb-2 product-name">
@@ -56,14 +43,9 @@
                 <div class="mb-2">
                   <span class="text-warning fs-6">★★★★★</span>
                 </div>
-                <p class="text-muted small mb-3 fw-medium">
-                  Đã bán {{ product.sold || 0 }}
-                </p>
 
-                <button
-                  class="btn btn-buy-now px-3"
-                  @click="goToDetail(product.id)"
-                >
+
+                <button class="btn btn-buy-now px-3" @click="goToDetail(product.id)">
                   <i class="bi bi-bag me-1"></i> Mua ngay
                 </button>
               </div>
@@ -140,15 +122,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* ===== Cấu trúc tổng thể ===== */
-
-
-/* ===== Tiêu đề ===== */
 .section-subtitle {
   letter-spacing: 1.5px;
   font-size: 1rem;
   color: #555;
 }
+
 .section-title {
   font-size: 2rem;
   font-weight: 700;
@@ -166,23 +145,23 @@ onMounted(async () => {
   letter-spacing: 0.4px;
   transition: all 0.3s ease;
 }
+
 .filter-btn:hover,
 .filter-btn.active {
   background-color: #000;
   color: #fff;
 }
 
-/* ===== Lưới sản phẩm (4 cột) ===== */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 28px;
 }
+
 .product-item {
   display: flex;
 }
 
-/* ===== Card sản phẩm ===== */
 .product-card {
   border: 1px solid #eee;
   border-radius: 16px;
@@ -192,6 +171,7 @@ onMounted(async () => {
   padding: 16px;
   flex: 1;
 }
+
 .product-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.15);
@@ -205,6 +185,7 @@ onMounted(async () => {
   margin: 0 auto 12px;
   transition: transform 0.3s ease;
 }
+
 .product-card:hover img {
   transform: scale(1.05);
 }
@@ -239,6 +220,7 @@ onMounted(async () => {
   transition: all 0.3s ease;
   letter-spacing: 0.3px;
 }
+
 .btn-buy-now:hover {
   background: #333;
   transform: translateY(-2px);

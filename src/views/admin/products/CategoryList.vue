@@ -76,8 +76,8 @@ const loading = ref(false)
 
 const columns = ref([
   { label: 'ID', field: 'id', sortable: true, width: '80px' },
-  { label: 'Slug', field: 'slug', sortable: true },
   { label: 'Tên danh mục', field: 'name', sortable: true },
+  { label: 'Slug', field: 'slug', sortable: true },
   { label: 'Trạng thái', field: 'status', width: '150px' },
   { label: 'Hành động', field: 'actions', width: '120px' },
 ])

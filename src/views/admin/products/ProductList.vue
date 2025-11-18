@@ -147,7 +147,9 @@ onMounted(fetchProducts)
 .badge {
   font-size: 13px;
   padding: 5px 10px;
+  color: black;
 }
+
 
 .btn {
   padding: 4px 8px;

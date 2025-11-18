@@ -86,11 +86,8 @@
 
             <p class="text-muted small mb-3">Đã bán {{ product.sold || 0 }}</p>
 
-            <!-- ✅ Nút hành động -->
             <div class="d-flex justify-content-center gap-2">
-              <button class="btn btn-square btn-cart" @click="addToCart(product)">
-                <i class="bi bi-cart3"></i>
-              </button>
+            
               <button class="btn btn-buy-now px-3" @click="goToDetail(product.id)">
                 <i class="bi bi-bag me-1"></i> Mua ngay
               </button>
@@ -125,7 +122,7 @@ const filters = [
   { key: "bestseller", label: "Bán chạy nhất" },
 ];
 
-// 📦 Lấy sản phẩm từ API
+
 const fetchProducts = async () => {
   loading.value = true;
   try {
@@ -154,13 +151,13 @@ const fetchProducts = async () => {
   }
 };
 
-// ✅ Lấy giá thấp nhất trong các biến thể
+
 const getMinPrice = (product) => {
   if (!product.skus || !product.skus.length) return product.minPrice || 0;
   return Math.min(...product.skus.map((s) => s.price));
 };
 
-// Bộ lọc
+
 const filteredProducts = computed(() => {
   switch (activeFilter.value) {
     case "new":
@@ -177,15 +174,14 @@ const filteredProducts = computed(() => {
 
 const setFilter = (key) => (activeFilter.value = key);
 
-// Định dạng giá
+
 const formatPrice = (price) =>
   price ? price.toLocaleString("vi-VN") + " VND" : "Liên hệ";
 
-// ✅ Mở trang chi tiết
+
 const goToDetail = (id) => router.push(`/product/${id}`);
 
-// ✅ Thêm vào giỏ hàng
-// ✅ Thêm vào giỏ hàng
+
 const addToCart = async (product) => {
   try {
     // 1️⃣ Lấy token từ localStorage (đúng như cart.vue)

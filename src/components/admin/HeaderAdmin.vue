@@ -1,6 +1,6 @@
 <template>
   <header class="admin-header">
-    <h1 class="title">Admin Dashboard</h1>
+    <h1 class="title">Quản lý hệ thống cửa hàng</h1>
 
     <div class="right">
       <!-- Dropdown người dùng -->

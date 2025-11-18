@@ -8,10 +8,17 @@
         <div class="col-lg-4">
           <label>Ảnh sản phẩm chung</label>
           <div class="mb-3 text-center">
-            <div class="image-upload border rounded-4 bg-light border-dark-subtle"
+            <div
+              class="image-upload border rounded-4 bg-light border-dark-subtle"
               style="width: 100%; max-width: 280px; height: 280px; cursor: pointer; overflow: hidden;"
-              @click="$refs.fileInput.click()">
-              <img v-if="imagePreview" :src="imagePreview" alt="Ảnh sản phẩm" class="w-100 h-100 object-fit-cover" />
+              @click="$refs.fileInput.click()"
+            >
+              <img
+                v-if="imagePreview"
+                :src="imagePreview"
+                alt="Ảnh sản phẩm"
+                class="w-100 h-100 object-fit-cover"
+              />
               <div v-else class="text-muted d-flex flex-column align-items-center justify-content-center h-100">
                 <i class="bi bi-image fs-1 mb-2"></i>
                 <small>Bấm để chọn ảnh</small>
@@ -52,14 +59,18 @@
       </div>
 
       <div class="mb-3">
-        <label>Mô tả</label>
-        <textarea v-model="product.description" class="form-control"></textarea>
+        <label class="fw-bold">Mô tả sản phẩm</label>
+        <textarea id="descEditor"></textarea>
       </div>
 
       <hr />
 
-      <!-- DANH SÁCH SKU -->
-      <div v-for="(sku, index) in product.skus" :key="sku.id || index" class="border rounded p-3 mb-3">
+      <!-- SKU LIST -->
+      <div
+        v-for="(sku, index) in product.skus"
+        :key="sku.id || index"
+        class="border rounded p-3 mb-3"
+      >
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5>Biến thể sản phẩm {{ index + 1 }}</h5>
           <button type="button" class="btn btn-danger btn-sm" @click="removeSku(index)">Xóa</button>
@@ -76,24 +87,48 @@
           </div>
         </div>
 
-        <!-- Thuộc tính -->
+        <!-- Attributes -->
         <div class="mb-3">
           <label>Thuộc tính</label>
-          <div v-for="(attr, aIndex) in sku.attributes" :key="attr.id || aIndex" class="d-flex gap-2 mb-2">
-            <select v-model="attr.optionAttributeId" class="form-select w-25" @change="attr.valueAttributeId = ''">
+
+          <div
+            v-for="(attr, aIndex) in sku.attributes"
+            :key="attr.id || aIndex"
+            class="d-flex gap-2 mb-2"
+          >
+            <select
+              v-model="attr.optionAttributeId"
+              class="form-select w-25"
+              @change="attr.valueAttributeId = ''"
+            >
               <option disabled value="">Chọn loại</option>
-              <option v-for="opt in optionAttributes" :key="opt.id" :value="opt.id">{{ opt.name }}</option>
+              <option v-for="opt in optionAttributes" :key="opt.id" :value="opt.id">
+                {{ opt.name }}
+              </option>
             </select>
 
-            <select v-model="attr.valueAttributeId" class="form-select w-50" :disabled="!attr.optionAttributeId">
+            <select
+              v-model="attr.valueAttributeId"
+              class="form-select w-50"
+              :disabled="!attr.optionAttributeId"
+            >
               <option disabled value="">Chọn giá trị</option>
-              <option v-for="val in filteredValueAttributes(attr.optionAttributeId)" :key="val.id" :value="val.id">
+              <option
+                v-for="val in filteredValueAttributes(attr.optionAttributeId)"
+                :key="val.id"
+                :value="val.id"
+              >
                 {{ val.name }}
               </option>
             </select>
 
-            <button class="btn btn-sm btn-outline-danger" type="button"
-              @click="removeAttribute(index, aIndex)">X</button>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              type="button"
+              @click="removeAttribute(index, aIndex)"
+            >
+              X
+            </button>
           </div>
 
           <button class="btn btn-sm btn-outline-primary" type="button" @click="addAttribute(index)">
@@ -101,41 +136,69 @@
           </button>
         </div>
 
-        <!-- Ảnh SKU -->
+        <!-- SKU Images -->
         <div class="mb-3">
           <label>Ảnh biến thể</label>
           <div class="d-flex flex-wrap gap-2 mt-2">
-            <div v-for="(img, i) in sku.skuImages" :key="img.id || i"
-              class="position-relative border rounded overflow-hidden" style="width: 80px; height: 80px;">
-              <img :src="img.url || img.path" class="w-100 h-100 object-fit-cover" />
-              <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 2px; right: 2px;"
-                @click="removeSkuImage(index, i)">
+            <div
+              v-for="(img, i) in sku.skuImages"
+              :key="img.id || i"
+              class="position-relative border rounded overflow-hidden"
+              style="width: 80px; height: 80px;"
+            >
+              <img :src="img.path" class="w-100 h-100 object-fit-cover" />
+              <button
+                type="button"
+                class="btn btn-sm btn-danger position-absolute"
+                style="top: 2px; right: 2px;"
+                @click="removeSkuImage(index, i)"
+              >
                 ×
               </button>
             </div>
 
-            <div class="border rounded d-flex align-items-center justify-content-center text-muted"
-              style="width: 80px; height: 80px; cursor: pointer;" @click="openSkuFilePicker(index)">
+            <div
+              class="border rounded d-flex align-items-center justify-content-center text-muted"
+              style="width: 80px; height: 80px; cursor: pointer;"
+              @click="openSkuFilePicker(index)"
+            >
               <i class="bi bi-plus-circle fs-5"></i>
             </div>
-            <input type="file" multiple class="d-none" accept="image/*" ref="skuFileInputs"
-              @change="(e) => handleAutoUploadSkuImages(e, index)" />
+
+            <input
+              type="file"
+              class="d-none"
+              multiple
+              accept="image/*"
+              :ref="(el) => (skuFileInputs[index] = el)"
+              @change="(e) => handleAutoUploadSkuImages(e, index)"
+            />
           </div>
         </div>
       </div>
 
-      <button type="button" class="btn btn-outline-success" @click="addSku">+ Thêm biến thể</button>
+      <button type="button" class="btn btn-outline-success" @click="addSku">
+        + Thêm biến thể
+      </button>
 
       <hr />
+
       <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "@/composables/axios.js";
+import { useCkeditor } from "@/composables/useCkeditor";
+
+// CKEditor
+const { content: descContent, setData: setDescData } = useCkeditor("descEditor", {
+  height: 300,
+});
+
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id;
@@ -151,158 +214,156 @@ const product = ref({
   skus: [],
 });
 
-const imagePreview = ref(null);
 const categories = ref([]);
 const optionAttributes = ref([]);
 const valueAttributes = ref([]);
+const imagePreview = ref(null);
+
+// Ref cho từng input SKU
 const skuFileInputs = ref([]);
-const skuUploading = ref({});
-console.log(categories)
+
 onMounted(async () => {
-  try {
-    // --- Lấy sản phẩm ---
-    const response = await axios.get(`/api/product/${id}`);
-    const p = response.data;
+  const res = await axios.get(`/api/product/${id}`);
+  const p = res.data;
 
-    // Map dữ liệu từ backend -> FE
-    product.value = {
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      description: p.description,
-      image: p.image,
-      status: p.status,
-      categoryId: p.categoryId,
-      skus: p.skus.map((sku) => ({
-        id: sku.id,
-        price: sku.price,
-        quantity: sku.quantity,
-
-        attributes: sku.skuAttributes?.map((attr) => ({
-          id: attr.id,
-          optionAttributeId: attr.optionAttributeId,
-          valueAttributeId: attr.valueAttributeId,
-          optionAttributeName: attr.optionAttributeName,
-          valueAttributeName: attr.valueAttributeName,
+  product.value = {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    description: p.description,
+    image: p.image,
+    status: p.status,
+    categoryId: p.categoryId,
+    skus: p.skus.map((sku) => ({
+      id: sku.id,
+      price: sku.price,
+      quantity: sku.quantity,
+      attributes:
+        sku.skuAttributes?.map((a) => ({
+          id: a.id,
+          optionAttributeId: a.optionAttributeId,
+          valueAttributeId: a.valueAttributeId,
         })) || [],
-        skuImages: sku.skuImages?.map((img) => ({
+      skuImages:
+        sku.skuImages?.map((img) => ({
           id: img.id,
           path: img.path,
         })) || [],
-      })),
-    };
+    })),
+  };
 
-    imagePreview.value = p.image;
+  imagePreview.value = p.image;
 
-    const [ cateRes,optionRes, valueRes] = await Promise.all([
-      
-      axios.get("/api/category"),
-      axios.get("/api/option-attribute"),
-      axios.get("/api/value-attribute"),
-    ]);
-    
-    categories.value = cateRes.data.data;
-    optionAttributes.value = optionRes.data.data;
-    valueAttributes.value = valueRes.data.data;
+  await nextTick();
+  setDescData(p.description);
 
-    console.log(categories.value, optionAttributes.value, valueAttributes.value);
-  } catch (err) {
-    console.error("❌ Lỗi khi tải sản phẩm:", err);
-  }
+  // Load danh mục + thuộc tính
+  const [cate, opt, val] = await Promise.all([
+    axios.get("/api/category"),
+    axios.get("/api/option-attribute"),
+    axios.get("/api/value-attribute"),
+  ]);
+
+  categories.value = cate.data.data;
+  optionAttributes.value = opt.data.data;
+  valueAttributes.value = val.data.data;
 });
 
-// -------------------- HÀM PHỤ TRỢ --------------------
+// Helpers
 function filteredValueAttributes(optionId) {
   return valueAttributes.value.filter((v) => v.optionAttributeId === optionId);
 }
 
 function openSkuFilePicker(index) {
-  const input = skuFileInputs.value[index];
-  if (input) input.click();
+  skuFileInputs.value[index]?.click();
 }
 
-async function handleImageUpload(event) {
-  const file = event.target.files[0];
+// Upload ảnh chính
+async function handleImageUpload(e) {
+  const file = e.target.files[0];
   if (!file) return;
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await axios.post("/api/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  const res = await axios.post("/api/upload", fd);
   product.value.image = res.data;
   imagePreview.value = res.data;
 }
 
-async function handleAutoUploadSkuImages(event, index) {
-  const files = Array.from(event.target.files);
+// Upload ảnh SKU
+async function handleAutoUploadSkuImages(e, index) {
+  const files = Array.from(e.target.files);
   if (!files.length) return;
-  skuUploading.value[index] = true;
-  try {
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      product.value.skus[index].skuImages.push({ path: res.data });
-    }
-  } finally {
-    skuUploading.value[index] = false;
+
+  for (const f of files) {
+    const fd = new FormData();
+    fd.append("file", f);
+    const res = await axios.post("/api/upload", fd);
+
+    product.value.skus[index].skuImages.push({
+      id: null,
+      path: res.data,
+    });
   }
 }
 
 function addSku() {
-  product.value.skus.push({ price: 0, quantity: 0, attributes: [], skuImages: [] });
-}
-function removeSku(index) {
-  product.value.skus.splice(index, 1);
-}
-function addAttribute(skuIndex) {
-  product.value.skus[skuIndex].attributes.push({ optionAttributeId: "", valueAttributeId: "" });
-}
-function removeAttribute(skuIndex, attrIndex) {
-  product.value.skus[skuIndex].attributes.splice(attrIndex, 1);
-}
-function removeSkuImage(skuIndex, imgIndex) {
-  product.value.skus[skuIndex].skuImages.splice(imgIndex, 1);
+  product.value.skus.push({
+    id: null,
+    price: 0,
+    quantity: 0,
+    attributes: [],
+    skuImages: [],
+  });
 }
 
-// -------------------- UPDATE PRODUCT --------------------
+function removeSku(i) {
+  product.value.skus.splice(i, 1);
+}
+
+function addAttribute(i) {
+  product.value.skus[i].attributes.push({
+    id: null,
+    optionAttributeId: "",
+    valueAttributeId: "",
+  });
+}
+
+function removeAttribute(i, j) {
+  product.value.skus[i].attributes.splice(j, 1);
+}
+
+function removeSkuImage(i, j) {
+  product.value.skus[i].skuImages.splice(j, 1);
+}
+
+// Update
 async function updateProduct() {
-  try {
-    const payload = JSON.parse(JSON.stringify(product.value));
+  const payload = JSON.parse(JSON.stringify(product.value));
 
-    // ⚠️ Xóa field id ở payload nếu backend không có trong ProductRequestDTO
-    delete payload.id;
+  payload.description = descContent.value;
 
-    // Map lại sku -> đúng cấu trúc backend
-    payload.skus = payload.skus.map((sku) => ({
-      id: sku.id, // Giữ id SKU để update
-      price: sku.price,
-      quantity: sku.quantity,
-      skuImages: sku.skuImages.map((img) => ({
-        id: img.id,
-        path: img.path,
-      })),
-      attributes: sku.attributes.map((attr) => ({
-        id: attr.id,
-        skuId: attr.skuId,
-        valueAttributeId: attr.valueAttributeId,
-      })),
-    }));
+  payload.skus = payload.skus.map((sku) => ({
+    id: sku.id,
+    price: sku.price,
+    quantity: sku.quantity,
+    skuImages: sku.skuImages.map((i) => ({
+      id: i.id,
+      path: i.path,
+    })),
+    attributes: sku.attributes.map((a) => ({
+      id: a.id,
+      valueAttributeId: a.valueAttributeId,
+    })),
+  }));
 
-    console.log("📦 Payload gửi đi:", payload);
+  await axios.put(`/api/product/${product.value.id}`, payload);
 
-    await axios.put(`/api/product/${product.value.id}`, payload);
-    alert("✅ Cập nhật sản phẩm thành công!");
-    router.push("/admin/list-product");
-  } catch (err) {
-    console.error("❌ Lỗi khi cập nhật:", err.response?.data || err);
-    alert("❌ Lỗi khi cập nhật sản phẩm!");
-  }
+  alert("Update thành công!");
+  router.push("/admin/list-product");
 }
 </script>
-
 
 <style scoped>
 .container {
