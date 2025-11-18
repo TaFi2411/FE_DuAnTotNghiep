@@ -153,7 +153,8 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
+import axios from "@/composables/axios.js";
+
 import Swal from "sweetalert2";
 
 const route = useRoute();

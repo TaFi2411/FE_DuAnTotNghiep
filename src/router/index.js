@@ -53,7 +53,7 @@ import ProductDetailAdmin from "@/views/admin/products/ProductDetail.vue";
 import OrderManagement from "@/views/admin/OrderManagement.vue";
 import FlashSaleAdmin from "@/views/admin/FlashSaleAdmin.vue";
 import FlashSaleSku from "@/views/admin/FlashSaleSku.vue";
-
+import statistical from "@/views/admin/statistical.vue";
 // --- Định nghĩa các route con ---
 // --- CLIENT ROUTER --- //
 const clientRouter = [
@@ -216,6 +216,11 @@ const adminRouter = [
   path: '/admin/orders',
   name: 'orderss',
   component: OrderManagement
+},
+   {
+  path: '/admin/statistical',
+  name: 'statistical',
+  component: statistical
 },
   {
     path: "list-product",

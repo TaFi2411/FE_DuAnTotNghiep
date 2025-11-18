@@ -117,7 +117,6 @@
           >
         </div>
 
-
         <!-- Voucher -->
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="fw-semibold">Mã giảm giá</span>
@@ -383,9 +382,6 @@
                   {{
                     (Number(v.usage_condition) || 0).toLocaleString("vi-VN")
                   }}
-                  {{
-                    (Number(v.usage_condition) || 0).toLocaleString("vi-VN")
-                  }}
                   ₫
                 </div>
                 <hr />
@@ -410,11 +406,9 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { ref, onMounted, computed, watch } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 
-// --- Refs ---
 // --- Refs ---
 const showAddressModal = ref(false);
 const provinces = ref([]);
@@ -441,12 +435,7 @@ const showSelectAddressModal = ref(false);
 
 const paymentMethods = ref([]);
 const selectedPaymentMethod = ref(null);
-const showSelectAddressModal = ref(false);
 
-const paymentMethods = ref([]);
-const selectedPaymentMethod = ref(null);
-
-// --- Helpers ---
 // --- Helpers ---
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
@@ -472,22 +461,16 @@ const totalPayment = computed(() => {
     (totalProductPrice.value || 0) +
     (Number(shippingFee.value) || 0) -
     (Number(discountAmount.value) || 0)
-    (totalProductPrice.value || 0) +
-    (Number(shippingFee.value) || 0) -
-    (Number(discountAmount.value) || 0)
   );
 });
-
 
 const fetchPaymentMethods = async () => {
   try {
     const res = await axios.get("/api/payment-method");
     paymentMethods.value = res.data?.data || [];
-    paymentMethods.value = res.data?.data || [];
     if (paymentMethods.value.length)
       selectedPaymentMethod.value = paymentMethods.value[0].id;
   } catch (err) {
-    console.error("fetchPaymentMethods error", err);
     console.error("fetchPaymentMethods error", err);
   }
 };
@@ -531,7 +514,6 @@ const applyVoucher = (v) => {
 
   selectedVoucher.value = v;
   const discount = v?.type
-  const discount = v?.type
     ? (totalProductPrice.value * (Number(v.discount) || 0)) / 100
     : Number(v.discount) || 0;
   discountAmount.value = Math.min(
@@ -541,7 +523,6 @@ const applyVoucher = (v) => {
   showVoucherModal.value = false;
 };
 
-// --- Address APIs ---
 // --- Address APIs ---
 const closeSelectAddressModal = () => {
   showSelectAddressModal.value = false;
@@ -567,14 +548,7 @@ const fetchProvinces = async () => {
   } catch (err) {
     console.error("fetchProvinces", err);
   }
-  try {
-    const res = await axios.get("/api/ghn/provinces");
-    provinces.value = res.data || [];
-  } catch (err) {
-    console.error("fetchProvinces", err);
-  }
 };
-
 
 const fetchDistricts = async () => {
   if (!selectedProvince.value) return;
@@ -589,19 +563,7 @@ const fetchDistricts = async () => {
   } catch (err) {
     console.error("fetchDistricts", err);
   }
-  try {
-    const res = await axios.get(
-      `/api/ghn/districts?provinceId=${selectedProvince.value}`
-    );
-    districts.value = res.data || [];
-    wards.value = [];
-    selectedDistrict.value = "";
-    selectedWard.value = "";
-  } catch (err) {
-    console.error("fetchDistricts", err);
-  }
 };
-
 
 const fetchWards = async () => {
   if (!selectedDistrict.value) return;
@@ -614,17 +576,7 @@ const fetchWards = async () => {
   } catch (err) {
     console.error("fetchWards", err);
   }
-  try {
-    const res = await axios.get(
-      `/api/ghn/wards?districtId=${selectedDistrict.value}`
-    );
-    wards.value = res.data || [];
-    selectedWard.value = "";
-  } catch (err) {
-    console.error("fetchWards", err);
-  }
 };
-
 
 const fetchAddresses = async () => {
   if (!accountId.value) return;
@@ -634,17 +586,15 @@ const fetchAddresses = async () => {
   } catch (err) {
     console.error("fetchAddresses", err);
   }
-  try {
-    const res = await axios.get(`/api/address/account/${accountId.value}`);
-    addresses.value = (res.data || []).sort((a, b) => b.id - a.id);
-  } catch (err) {
-    console.error("fetchAddresses", err);
-  }
 };
-
-
+const fullAddress = computed(() => {
+  if (!selectedAddress.value) return "";
+  return selectedAddress.value.fulladdress || "";
+});
 const selectAddress = (a) => {
-  selectedAddress.value = a;
+ 
+  selectedAddress.value = a; // computed fullAddress tự động cập nhật
+  showAddressModal.value = false;
 };
 const closeModal = () => {
   showAddressModal.value = false;
@@ -654,47 +604,51 @@ const closeModal = () => {
   specificAddress.value = "";
 };
 
-
 const saveAddress = async () => {
-  if (
-    !specificAddress.value ||
-    !selectedProvince.value ||
-    !selectedDistrict.value ||
-    !selectedWard.value
-  ) {
+  // Kiểm tra dữ liệu bắt buộc
+  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
     alert("Vui lòng nhập đầy đủ thông tin địa chỉ!");
     return;
   }
-  const provinceName =
-    provinces.value.find((p) => p.ProvinceID === selectedProvince.value)
-      ?.ProvinceName || "";
-  const districtName =
-    districts.value.find((d) => d.DistrictID === selectedDistrict.value)
-      ?.DistrictName || "";
-  const wardName =
-    wards.value.find((w) => w.WardCode === selectedWard.value)?.WardName || "";
-  const fullAddress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
+
+  // Lấy tên tỉnh/quận/phường
+  const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
+  const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
+  const wardName = wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
+
+  // Cập nhật selectedAddress
+  selectedAddress.value = {
+    detail: specificAddress.value,
+    ward: wardName,
+    district: districtName,
+    province: provinceName,
+    ward_code: selectedWard.value,
+    district_id: selectedDistrict.value,
+    province_id: selectedProvince.value,
+    fulladdress: `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`
+  };
+
   try {
+    // Gửi lên backend
     await axios.post("/api/address", {
       province_id: selectedProvince.value,
       district_id: selectedDistrict.value,
       ward_code: selectedWard.value,
       address: specificAddress.value,
-      fulladdress: fullAddress,
+      fulladdress: fullAddress.value, // dùng computed luôn
       defaultAddress: false,
       active: true,
       accountId: accountId.value,
     });
-    closeModal();
-    await fetchAddresses();
-    await fetchAddresses();
+
+    closeModal();       // Đóng modal và reset input
+    await fetchAddresses(); // Lấy lại danh sách địa chỉ
   } catch (err) {
     console.error(err);
     alert("Không thể lưu địa chỉ.");
   }
 };
 
-// --- Shipping fee ---
 // --- Shipping fee ---
 const fetchShippingFee = async () => {
   if (!selectedAddress.value || !selectedAddress.value.district_id) {
@@ -720,123 +674,140 @@ watch(selectedAddress, (newVal) => {
   if (newVal) fetchShippingFee();
 });
 
-// --- Payment flow ---
-// --- Payment flow ---
+
 const handlePayment = async () => {
   const uniqueOrderId = "DH" + Date.now();
 
-  const uniqueOrderId = "DH" + Date.now();
+  try {
+    // Kiểm tra địa chỉ giao hàng
+    if (!selectedAddress.value) {
+      Swal.fire({
+        icon: "warning",
+        title: "Vui lòng chọn địa chỉ giao hàng!",
+        text: "Bạn cần chọn địa chỉ giao hàng trước khi thanh toán.",
+        confirmButtonText: "Đã hiểu",
+      });
+      return;
+    }
 
-  if (!selectedAddress.value) {
-    Swal.fire({
-      icon: "warning",
-      title: "Vui lòng chọn địa chỉ giao hàng!",
-      text: "Bạn cần chọn địa chỉ giao hàng trước khi thanh toán.",
-      confirmButtonText: "Đã hiểu",
-    });
-    return;
-  }
-  if (!selectedPaymentMethod.value) {
-    Swal.fire({
-      icon: "warning",
-      title: "Vui lòng chọn phương thức thanh toán!",
-      confirmButtonText: "Đã hiểu",
-    });
-    Swal.fire({
-      icon: "warning",
-      title: "Vui lòng chọn phương thức thanh toán!",
-      confirmButtonText: "Đã hiểu",
-    });
-    return;
-  }
-  if (!shippingPhone.value) {
-    Swal.fire({
-      icon: "warning",
-      title: "Thiếu số điện thoại!",
-      text: "Vui lòng nhập số điện thoại người nhận trước khi thanh toán.",
-      confirmButtonText: "Đã hiểu",
-    });
-    return;
-  }
-    Swal.fire({
-      icon: "warning",
-      title: "Thiếu số điện thoại!",
-      text: "Vui lòng nhập số điện thoại người nhận trước khi thanh toán.",
-      confirmButtonText: "Đã hiểu",
-    });
-    return;
-  }
+    // Kiểm tra phương thức thanh toán
+    if (!selectedPaymentMethod.value) {
+      Swal.fire({
+        icon: "warning",
+        title: "Vui lòng chọn phương thức thanh toán!",
+        confirmButtonText: "Đã hiểu",
+      });
+      return;
+    }
+
+    // Kiểm tra số điện thoại người nhận
+    if (!shippingPhone.value) {
+      Swal.fire({
+        icon: "warning",
+        title: "Thiếu số điện thoại!",
+        text: "Vui lòng nhập số điện thoại người nhận trước khi thanh toán.",
+        confirmButtonText: "Đã hiểu",
+      });
+      return;
+    }
 
   const orderPayload = {
-    orderId: uniqueOrderId,
-    orderId: uniqueOrderId,
-    accountId: accountId.value,
-    addressId: selectedAddress.value.id,
-    paymentMethodId: selectedPaymentMethod.value,
-    feeship: Number(shippingFee.value) || 0,
-    total: Number(totalPayment.value) || 0,
-    feeship: Number(shippingFee.value) || 0,
-    total: Number(totalPayment.value) || 0,
-    payment_status: false,
-    discount: Number(discountAmount.value) || 0,
-    voucherId: selectedVoucher.value ? selectedVoucher.value.id : null,
-    shippingPhone: shippingPhone.value,
-    orderDetails: cartItems.value.map((i) => ({
-      skuId: i.skuId,
-      quantity: i.quantity,
-      price: i.price,
-    })),
-  };
+  accountId: accountId.value,
+  shippingAddress: selectedAddress.value?.fulladdress || "", // thay đổi đây
+  paymentMethodId: selectedPaymentMethod.value,
+  feeship: Number(shippingFee.value) || 0,
+  total: Number(totalPayment.value) || 0,
+  paymentStatus: false, // camelCase
+  discount: Number(discountAmount.value) || 0,
+  voucherId: selectedVoucher.value ? selectedVoucher.value.id : null,
+  shippingPhone: shippingPhone.value,
+  statusId: 1, // PENDING
+  orderDetails: cartItems.value.map((i) => ({
+    skuId: i.skuId,
+    quantity: i.quantity,
+    price: i.price,
+    // productId: i.productId // thêm nếu backend cần
+  })),
+};
 
-  console.log("Order Payload:", orderPayload);
-
-  console.log("Order Payload:", orderPayload);
-
-  try {
-    // VNPAY
-    // VNPAY
+console.log("Order Payload:", orderPayload);
+    // Xử lý thanh toán qua VNPAY
     if (selectedPaymentMethod.value === 1) {
       const res = await axios.post("/api/vnpay/create", {
         amount: orderPayload.total,
-        orderInfo: "Thanh toán đơn hàng qua VNPAY",
-        orderInfo: "Thanh toán đơn hàng qua VNPAY",
-      });
+        orderInfo: orderPayload.orderId,
+      });     
+
       if (res.data?.paymentUrl) {
         sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
         window.location.href = res.data.paymentUrl;
         return;
-        return;
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Không thể khởi tạo thanh toán VNPAY",
+          text: "Vui lòng thử lại sau.",
+        });
       }
     }
 
-    // MOMO
-    if (selectedPaymentMethod.value === 3) {
-    }
+    // Xử lý thanh toán qua MOMO
+   // MOMO
+if (selectedPaymentMethod.value === 3) {
+  try {
+    const res = await axios.post("/api/momo/create", {
+      amount: orderPayload.total,
+      orderInfo: "Thanh toán đơn hàng qua MOMO",
+    });
 
-    // MOMO
-    if (selectedPaymentMethod.value === 3) {
-      const res = await axios.post("/api/momo/create", {
-        orderId: orderPayload.orderId,
-        orderId: orderPayload.orderId,
-        amount: orderPayload.total,
-        orderInfo: "Thanh toán đơn hàng qua MOMO",
-        orderInfo: "Thanh toán đơn hàng qua MOMO",
+    console.log("MOMO create response:", res);
+
+    // MoMo service có thể trả payUrl (từ MoMo) hoặc paymentUrl (nếu backend map lại)
+    const paymentUrl =
+      res?.data?.paymentUrl || res?.data?.payUrl || res?.data?.data?.payUrl || null;
+
+    // Nếu backend trả nguyên momoResponse object (chứa payUrl)
+    if (paymentUrl) {
+      // Lưu pending order trước khi redirect để callback còn dùng
+      sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
+      window.location.href = paymentUrl;
+      return;
+    } else {
+      // Hiển thị lỗi chi tiết nếu backend trả message hoặc resultCode
+      const backendMsg =
+        res?.data?.message ||
+        res?.data?.msg ||
+        JSON.stringify(res?.data) ||
+        "Không nhận được URL thanh toán từ MoMo";
+      Swal.fire({
+        icon: "error",
+        title: "Không thể khởi tạo thanh toán MOMO",
+        text: backendMsg,
       });
-      if (res.data?.paymentUrl) {
-      if (res.data?.paymentUrl) {
-        sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
-        window.location.href = res.data.paymentUrl;
-        return;
-      }
+      console.error("MOMO create unexpected response:", res?.data);
+      return;
     }
-        window.location.href = res.data.paymentUrl;
-        return;
-      }
-    }
+  } catch (err) {
+    console.error("MOMO create error:", err);
+    const serverMessage =
+      err?.response?.data ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "Lỗi khi kết nối tới server";
+    Swal.fire({
+      icon: "error",
+      title: "Lỗi khi khởi tạo MOMO",
+      text:
+        typeof serverMessage === "string"
+          ? serverMessage
+          : JSON.stringify(serverMessage),
+    });
+    return;
+  }
+}
 
-    // COD
-    if (selectedPaymentMethod.value === 2) {
-    // COD
+
+    // Xử lý COD
     if (selectedPaymentMethod.value === 2) {
       const orderRes = await axios.post("/api/order", orderPayload);
       sessionStorage.removeItem("cart");
@@ -844,14 +815,8 @@ const handlePayment = async () => {
       cartItems.value = [];
       window.location.href = "/orders";
       return;
-      return;
     }
 
-    Swal.fire({
-      icon: "error",
-      title: "Không thể khởi tạo thanh toán",
-      text: "Vui lòng thử lại sau.",
-    });
     Swal.fire({
       icon: "error",
       title: "Không thể khởi tạo thanh toán",
@@ -864,95 +829,114 @@ const handlePayment = async () => {
       title: "Có lỗi khi thanh toán!",
       text: "Vui lòng thử lại sau.",
     });
-    console.error("handlePayment error", err);
-    Swal.fire({
+  }
+};
+
+// Handle callback from payment gateways
+
+const handlePaymentCallback = async () => {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
+    const momoResultCode = urlParams.get("resultCode");
+    const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
+
+    const pendingOrderStr = sessionStorage.getItem("pendingOrder");
+    const token = localStorage.getItem("token"); // JWT lưu trong localStorage
+console.log(localStorage.getItem("token"));
+
+    if (!token) {
+      await Swal.fire({
+        icon: "error",
+        title: "Bạn chưa đăng nhập!",
+        text: "Vui lòng đăng nhập trước khi thanh toán.",
+      });
+      window.location.href = "/login";
+      return;
+    }
+
+    if (pendingOrderStr) {
+      const orderPayload = JSON.parse(pendingOrderStr);
+
+      if (paymentSuccess) {
+        try {
+          // Tạo order trên backend
+          console.log("Token sent to backend:", token);
+          const createdOrderRes = await axios.post("http://localhost:8080/api/order", orderPayload, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const orderId = createdOrderRes.data?.id || createdOrderRes.data;
+
+          // Gọi endpoint xác nhận thanh toán VNPAY nếu backend có
+          try {
+            await axios.post(
+              `http://localhost:8080/api/order/vnpay-success/${orderId}`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+          } catch (e) {
+            console.warn("Không thể gọi /vnpay-success:", e);
+          }
+
+          // Xóa session tạm
+          sessionStorage.removeItem("pendingOrder");
+          sessionStorage.removeItem("cart");
+          sessionStorage.removeItem("checkoutItems");
+          cartItems.value = [];
+
+          // Thông báo thành công
+          await Swal.fire({
+            icon: "success",
+            title: "Thanh toán thành công!",
+            text: "Đơn hàng của bạn đã được ghi nhận.",
+          });
+          window.location.href = "/orders";
+        } catch (err) {
+          console.error("Lỗi khi tạo đơn hàng sau thanh toán:", err);
+          await Swal.fire({
+            icon: "error",
+            title: "Lỗi khi lưu đơn hàng",
+            text: "Vui lòng liên hệ quản trị viên.",
+          });
+          window.location.href = "/cart";
+        }
+      } else {
+        // Thanh toán thất bại
+        sessionStorage.removeItem("pendingOrder");
+        await Swal.fire({
+          icon: "error",
+          title: "Thanh toán thất bại hoặc đã bị hủy!",
+        });
+        window.location.href = "/cart";
+      }
+    } else if (vnp_ResponseCode || momoResultCode) {
+      // Có callback nhưng không có pendingOrder
+      await Swal.fire({
+        icon: "error",
+        title: "Không tìm thấy thông tin đơn hàng!",
+        text: "Vui lòng kiểm tra lại giỏ hàng.",
+      });
+      window.location.href = "/cart";
+    }
+  } catch (err) {
+    console.error("handlePaymentCallback unexpected error:", err);
+    await Swal.fire({
       icon: "error",
-      title: "Có lỗi khi thanh toán!",
+      title: "Có lỗi xảy ra!",
       text: "Vui lòng thử lại sau.",
     });
+    window.location.href = "/cart";
+  } finally {
+    // Xóa query params khỏi URL
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.origin + window.location.pathname
+    );
   }
 };
 
-// Handle callback from payment gateways
-const handlePaymentCallback = async () => {
-// Handle callback from payment gateways
-const handlePaymentCallback = async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
-  const momoResultCode = urlParams.get("resultCode");
-  const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
-  const momoResultCode = urlParams.get("resultCode");
-  const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
-  const pendingOrder = sessionStorage.getItem("pendingOrder");
-
-  if (pendingOrder && paymentSuccess) {
-    try {
-      const orderPayload = JSON.parse(pendingOrder);
-      const createdOrder = await axios.post("/api/order", orderPayload);
-      const orderId = createdOrder.data?.id || createdOrder.data;
-
-      // call vnpay-success endpoint if exists
-      try {
-        await axios.post(`/api/order/vnpay-success/${orderId}`);
-      } catch (e) {
-        console.warn("Could not call vnpay-success", e);
-      }
-      const createdOrder = await axios.post("/api/order", orderPayload);
-      const orderId = createdOrder.data?.id || createdOrder.data;
-
-      // call vnpay-success endpoint if exists
-      try {
-        await axios.post(`/api/order/vnpay-success/${orderId}`);
-      } catch (e) {
-        console.warn("Could not call vnpay-success", e);
-      }
-
-      sessionStorage.removeItem("pendingOrder");
-      sessionStorage.removeItem("cart");
-      sessionStorage.removeItem("checkoutItems");
-      cartItems.value = [];
-
-      Swal.fire({
-        icon: "success",
-        title: "Thanh toán thành công!",
-        text: "Đơn hàng của bạn đã được ghi nhận.",
-      }).then(() => (window.location.href = "/orders"));
-      Swal.fire({
-        icon: "success",
-        title: "Thanh toán thành công!",
-        text: "Đơn hàng của bạn đã được ghi nhận.",
-      }).then(() => (window.location.href = "/orders"));
-    } catch (err) {
-      console.error("Error creating order after payment", err);
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi khi lưu đơn hàng",
-        text: "Vui lòng liên hệ quản trị viên.",
-      });
-      console.error("Error creating order after payment", err);
-      Swal.fire({
-        icon: "error",
-        title: "Lỗi khi lưu đơn hàng",
-        text: "Vui lòng liên hệ quản trị viên.",
-      });
-    }
-  } else if (vnp_ResponseCode || momoResultCode) {
-    // failed or canceled
-    // failed or canceled
-    sessionStorage.removeItem("pendingOrder");
-    Swal.fire({
-      icon: "error",
-      title: "Thanh toán thất bại hoặc đã bị hủy!",
-    }).then(() => (window.location.href = "/cart"));
-  }
-
-  // Clean query params
-  window.history.replaceState(
-    {},
-    document.title,
-    window.location.origin + window.location.pathname
-  );
-};
 
 onMounted(async () => {
   fetchCartFromSessionStorage();
@@ -961,29 +945,10 @@ onMounted(async () => {
   await fetchAddresses();
   await fetchPaymentMethods();
   await fetchVouchers();
-  await handlePaymentCallback();
-    Swal.fire({
-      icon: "error",
-      title: "Thanh toán thất bại hoặc đã bị hủy!",
-    }).then(() => (window.location.href = "/cart"));
+const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("vnp_ResponseCode") || urlParams.get("resultCode")) {
+    await handlePaymentCallback();
   }
-
-  // Clean query params
-  window.history.replaceState(
-    {},
-    document.title,
-    window.location.origin + window.location.pathname
-  );
-};
-
-onMounted(async () => {
-  fetchCartFromSessionStorage();
-  fetchAccountId();
-  await fetchProvinces();
-  await fetchAddresses();
-  await fetchPaymentMethods();
-  await fetchVouchers();
-  await handlePaymentCallback();
 });
 </script>
 

@@ -13,7 +13,7 @@ instance.interceptors.request.use((config) => {
     url.startsWith("/auth/") ||        
     url.startsWith("/api/ghn/") ||     
     url.startsWith("/api/address/") || 
-    url.startsWith("/api/vnpay/") ||   
+     url.startsWith("/api/vnpay/") ||
     url.startsWith("/ghn/")            
   ) {
     return config;

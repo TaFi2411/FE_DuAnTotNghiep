@@ -1,13 +1,11 @@
 <template>
   <div
-    class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 via-white to-blue-100 text-center px-4"
+    class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 via-white to-blue-100 text-center px-4 relative"
   >
     <!-- 🔹 Khối thông báo chính -->
     <div
       class="w-full max-w-lg p-10 rounded-3xl shadow-2xl border backdrop-blur-md transition-all duration-500"
-      :class="status === 'success'
-        ? 'bg-gradient-to-br from-green-50 to-emerald-100 border-emerald-300'
-        : 'bg-gradient-to-br from-red-50 to-rose-100 border-rose-300'"
+      :class="boxClass"
     >
       <!-- Biểu tượng động -->
       <div class="text-7xl mb-6 animate-bounce">
@@ -16,10 +14,7 @@
       </div>
 
       <!-- Tiêu đề -->
-      <h1
-        class="text-3xl font-extrabold mb-3 tracking-wide"
-        :class="status === 'success' ? 'text-emerald-700' : 'text-rose-700'"
-      >
+      <h1 class="text-3xl font-extrabold mb-3 tracking-wide" :class="textClass">
         {{ status === 'success' ? 'Thanh toán thành công!' : 'Thanh toán thất bại!' }}
       </h1>
 
@@ -59,17 +54,30 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 
 const router = useRouter();
 const route = useRoute();
 const status = ref("");
 
+// Computed class cho div chính
+const boxClass = computed(() =>
+  status.value === "success"
+    ? "bg-gradient-to-br from-green-50 to-emerald-100 border-emerald-300"
+    : "bg-gradient-to-br from-red-50 to-rose-100 border-rose-300"
+);
+
+const textClass = computed(() =>
+  status.value === "success" ? "text-emerald-700" : "text-rose-700"
+);
+
 onMounted(async () => {
+  // Lấy trạng thái và orderId từ query params hoặc localStorage
   status.value = route.query.status || "fail";
   const orderId = route.query.orderId || localStorage.getItem("orderId");
 
+  // Nếu thanh toán thành công → gọi endpoint cập nhật trạng thái đơn hàng
   if (status.value === "success" && orderId) {
     try {
       const response = await fetch(
@@ -77,35 +85,26 @@ onMounted(async () => {
         { method: "POST" }
       );
 
-      if (response.ok) {
-        console.log("✅ Cập nhật đơn hàng thành công!");
-      } else {
-        console.error("⚠️ Lỗi khi cập nhật đơn hàng:", await response.text());
-      }
+      if (response.ok) console.log("✅ Cập nhật đơn hàng thành công!");
+      else console.error("⚠️ Lỗi khi cập nhật đơn hàng:", await response.text());
     } catch (error) {
       console.error("❌ Lỗi khi gửi yêu cầu cập nhật:", error);
     }
   }
 
-  setTimeout(() => {
-    router.push("/");
-  }, 4000);
+  // Tự động chuyển về trang chủ sau 4 giây
+  setTimeout(() => router.push("/"), 4000);
 });
 
-const goHome = () => {
-  router.push("/");
-};
+// Nút về trang chủ
+const goHome = () => router.push("/");
 </script>
 
 <style scoped>
 /* Hiệu ứng bounce mượt hơn */
 @keyframes bounce-smooth {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
 }
 .animate-bounce {
   animation: bounce-smooth 1.2s infinite;
@@ -113,14 +112,8 @@ const goHome = () => {
 
 /* Hiệu ứng ánh sáng */
 @keyframes pulse-light {
-  0%, 100% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(1.1);
-  }
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.1); }
 }
 .animate-pulse {
   animation: pulse-light 3s ease-in-out infinite;
