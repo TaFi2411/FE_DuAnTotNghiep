@@ -24,8 +24,11 @@ const toggleSidebar = () => {
 }
 
 const menu = [
-  { name: 'Tổng quan', path: '/admin', icon: 'bi bi-speedometer2' },
- {
+  { type: 'item', name: 'Tổng quan', path: '/admin', icon: 'bi bi-speedometer2' },
+
+  { type: 'title', label: 'QUẢN LÝ SẢN PHẨM' },
+  {
+    type: 'item',
     name: 'Sản phẩm',
     icon: 'bi bi-box-seam',
     children: [
@@ -33,14 +36,20 @@ const menu = [
       { name: 'Thêm sản phẩm', path: '/admin/product/create' },
     ]
   },
-  { name: 'Loại', path: '/admin/category', icon: 'bi bi-journal-bookmark' },
-  { name: 'Thuộc tính', path: '/admin/attribute', icon: 'bi bi-segmented-nav' },
-  { name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-ticket-detailed' },
-  { name: 'FlashSale', path: '/admin/flash-sale-admin', icon: 'bi bi-lightning-charge-fill' },
-  { name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
-  { name: 'Người dùng', path: '/admin/account-management', icon: 'bi bi-people' },
-  { name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-people' },
+  { type: 'item', name: 'Loại', path: '/admin/category', icon: 'bi bi-journal-bookmark' },
+  { type: 'item', name: 'Thuộc tính', path: '/admin/attribute', icon: 'bi bi-segmented-nav' },
+
+  { type: 'title', label: 'QUẢN LÝ BÁN HÀNG' },
+  { type: 'item', name: 'Voucher', path: '/admin/list-voucher', icon: 'bi bi-ticket-detailed' },
+  { type: 'item', name: 'FlashSale', path: '/admin/flash-sale-admin', icon: 'bi bi-lightning-charge-fill' },
+  { type: 'item', name: 'Đơn hàng', path: '/admin/orders', icon: 'bi bi-cart-check' },
+
+  { type: 'title', label: 'HỆ THỐNG' },
+  { type: 'item', name: 'Người dùng', path: '/admin/account-management', icon: 'bi bi-people' },
+  { type: 'item', name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-bar-chart' },
 ]
+
+
 </script>
 
 <style scoped>

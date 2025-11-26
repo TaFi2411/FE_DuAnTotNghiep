@@ -152,14 +152,13 @@ const login = async () => {
     const token = res.data.token;
     if (!token) throw new Error("Không nhận được token từ server");
 
-    // Lưu token & role
     localStorage.setItem("token", token);
     const payload = JSON.parse(atob(token.split(".")[1]));
     const roles = payload.roles || [];
     const role = roles.length > 0 ? roles[0] : null;
     if (role) localStorage.setItem("role", role);
 
-    // Thành công
+  
     await Swal.fire({
       icon: "success",
       title: "Đăng nhập thành công",

@@ -193,8 +193,8 @@ import { ref, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "@/composables/axios.js";
 import { useCkeditor } from "@/composables/useCkeditor";
+import Swal from "sweetalert2";
 
-// CKEditor
 const { content: descContent, setData: setDescData } = useCkeditor("descEditor", {
   height: 300,
 });
@@ -360,7 +360,7 @@ async function updateProduct() {
 
   await axios.put(`/api/product/${product.value.id}`, payload);
 
-  alert("Update thành công!");
+  Swal.fire("Thành công", "Cập nhật sản phẩm thành công!", "success");
   router.push("/admin/list-product");
 }
 </script>

@@ -3,26 +3,52 @@
     <div class="row align-items-start g-5">
       <!-- 🔹 Ảnh sản phẩm -->
       <div class="col-lg-6 col-md-12 text-center">
-        <div class="main-image-wrapper position-relative bg-white rounded-4 shadow-lg p-4">
-          <img :src="currentImage || '/images/default-product.png'" alt="Ảnh sản phẩm"
-            class="img-fluid rounded-3 main-image" />
+        <div
+          class="main-image-wrapper position-relative bg-white rounded-4 shadow-lg p-4"
+        >
+          <img
+            :src="currentImage || '/images/default-product.png'"
+            alt="Ảnh sản phẩm"
+            class="img-fluid rounded-3 main-image"
+          />
         </div>
 
         <!-- 🔸 Thumbnail -->
         <!-- Nếu có hơn 6 ảnh thì hiển thị bằng Swiper -->
         <div v-if="getAllImages().length > 6" class="thumbs mt-4">
-          <Swiper :modules="[Navigation]" :slides-per-view="6" :space-between="10" navigation class="thumb-swiper">
+          <Swiper
+            :modules="[Navigation]"
+            :slides-per-view="6"
+            :space-between="10"
+            navigation
+            class="thumb-swiper"
+          >
             <SwiperSlide v-for="(img, idx) in getAllImages()" :key="idx">
-              <img :src="img" class="thumb" :class="{ active: img === currentImage }" @click="currentImage = img"
-                alt="thumb" />
+              <img
+                :src="img"
+                class="thumb"
+                :class="{ active: img === currentImage }"
+                @click="currentImage = img"
+                alt="thumb"
+              />
             </SwiperSlide>
           </Swiper>
         </div>
 
         <!-- Nếu có 6 ảnh trở xuống thì hiển thị dạng lưới -->
-        <div v-else class="thumbs d-flex justify-content-center gap-3 mt-4 flex-wrap">
-          <img v-for="(img, idx) in getAllImages()" :key="idx" :src="img" class="thumb"
-            :class="{ active: img === currentImage }" @click="currentImage = img" alt="thumb" />
+        <div
+          v-else
+          class="thumbs d-flex justify-content-center gap-3 mt-4 flex-wrap"
+        >
+          <img
+            v-for="(img, idx) in getAllImages()"
+            :key="idx"
+            :src="img"
+            class="thumb"
+            :class="{ active: img === currentImage }"
+            @click="currentImage = img"
+            alt="thumb"
+          />
         </div>
       </div>
 
@@ -36,16 +62,26 @@
           </p>
 
           <!-- Thuộc tính -->
-          <div v-for="(attrGroup, index) in attributes" :key="index" class="attribute-group mb-3">
+          <div
+            v-for="(attrGroup, index) in attributes"
+            :key="index"
+            class="attribute-group mb-3"
+          >
             <h6 class="fw-semibold mb-2 text-black">{{ attrGroup.name }}</h6>
             <div class="options">
-              <span v-for="option in getVisibleOptions(attrGroup)" :key="option.name" class="option" :class="{
-                active: selectedAttributes[attrGroup.name] === option.name,
-                disabled: option.disabled,
-              }" @click="
-                !option.disabled &&
-                selectAttribute(attrGroup.name, option.name)
-                ">
+              <span
+                v-for="option in getVisibleOptions(attrGroup)"
+                :key="option.name"
+                class="option"
+                :class="{
+                  active: selectedAttributes[attrGroup.name] === option.name,
+                  disabled: option.disabled,
+                }"
+                @click="
+                  !option.disabled &&
+                    selectAttribute(attrGroup.name, option.name)
+                "
+              >
                 {{ option.name }}
               </span>
             </div>
@@ -55,11 +91,24 @@
           <div class="quantity-selector mt-4" v-if="selectedSku">
             <label class="quantity-label text-black">Số lượng:</label>
             <div class="quantity-controls">
-              <button class="btn-qty" @click="decreaseQuantity" :disabled="quantity <= 1">
+              <button
+                class="btn-qty"
+                @click="decreaseQuantity"
+                :disabled="quantity <= 1"
+              >
                 <i class="bi bi-dash"></i>
               </button>
-              <input type="number" class="quantity-input" v-model="quantity" readonly />
-              <button class="btn-qty" @click="increaseQuantity" :disabled="quantity >= selectedSku.quantity">
+              <input
+                type="number"
+                class="quantity-input"
+                v-model="quantity"
+                readonly
+              />
+              <button
+                class="btn-qty"
+                @click="increaseQuantity"
+                :disabled="quantity >= selectedSku.quantity"
+              >
                 <i class="bi bi-plus"></i>
               </button>
             </div>
@@ -67,7 +116,11 @@
 
           <!-- Nút thao tác -->
           <div class="button-group mt-4">
-            <button class="btn add-cart" :disabled="!hasStock" @click="addToCart">
+            <button
+              class="btn add-cart"
+              :disabled="!hasStock"
+              @click="addToCart"
+            >
               <i class="bi bi-cart"></i> Thêm vào giỏ
             </button>
             <button class="btn buy-now" :disabled="!hasStock" @click="buyNow">
@@ -132,14 +185,21 @@
       </div>
     </div>
 
-    <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper">
+    <div
+      class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper"
+    >
       <h4 class="fw-bold mb-3 text-black text-center">Mô tả sản phẩm</h4>
 
       <div class="description-text text-secondary lh-lg mx-auto">
-        <div v-html="showFullDescription ? product.description : shortDescription"></div>
+        <div
+          v-html="showFullDescription ? product.description : shortDescription"
+        ></div>
 
-        <button v-if="product.description && product.description.length > 300"
-          class="btn btn-link p-0 mt-3 description-toggle" @click="showFullDescription = !showFullDescription">
+        <button
+          v-if="product.description && product.description.length > 300"
+          class="btn btn-link p-0 mt-3 description-toggle"
+          @click="showFullDescription = !showFullDescription"
+        >
           {{ showFullDescription ? "Thu gọn ▲" : "Xem thêm ▼" }}
         </button>
       </div>
@@ -150,7 +210,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
+import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation } from "swiper/modules";
@@ -198,7 +258,7 @@ function decodeJwtToken(token) {
 const loadProductDetail = async () => {
   try {
     const res = await axios.get(
-      `http://localhost:8080/api/product/${route.params.id}`
+      `/api/product/${route.params.id}`
     );
     product.value = res.data;
     currentImage.value = product.value.image;
@@ -228,8 +288,6 @@ const loadProductDetail = async () => {
       updateSelectedSku();
     }
 
-    // Gọi sản phẩm tương tự (nếu backend có categoryId)
-    await loadRelatedProducts();
   } catch (err) {
     console.error("Lỗi khi tải sản phẩm:", err);
   }
@@ -357,7 +415,7 @@ const addToCart = async () => {
   }
 
   try {
-    const res = await axios.post("http://localhost:8080/api/cart-details", {
+    const res = await axios.post("/api/cart-details", {
       accountId: accountId.value,
       skuId: selectedSku.value.id,
       quantity: quantity.value,
@@ -420,6 +478,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+
 .policy-premium-row {
   width: 100%;
   padding: 22px 0;

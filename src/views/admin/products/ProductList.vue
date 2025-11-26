@@ -34,7 +34,7 @@
           <span v-else-if="props.column.field === 'status'">
             <span
               class="badge"
-              :class="props.row.status ? 'bg-success' : 'bg-secondary'"
+              
             >
               {{ props.row.status ? "Đang bán" : "Ngừng bán" }}
             </span>
@@ -73,7 +73,6 @@ import { ref, onMounted } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 import { useRouter } from "vue-router";
-// ✅ BƯỚC 2: IMPORT CSS (Đã có sẵn)
 import "vue-good-table-next/dist/vue-good-table-next.css";
 
 const router = useRouter();
@@ -145,7 +144,7 @@ onMounted(fetchProducts);
   color: black;
 }
 
-/* ===== ✅ NÚT THÊM (ĐÃ CẬP NHẬT) ===== */
+
 .btn-add-product {
   display: inline-flex;
   align-items: center;
@@ -181,11 +180,7 @@ onMounted(fetchProducts);
 }
 
 
-/* ===== ✅ BƯỚC 3: CSS CHO SCROLLBAR VÀ STICKY HEADER ===== */
-
-/* 1. Style cho vùng cuộn (tbody) */
 :deep(.vgt-table-wrapper) {
-  /* Tùy chỉnh thanh cuộn cho mỏng và đẹp */
   &::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -203,20 +198,10 @@ onMounted(fetchProducts);
   }
 }
 
-/* 2. Ép header phải "dính" (sticky) */
 :deep(.vgt-table thead th) {
-  /* Sử dụng !important để đảm bảo
-    ghi đè lên mọi style khác 
-  */
   position: sticky !important;
   top: 0 !important;
-
-  /* Thêm nền trắng (hoặc màu nền của bạn) 
-    để tbody không bị "xuyên thấu" qua header khi cuộn
-  */
   background: white !important;
-
-  /* Đảm bảo header luôn nổi lên trên */
   z-index: 10 !important;
 }
 </style>

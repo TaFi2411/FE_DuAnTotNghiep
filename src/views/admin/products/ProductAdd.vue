@@ -237,12 +237,10 @@ import useVuelidate from "@vuelidate/core";
 import { required, minLength, numeric } from "@vuelidate/validators";
 import Swal from "sweetalert2";
 import { useCkeditor } from "@/composables/useCkeditor";
+
 const { content: descContent, setData: setDescData } = useCkeditor("descEditor", {
   height: 300,
 });
-
-
-
 
 
 const product = ref({
@@ -272,6 +270,7 @@ watch(selectedOptionIds, (newIds) => {
     }
   }
 });
+
 watch(descContent, (val) => {
   product.value.description = val;
 });
@@ -394,14 +393,14 @@ async function handleAutoUploadSkuImages(event, index) {
 
 
 
-function addSku() {
-  product.value.skus.push({
-    price: null,
-    quantity: null,
-    attributes: [],
-    skuImages: [],
-  });
-}
+// function addSku() {
+//   product.value.skus.push({
+//     price: null,
+//     quantity: null,
+//     attributes: [],
+//     skuImages: [],
+//   });
+// }
 function removeSku(index) {
   product.value.skus.splice(index, 1);
 }
