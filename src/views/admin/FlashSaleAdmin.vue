@@ -17,10 +17,11 @@
             <div class="col-md-4 mb-3">
               <label class="form-label">Tiêu đề</label>
               <input
-                v-model="form.title"
+                v-model.lazy="form.title"
                 type="text"
                 class="form-control"
                 :class="{ 'is-invalid': v$.title.$error }"
+                @blur="v$.title.$touch()"
               />
               <small class="text-danger" v-if="v$.title.$error">
                 {{ v$.title.$errors[0].$message }}
@@ -30,10 +31,11 @@
             <div class="col-md-2 mb-3">
               <label class="form-label">Giảm giá (%)</label>
               <input
-                v-model.number="form.discount"
+                v-model.lazy.number="form.discount"
                 type="number"
                 class="form-control"
                 :class="{ 'is-invalid': v$.discount.$error }"
+                @blur="v$.discount.$touch()"
               />
               <small class="text-danger" v-if="v$.discount.$error">
                 {{ v$.discount.$errors[0].$message }}
@@ -43,10 +45,11 @@
             <div class="col-md-3 mb-3">
               <label class="form-label">Ngày bắt đầu</label>
               <input
-                v-model="form.started_date"
+                v-model.lazy="form.started_date"
                 type="datetime-local"
                 class="form-control"
                 :class="{ 'is-invalid': v$.started_date.$error }"
+                @blur="v$.started_date.$touch()"
               />
               <small class="text-danger" v-if="v$.started_date.$error">
                 {{ v$.started_date.$errors[0].$message }}
@@ -56,18 +59,15 @@
             <div class="col-md-3 mb-3">
               <label class="form-label">Ngày kết thúc</label>
               <input
-                v-model="form.ended_date"
+                v-model.lazy="form.ended_date"
                 type="datetime-local"
                 class="form-control"
                 :class="{ 'is-invalid': v$.ended_date.$error }"
+                @blur="v$.ended_date.$touch()"
               />
               <small class="text-danger" v-if="v$.ended_date.$error">
-                <span v-if="v$.ended_date.required.$invalid"
-                  >Ngày kết thúc không được để trống</span
-                >
-                <span v-else-if="v$.ended_date.afterStart.$invalid"
-                  >Ngày kết thúc phải lớn hơn ngày bắt đầu</span
-                >
+                <span v-if="v$.ended_date.required.$invalid">Ngày kết thúc không được để trống</span>
+                <span v-else-if="v$.ended_date.afterStart.$invalid">Ngày kết thúc phải lớn hơn ngày bắt đầu</span>
               </small>
             </div>
           </div>
@@ -83,10 +83,7 @@
           </div>
 
           <button type="submit" class="btn-save me-2">
-            <i
-              class="bi"
-              :class="editMode ? 'bi-check-lg' : 'bi-plus-lg'"
-            ></i>
+            <i class="bi" :class="editMode ? 'bi-check-lg' : 'bi-plus-lg'"></i>
             {{ editMode ? "Cập nhật" : "Tạo mới" }}
           </button>
           <button
@@ -111,10 +108,7 @@
         :columns="columns"
         :rows="flashSales"
         :pagination-options="paginationOptions"
-        :search-options="{
-          enabled: true,
-          placeholder: 'Tìm kiếm Flash Sale...',
-        }"
+        :search-options="{ enabled: true, placeholder: 'Tìm kiếm Flash Sale...' }"
         theme="polar-bear"
         :max-height="'60vh'"
       >
@@ -141,11 +135,7 @@
           </span>
 
           <span
-            v-else-if="
-              ['created_date', 'started_date', 'ended_date'].includes(
-                props.column.field
-              )
-            "
+            v-else-if="['created_date', 'started_date', 'ended_date'].includes(props.column.field)"
           >
             {{ formatDateTime(props.row[props.column.field]) }}
           </span>
@@ -164,9 +154,7 @@ import { ref, reactive, onMounted } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 import { useRouter } from "vue-router";
-// ✅ BƯỚC 2: IMPORT CSS (Đã có sẵn)
 import "vue-good-table-next/dist/vue-good-table-next.css";
-// Import Vuelidate
 import useVuelidate from "@vuelidate/core";
 import { required, numeric, between, helpers } from "@vuelidate/validators";
 
@@ -185,7 +173,6 @@ const form = reactive({
 });
 
 // --- VUELIDATE SETUP ---
-// Validator tùy chỉnh
 const afterStart = helpers.withMessage(
   "Phải lớn hơn ngày bắt đầu",
   (value) => {
@@ -194,19 +181,14 @@ const afterStart = helpers.withMessage(
   }
 );
 
-// Rules
 const rules = {
-  title: {
-    required: helpers.withMessage("Tiêu đề không được để trống", required),
-  },
+  title: { required: helpers.withMessage("Tiêu đề không được để trống", required) },
   discount: {
     required: helpers.withMessage("Giảm giá không được để trống", required),
     numeric: helpers.withMessage("Phải là số", numeric),
     between: helpers.withMessage("Giảm giá phải từ 0–100", between(0, 100)),
   },
-  started_date: {
-    required: helpers.withMessage("Ngày bắt đầu không được để trống", required),
-  },
+  started_date: { required: helpers.withMessage("Ngày bắt đầu không được để trống", required) },
   ended_date: {
     required: helpers.withMessage("Ngày kết thúc không được để trống", required),
     afterStart,
@@ -214,7 +196,6 @@ const rules = {
 };
 
 const v$ = useVuelidate(rules, form);
-// --- HẾT VUELIDATE ---
 
 // 🧩 Cột hiển thị
 const columns = ref([
@@ -228,7 +209,7 @@ const columns = ref([
   { label: "Hành động", field: "actions", width: "130px" },
 ]);
 
-// 🧭 Phân trang frontend
+// 🧭 Phân trang
 const paginationOptions = ref({
   enabled: true,
   perPage: 10,
@@ -242,13 +223,10 @@ const paginationOptions = ref({
 const fetchFlashSales = async () => {
   loading.value = true;
   try {
-    const res = await axios.get("/api/flash-sale", {
-      params: { page: 0, size: 1000 },
-    });
+    const res = await axios.get("/api/flash-sale", { params: { page: 0, size: 1000 } });
     const data = res.data.data || res.data.content || res.data || [];
     flashSales.value = data.sort((a, b) => b.id - a.id);
   } catch (err) {
-    console.error("❌ Lỗi tải Flash Sale:", err);
     Swal.fire("Lỗi", "Không thể tải danh sách Flash Sale!", "error");
   } finally {
     loading.value = false;
@@ -258,12 +236,10 @@ const fetchFlashSales = async () => {
 // 📆 Định dạng thời gian
 const formatDateTime = (date) => {
   if (!date) return "";
-  return new Date(date).toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-  });
+  return new Date(date).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
 };
 
-// ⚡ Trạng thái hiển thị
+// ⚡ Trạng thái
 const isActiveNow = (sale) => {
   const now = new Date();
   const start = new Date(sale.started_date);
@@ -288,7 +264,6 @@ const getStatusClass = (sale) => {
 // 🧱 CRUD
 const goToFlashSaleSku = () => router.push("/admin/flash-sale-sku");
 
-// Cần giữ hàm này
 const formatDateToServer = (dateString) => {
   if (!dateString) return null;
   const localDate = new Date(dateString);
@@ -297,7 +272,6 @@ const formatDateToServer = (dateString) => {
 };
 
 const createFlashSale = async () => {
-  // Thay thế validateForm bằng Vuelidate
   const isValid = await v$.value.$validate();
   if (!isValid) return;
 
@@ -317,7 +291,6 @@ const createFlashSale = async () => {
 };
 
 const updateFlashSale = async () => {
-  // Thay thế validateForm bằng Vuelidate
   const isValid = await v$.value.$validate();
   if (!isValid) return;
 
@@ -366,7 +339,7 @@ const editSale = (sale) => {
   });
   editMode.value = true;
   editId.value = sale.id;
-  v$.value.$reset(); // Reset lỗi validation khi edit
+  v$.value.$reset();
 };
 
 const cancelEdit = () => resetForm();
@@ -381,162 +354,70 @@ const resetForm = () => {
   });
   editMode.value = false;
   editId.value = null;
-  v$.value.$reset(); // Reset lỗi validation
+  v$.value.$reset();
 };
 
-// 🚀 Khi component mount
 onMounted(fetchFlashSales);
 </script>
 
 <style scoped>
-/* CSS Layout cơ bản (giữ nguyên) */
+/* CSS Layout cơ bản */
 .p-3 {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
-.badge {
-  font-size: 13px;
-  padding: 5px 10px;
-}
+.badge { font-size: 13px; padding: 5px 10px; }
 
-/* ===== ✅ NÚT HEADER (ĐÃ THÊM) ===== */
+/* Nút Header */
 .btn-header-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border: 1px solid #0d6efd; /* Primary color */
-  border-radius: 6px;
-  height: 38px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  background-color: #fff;
-  color: #0d6efd;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 500; padding: 8px 16px;
+  border: 1px solid #0d6efd; border-radius: 6px; height: 38px;
+  cursor: pointer; transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); background-color: #fff; color: #0d6efd;
 }
 .btn-header-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #0d6efd;
-  color: #fff;
+  transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #0d6efd; color: #fff;
 }
 
-/* ===== CSS NÚT BẤM (ĐÃ CẬP NHẬT) ===== */
-
-/* Style cơ bản cho cả 2 nút */
-.btn-save,
-.btn-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 16px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  height: 38px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* Buttons */
+.btn-save, .btn-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 500; padding: 8px 16px;
+  border: 1px solid transparent; border-radius: 6px; height: 38px;
+  cursor: pointer; transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-.btn-save:hover,
-.btn-back:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.btn-save:hover, .btn-back:hover {
+  transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+.btn-save { background-color: #198754; color: #fff; border-color: #198754; }
+.btn-save:hover { background-color: #157347; border-color: #146c43; }
+.btn-back { background-color: #6c757d; color: #fff; border-color: #6c757d; }
+.btn-back:hover { background-color: #5c636a; border-color: #565e64; }
 
-/* Nút Lưu/Tạo (Xanh) */
-.btn-save {
-  background-color: #198754;
-  color: #fff;
-  border-color: #198754;
+/* Validation & Focus */
+.form-control.is-invalid, .form-check-input.is-invalid { border-color: #dc3545; }
+.form-control.is-invalid:focus, .form-check-input.is-invalid:focus {
+  border-color: #dc3545; box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
-.btn-save:hover {
-  background-color: #157347;
-  border-color: #146c43;
-}
-
-/* Nút Hủy (Xám) */
-.btn-back {
-  background-color: #6c757d;
-  color: #fff;
-  border-color: #6c757d;
-}
-.btn-back:hover {
-  background-color: #5c636a;
-  border-color: #565e64;
-}
-
-/* Nút bấm trong bảng (giữ nguyên) */
-.btn-outline-warning,
-.btn-outline-danger {
-  padding: 4px 8px;
-  font-size: 13px;
-}
-
-/* ===== CSS VALIDATION + FOCUS (ĐÃ THÊM) ===== */
-.form-control.is-invalid,
-.form-check-input.is-invalid {
-  border-color: #dc3545;
-}
-
-.form-control.is-invalid:focus,
-.form-check-input.is-invalid:focus {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
-}
-
 .form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+  border-color: #0d6efd; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+.text-danger { font-size: 0.875rem; margin-top: 4px; display: block; }
 
-.text-danger {
-  font-size: 0.875rem;
-  margin-top: 4px;
-  display: block;
-}
-
-/* ===== ✅ BƯỚC 3: CSS CHO SCROLLBAR VÀ STICKY HEADER ===== */
-
-/* 1. Style cho vùng cuộn (tbody) */
+/* Scrollbar & Sticky Header */
 :deep(.vgt-table-wrapper) {
-  /* Tùy chỉnh thanh cuộn cho mỏng và đẹp */
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-  }
-  &::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-  }
+  &::-webkit-scrollbar { width: 6px; height: 6px; }
+  &::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+  &::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+  &::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
 }
-
-/* 2. Ép header phải "dính" (sticky) */
 :deep(.vgt-table thead th) {
-  /* Sử dụng !important để đảm bảo
-    ghi đè lên mọi style khác 
-  */
-  position: sticky !important;
-  top: 0 !important;
-
-  /* Thêm nền trắng (hoặc màu nền của bạn) 
-    để tbody không bị "xuyên thấu" qua header khi cuộn
-  */
-  background: white !important;
-
-  /* Đảm bảo header luôn nổi lên trên */
-  z-index: 10 !important;
+  position: sticky !important; top: 0 !important;
+  background: white !important; z-index: 10 !important;
 }
 </style>

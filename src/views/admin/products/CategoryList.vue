@@ -5,23 +5,17 @@
     <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
       <div class="flex-grow-1">
         <input
-          v-model="form.name"
+          v-model.lazy="form.name"
           type="text"
           class="form-control"
           placeholder="Nhập tên danh mục..."
-          @input="onNameInput"
+          @blur="handleNameBlur"
           :class="{ 'is-invalid': v$.name.$error }"
         />
         <small class="text-danger" v-if="v$.name.$error">
-          <span v-if="v$.name.required.$invalid"
-            >Tên danh mục không được để trống</span
-          >
-          <span v-else-if="v$.name.minLength.$invalid"
-            >Tên danh mục ít nhất 3 ký tự</span
-          >
-          <span v-else-if="v$.name.duplicateName.$invalid"
-            >Tên danh mục đã tồn tại</span
-          >
+          <span v-if="v$.name.required.$invalid">Tên danh mục không được để trống</span>
+          <span v-else-if="v$.name.minLength.$invalid">Tên danh mục ít nhất 3 ký tự</span>
+          <span v-else-if="v$.name.duplicateName.$invalid">Tên danh mục đã tồn tại</span>
         </small>
       </div>
 
@@ -35,12 +29,8 @@
           :class="{ 'is-invalid': v$.slug.$error }"
         />
         <small class="text-danger" v-if="v$.slug.$error">
-          <span v-if="v$.slug.required.$invalid"
-            >Slug không được bỏ trống</span
-          >
-          <span v-else-if="v$.slug.duplicateSlug.$invalid"
-            >Slug đã tồn tại</span
-          >
+          <span v-if="v$.slug.required.$invalid">Slug không được bỏ trống</span>
+          <span v-else-if="v$.slug.duplicateSlug.$invalid">Slug đã tồn tại</span>
         </small>
       </div>
 
@@ -76,9 +66,7 @@
     >
       <template #table-row="props">
         <span v-if="props.column.field === 'status'">
-          <span
-            :class="['badge', props.row.status ? 'bg-success' : 'bg-secondary']"
-          >
+          <span :class="['badge', props.row.status ? 'bg-success' : 'bg-secondary']">
             {{ props.row.status ? 'Hoạt động' : 'Ẩn' }}
           </span>
         </span>
@@ -117,14 +105,17 @@ import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 import useVuelidate from "@vuelidate/core";
 import { required, minLength, helpers } from "@vuelidate/validators";
-
-// ✅ BƯỚC 2: IMPORT CSS CỦA THƯ VIỆN
-// (Bắt buộc để 'max-height' hoạt động đúng và cố định header)
 import "vue-good-table-next/dist/vue-good-table-next.css";
 
 const categories = ref([]);
 const isEdit = ref(false);
-const form = ref({ id: null, name: "", slug: "", status: true });
+
+const form = ref({
+  id: null,
+  name: "",
+  slug: "",
+  status: true,
+});
 
 const columns = ref([
   { label: "ID", field: "id", sortable: true, width: "80px" },
@@ -143,23 +134,18 @@ const paginationOptions = ref({
   prevLabel: "Trang trước",
 });
 
-// 🔹 Load danh mục
+/* ========== Load danh mục ========== */
 const fetchCategories = async () => {
   try {
-    const res = await axios.get("/api/category", {
-      params: { page: 0, size: 1000 },
-    });
-    categories.value =
-      (Array.isArray(res.data.data)
-        ? res.data.data
-        : res.data.content || res.data) || [];
+    const res = await axios.get("/api/category", { params: { page: 0, size: 1000 } });
+    const data = res.data?.data || res.data?.content || res.data;
+    categories.value = Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error("❌ Lỗi tải danh mục:", err);
     Swal.fire("Lỗi", "Không thể tải danh mục!", "error");
   }
 };
 
-// 🔹 Chuyển name sang slug
+/* ========== Auto slug (Được gọi khi Blur) ========== */
 const onNameInput = () => {
   form.value.slug = (form.value.name || "")
     .toLowerCase()
@@ -171,18 +157,22 @@ const onNameInput = () => {
     .replace(/\s+/g, "-");
 };
 
-// 🧩 Vuelidate rules
-const duplicateName = helpers.withMessage(
-  "Tên danh mục đã tồn tại",
-  (value) => {
-    if (!value) return true;
-    return !categories.value.some(
-      (c) =>
-        c.name.trim().toLowerCase() === value.trim().toLowerCase() &&
-        c.id !== form.value.id
-    );
-  }
-);
+// Hàm xử lý khi blur khỏi ô Name
+const handleNameBlur = () => {
+  v$.value.name.$touch(); // 1. Kích hoạt validation
+  onNameInput();          // 2. Tạo slug từ tên mới nhập
+};
+
+/* ========== Validation ========== */
+const duplicateName = helpers.withMessage("Tên danh mục đã tồn tại", (value) => {
+  if (!value) return true;
+  return !categories.value.some(
+    (c) =>
+      c.name.trim().toLowerCase() === value.trim().toLowerCase() &&
+      c.id !== form.value.id
+  );
+});
+
 const duplicateSlug = helpers.withMessage("Slug đã tồn tại", (value) => {
   if (!value) return true;
   return !categories.value.some(
@@ -196,16 +186,24 @@ const rules = {
   name: { required, minLength: minLength(3), duplicateName },
   slug: { required, duplicateSlug },
 };
+
 const v$ = useVuelidate(rules, form);
 
-// 🔹 Thêm / cập nhật
+/* ========== Lưu hoặc cập nhật ========== */
 const saveCategory = async () => {
-  const isValid = await v$.value.$validate();
-  if (!isValid) return;
+  // Gọi onNameInput để đảm bảo slug được cập nhật lần cuối trước khi lưu
+  onNameInput(); 
+  const valid = await v$.value.$validate();
+  if (!valid) return;
 
   try {
     if (isEdit.value) {
-      await axios.put(`/api/category/${form.value.id}`, form.value);
+      await axios.put(`/api/category/${form.value.id}`, {
+        name: form.value.name,
+        slug: form.value.slug,
+        status: form.value.status,
+      });
+
       Swal.fire({
         icon: "success",
         title: "Cập nhật thành công",
@@ -213,7 +211,12 @@ const saveCategory = async () => {
         showConfirmButton: false,
       });
     } else {
-      await axios.post("/api/category", form.value);
+      await axios.post("/api/category", {
+        name: form.value.name,
+        slug: form.value.slug,
+        status: form.value.status,
+      });
+
       Swal.fire({
         icon: "success",
         title: "Thêm mới thành công",
@@ -222,35 +225,34 @@ const saveCategory = async () => {
       });
     }
 
-    form.value = { id: null, name: "", slug: "", status: true };
-    v$.value.$reset();
-    isEdit.value = false;
-
+    resetForm();
     fetchCategories();
   } catch (err) {
-    console.error(err);
-    Swal.fire(
-      "Lỗi",
-      err.response?.data?.message || "Đã có lỗi xảy ra",
-      "error"
-    );
+    Swal.fire("Lỗi", err.response?.data?.message || "Đã có lỗi xảy ra", "error");
   }
 };
 
-// 🔹 Chỉnh sửa
+/* ========== Edit ========== */
 const editCategory = (row) => {
-  form.value = { ...row };
+  form.value.id = row.id;
+  form.value.name = row.name;
+  form.value.slug = row.slug;
+  form.value.status = row.status;
+
   isEdit.value = true;
+  v$.value.$reset();
 };
 
-// 🔹 Hủy
-const cancelEdit = () => {
+/* ========== Hủy ========== */
+const resetForm = () => {
   form.value = { id: null, name: "", slug: "", status: true };
   v$.value.$reset();
   isEdit.value = false;
 };
 
-// 🔹 Xóa
+const cancelEdit = () => resetForm();
+
+/* ========== Delete ========== */
 const confirmDelete = async (id) => {
   const confirm = await Swal.fire({
     title: "Xóa danh mục?",
@@ -260,13 +262,14 @@ const confirmDelete = async (id) => {
     confirmButtonText: "Xóa",
     cancelButtonText: "Hủy",
   });
+
   if (!confirm.isConfirmed) return;
+
   try {
     await axios.delete(`/api/category/${id}`);
     Swal.fire("Đã xóa!", "Danh mục đã bị xóa.", "success");
     fetchCategories();
-  } catch (err) {
-    console.error("❌ Lỗi xoá danh mục:", err);
+  } catch {
     Swal.fire("Lỗi", "Không thể xóa danh mục!", "error");
   }
 };
@@ -278,12 +281,11 @@ onMounted(fetchCategories);
 /* ===== Đường phân cách ===== */
 hr {
   border: 0;
-  border-top: 1px solid #e9ecef; /* Màu xám nhạt hiện đại */
-  opacity: 1; /* Ghi đè opacity mặc định của Bootstrap */
+  border-top: 1px solid #e9ecef;
+  opacity: 1;
 }
 
-/* ===== Nút Thêm / Hủy ===== */
-/* Style cơ bản cho cả 2 nút */
+/* ===== Buttons ===== */
 .add-category-btn,
 .cancel-btn {
   display: inline-flex;
@@ -304,8 +306,6 @@ hr {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
-/* Nút Thêm (Xanh) */
 .add-category-btn {
   background-color: #198754;
   color: #fff;
@@ -315,8 +315,6 @@ hr {
   background-color: #157347;
   border-color: #146c43;
 }
-
-/* Nút Hủy (Xám) */
 .cancel-btn {
   background-color: #6c757d;
   color: #fff;
@@ -327,11 +325,15 @@ hr {
   border-color: #565e64;
 }
 
-/* ===== Form Controls (Input, Checkbox) ===== */
+/* ===== Form Controls ===== */
 .form-control:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+.form-control.is-invalid {
+  border-color: #dc3545;
+}
+/* Quan trọng cho lazy validation: hiển thị đỏ khi focus nếu đang lỗi */
 .form-control.is-invalid:focus {
   border-color: #dc3545;
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
@@ -346,51 +348,36 @@ hr {
   box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
 }
 
-/* ===== Validation ===== */
-.is-invalid {
-  border-color: #dc3545;
-}
 .text-danger {
   font-size: 0.875rem;
   margin-top: 4px;
   display: block;
 }
 
-/* ===== ✅ CSS TÙY CHỈNH SCROLLBAR (ĐÃ THÊM) ===== */
-/* Khi bạn dùng prop :max-height và import CSS,
-  thư viện sẽ tự tạo ra 1 div wrapper 
-  cho tbody với class '.vgt-table-wrapper'.
-  Chúng ta chỉ cần style thanh cuộn của div đó.
-*/
-/* ===== Cố định header và cho tbody cuộn ===== */
+/* ===== Table Scrollbar & Sticky Header ===== */
 :deep(.vgt-table-wrapper) {
-  overflow-y: auto !important; /* Bắt buộc để scrollbar hiển thị */
-  max-height: 60vh !important; /* Hoặc giá trị bạn muốn */
+  overflow-y: auto !important;
+  max-height: 60vh !important;
 }
 
-/* Giữ cố định thead */
 :deep(.vgt-table thead tr) {
   position: sticky;
   top: 0;
   z-index: 5;
-  background: white; /* Giữ nền để không bị trùng chữ khi cuộn */
+  background: white;
 }
 
-/* ===== Scrollbar đẹp chỉ cho tbody ===== */
 :deep(.vgt-table-wrapper::-webkit-scrollbar) {
   width: 8px;
 }
-
 :deep(.vgt-table-wrapper::-webkit-scrollbar-track) {
   background: #f1f1f1;
   border-radius: 10px;
 }
-
 :deep(.vgt-table-wrapper::-webkit-scrollbar-thumb) {
   background: #bfbfbf;
   border-radius: 10px;
 }
-
 :deep(.vgt-table-wrapper::-webkit-scrollbar-thumb:hover) {
   background: #999;
 }
