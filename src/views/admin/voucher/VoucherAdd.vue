@@ -12,15 +12,14 @@
             <input
               type="text"
               class="form-control"
-              v-model="voucher.title"
+              v-model.lazy="voucher.title" 
               placeholder="Ví dụ: Giảm giá mừng lễ 30/4"
               :class="{ 'is-invalid': v$.title.$error }"
+              @blur="v$.title.$touch()"
             />
             <small class="text-danger" v-if="v$.title.$error">
               <span v-if="v$.title.required.$invalid">Phải nhập tiêu đề</span>
-              <span v-else-if="v$.title.minLength.$invalid"
-                >Tiêu đề ít nhất 3 ký tự</span
-              >
+              <span v-else-if="v$.title.minLength.$invalid">Tiêu đề ít nhất 3 ký tự</span>
             </small>
           </div>
 
@@ -39,17 +38,14 @@
             <label class="form-label fw-semibold">Mô tả</label>
             <textarea
               class="form-control"
-              v-model="voucher.description"
+              v-model.lazy="voucher.description"
               rows="3"
               :class="{ 'is-invalid': v$.description.$error }"
+              @blur="v$.description.$touch()"
             ></textarea>
             <small class="text-danger" v-if="v$.description.$error">
-              <span v-if="v$.description.required.$invalid"
-                >Phải nhập mô tả</span
-              >
-              <span v-else-if="v$.description.minLength.$invalid"
-                >Mô tả ít nhất 10 ký tự</span
-              >
+              <span v-if="v$.description.required.$invalid">Phải nhập mô tả</span>
+              <span v-else-if="v$.description.minLength.$invalid">Mô tả ít nhất 10 ký tự</span>
             </small>
           </div>
 
@@ -79,9 +75,7 @@
                 <label class="form-check-label">Vận chuyển</label>
               </div>
             </div>
-            <small class="text-danger" v-if="v$.type.$error"
-              >Phải chọn loại voucher</small
-            >
+            <small class="text-danger" v-if="v$.type.$error">Phải chọn loại voucher</small>
           </div>
 
           <div class="row g-3">
@@ -90,20 +84,15 @@
               <input
                 type="text"
                 class="form-control"
-                v-model="voucher.discount"
+                v-model.lazy="voucher.discount"
                 placeholder="Nhập số %"
                 :class="{ 'is-invalid': v$.discount.$error }"
+                @blur="v$.discount.$touch()"
               />
               <small class="text-danger" v-if="v$.discount.$error">
-                <span v-if="v$.discount.required.$invalid"
-                  >Phải nhập giảm %</span
-                >
-                <span v-else-if="v$.discount.numeric.$invalid"
-                  >Phải là số</span
-                >
-                <span v-else-if="v$.discount.positiveNumber.$invalid"
-                  >Phải là số dương</span
-                >
+                <span v-if="v$.discount.required.$invalid">Phải nhập giảm %</span>
+                <span v-else-if="v$.discount.numeric.$invalid">Phải là số</span>
+                <span v-else-if="v$.discount.positiveNumber.$invalid">Phải là số dương</span>
               </small>
             </div>
             <div class="col-md-6">
@@ -111,17 +100,14 @@
               <input
                 type="text"
                 class="form-control"
-                v-model="voucher.discount_max"
+                v-model.lazy="voucher.discount_max"
                 placeholder="Nhập số tiền"
                 :class="{ 'is-invalid': v$.discount_max.$error }"
+                @blur="v$.discount_max.$touch()"
               />
               <small class="text-danger" v-if="v$.discount_max.$error">
-                <span v-if="v$.discount_max.numeric.$invalid"
-                  >Phải là số</span
-                >
-                <span v-else-if="v$.discount_max.positiveNumber.$invalid"
-                  >Phải là số dương</span
-                >
+                <span v-if="v$.discount_max.numeric.$invalid">Phải là số</span>
+                <span v-else-if="v$.discount_max.positiveNumber.$invalid">Phải là số dương</span>
               </small>
             </div>
           </div>
@@ -134,39 +120,32 @@
               <input
                 type="text"
                 class="form-control"
-                v-model="voucher.quantity"
+                v-model.lazy="voucher.quantity"
                 placeholder="Nhập số lượng"
                 :class="{ 'is-invalid': v$.quantity.$error }"
+                @blur="v$.quantity.$touch()"
               />
               <small class="text-danger" v-if="v$.quantity.$error">
-                <span v-if="v$.quantity.required.$invalid"
-                  >Phải nhập số lượng</span
-                >
-                <span v-else-if="v$.quantity.numeric.$invalid"
-                  >Phải là số</span
-                >
-                <span v-else-if="v$.quantity.positiveNumber.$invalid"
-                  >Phải là số dương</span
-                >
+                <span v-if="v$.quantity.required.$invalid">Phải nhập số lượng</span>
+                <span v-else-if="v$.quantity.numeric.$invalid">Phải là số</span>
+                <span v-else-if="v$.quantity.positiveNumber.$invalid">Phải là số dương</span>
               </small>
             </div>
+            
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Điều kiện sử dụng</label>
-              <input
-                type="text"
-                class="form-control"
-                v-model="voucher.usage_condition"
-                placeholder="Bỏ trống nếu không có"
-                :class="{ 'is-invalid': v$.usage_condition.$error }"
-              />
-              <small class="text-danger" v-if="v$.usage_condition.$error">
-                <span v-if="v$.usage_condition.numeric.$invalid"
-                  >Phải là số</span
-                >
-                <span v-else-if="v$.usage_condition.positiveNumber.$invalid"
-                  >Phải là số dương</span
-                >
-              </small>
+               <label class="form-label fw-semibold">Điều kiện sử dụng</label>
+               <input
+                  type="text"
+                  class="form-control"
+                  v-model.lazy="voucher.usage_condition"
+                  placeholder="Bỏ trống nếu không có"
+                  :class="{ 'is-invalid': v$.usage_condition.$error }"
+                  @blur="v$.usage_condition.$touch()"
+                />
+                <small class="text-danger" v-if="v$.usage_condition.$error">
+                  <span v-if="v$.usage_condition.numeric.$invalid">Phải là số</span>
+                  <span v-else-if="v$.usage_condition.positiveNumber.$invalid">Phải là số dương</span>
+                </small>
             </div>
           </div>
 
@@ -180,9 +159,7 @@
                 :class="{ 'is-invalid': v$.started_date.$error }"
               />
               <small class="text-danger" v-if="v$.started_date.$error">
-                <span v-if="v$.started_date.required.$invalid"
-                  >Phải chọn ngày bắt đầu</span
-                >
+                <span v-if="v$.started_date.required.$invalid">Phải chọn ngày bắt đầu</span>
               </small>
             </div>
             <div class="col-md-6">
@@ -194,12 +171,8 @@
                 :class="{ 'is-invalid': v$.ended_date.$error }"
               />
               <small class="text-danger" v-if="v$.ended_date.$error">
-                <span v-if="v$.ended_date.required.$invalid"
-                  >Phải chọn ngày kết thúc</span
-                >
-                <span v-else-if="v$.ended_date.afterStart.$invalid"
-                  >Phải lớn hơn ngày bắt đầu</span
-                >
+                <span v-if="v$.ended_date.required.$invalid">Phải chọn ngày kết thúc</span>
+                <span v-else-if="v$.ended_date.afterStart.$invalid">Phải lớn hơn ngày bắt đầu</span>
               </small>
             </div>
           </div>
@@ -254,6 +227,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const isSubmitting = ref(false);
 
+// Đã xóa trường chance/change thừa
 const voucher = reactive({
   title: "",
   code: "",
@@ -268,13 +242,13 @@ const voucher = reactive({
   active: true,
 });
 
-// ✅ Validator số dương cho text
+// ✅ Validator số dương
 const positiveNumber = helpers.withMessage("Phải là số dương", (value) => {
   if (value === "" || value === null || value === undefined) return true;
   return !isNaN(Number(value)) && Number(value) >= 0;
 });
 
-// ✅ Validator ngày kết thúc > ngày bắt đầu
+// ✅ Validator ngày
 const afterStart = helpers.withMessage("Phải lớn hơn ngày bắt đầu", (value) => {
   if (!value || !voucher.started_date) return false;
   return new Date(value) > new Date(voucher.started_date);
@@ -320,9 +294,8 @@ const rules = {
 
 const v$ = useVuelidate(rules, voucher);
 
-// ✅ HÀM QUAY LẠI (ĐÃ THÊM)
 const goBack = () => {
-  router.go(-1); // Quay lại trang trước đó
+  router.go(-1);
 };
 
 function formatDateToVN(date) {
@@ -330,9 +303,6 @@ function formatDateToVN(date) {
   return new Date(date).toISOString().slice(0, 19).replace("T", " ");
 }
 
-/**
- * Gửi form tạo voucher
- */
 const handleSubmit = async () => {
   isSubmitting.value = true;
   const valid = await v$.value.$validate();
@@ -374,7 +344,6 @@ const handleSubmit = async () => {
   }
 };
 
-// Tự sinh mã voucher
 function generateVoucherCode(length = 14) {
   const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "";
@@ -387,38 +356,29 @@ generateVoucherCode();
 </script>
 
 <style scoped>
-/* ===== CSS VALIDATION + FOCUS ===== */
-
+/* Code CSS giữ nguyên như cũ */
 .form-check-input:checked {
   background-color: #0d6efd;
   border-color: #0d6efd;
 }
-
 .form-control.is-invalid,
 .form-check-input.is-invalid {
   border-color: #dc3545;
 }
-
 .form-control.is-invalid:focus,
 .form-check-input.is-invalid:focus {
   border-color: #dc3545;
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
 }
-
 .form-control:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
-
 .text-danger {
   font-size: 0.875rem;
   margin-top: 4px;
   display: block;
 }
-
-/* ===== CSS NÚT BẤM (ĐÃ CẬP NHẬT) ===== */
-
-/* Style cơ bản cho cả 2 nút */
 .btn-save,
 .btn-back {
   display: inline-flex;
@@ -440,8 +400,6 @@ generateVoucherCode();
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
-/* Nút Lưu (Xanh) */
 .btn-save {
   background-color: #198754;
   color: #fff;
@@ -451,8 +409,6 @@ generateVoucherCode();
   background-color: #157347;
   border-color: #146c43;
 }
-
-/* Nút Quay Lại (Xám) */
 .btn-back {
   background-color: #6c757d;
   color: #fff;
@@ -462,8 +418,6 @@ generateVoucherCode();
   background-color: #5c636a;
   border-color: #565e64;
 }
-
-/* Trạng thái Disabled */
 .btn-save:disabled,
 .btn-back:disabled {
   opacity: 0.65;
@@ -471,11 +425,9 @@ generateVoucherCode();
   transform: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-
-/* Căn chỉnh Spinner */
 .btn-save .spinner-border-sm {
-  width: 1rem; /* 16px */
-  height: 1rem; /* 16px */
+  width: 1rem;
+  height: 1rem;
   border-width: 0.2em;
 }
 </style>

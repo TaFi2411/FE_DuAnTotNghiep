@@ -19,6 +19,7 @@ import ChangePassword from "@/views/auth/ChangePassword.vue";
 // --- Client Pages --- //
 import Home from "@/views/client/Home.vue";
 import Store from "@/views/client/Store.vue";
+import Search from "@/views/client/Search.vue";
 import Introduce from "../views/client/Introduce.vue";
 import Support from "@/views/client/Support.vue";
 import ProductDetail from "@/views/client/ProductDetail.vue";
@@ -109,6 +110,11 @@ const clientRouter = [
     path: "store",
     name: "Store",
     component: Store,
+  },
+  {
+    path: "search",
+    name: "Search",
+    component: Search,
   },
   {
     path: "introduce",

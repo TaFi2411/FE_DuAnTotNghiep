@@ -170,7 +170,7 @@ function decodeJwtToken(token) {
 
 function handleSearch() {
   if (searchQuery.value.trim() !== '') {
-    router.push(`/store?search=${encodeURIComponent(searchQuery.value)}`);
+    router.push(`/search?search=${encodeURIComponent(searchQuery.value)}`);
     showSearch.value = false;
   }
 }
