@@ -150,7 +150,7 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import axios from "axios";
+import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation } from "swiper/modules";

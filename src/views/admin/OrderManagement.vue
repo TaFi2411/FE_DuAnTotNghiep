@@ -78,19 +78,34 @@
             </thead>
             <tbody>
               <tr v-for="item in order.items" :key="item.productName">
-                <td>
-                  <div class="d-flex align-items-center">
-                    <img
-                      v-if="item.productImage"
-                      :src="item.productImage"
-                      alt="Ảnh sản phẩm"
-                      class="me-3 rounded"
-                      style="width: 60px; height: 60px; object-fit: cover"
-                    />
-                    <div>{{ item.productName }}</div>
-                  </div>
-                </td>
+               <td>
+  <div class="d-flex align-items-center">
+    <img
+      v-if="item.productImage"
+      :src="item.productImage"
+      alt="Ảnh sản phẩm"
+      class="me-3 rounded"
+      style="width: 60px; height: 60px; object-fit: cover"
+    />
+    <div>{{ item.productName }}</div>
+  </div>
+
+ <div v-if="item.skuAttributes && item.skuAttributes.length" class="mt-1">
+  <div v-for="attr in item.skuAttributes" :key="attr.id" class="text-end">
+    <strong>{{ attr.optionAttributeName }}:</strong> {{ attr.valueAttributeName }}
+  </div>
+</div>
+
+<div v-if="item.attributes" class="mt-1">
+  <div v-for="(value, key) in item.attributes" :key="key" class="text-end">
+    <strong>{{ key }}:</strong> {{ value }}
+  </div>
+</div>
+
+</td>
+
                 <td class="text-end">{{ item.quantity }}</td>
+               
                 <td class="text-end">{{ formatCurrency(item.price) }}</td>
               </tr>
             </tbody>

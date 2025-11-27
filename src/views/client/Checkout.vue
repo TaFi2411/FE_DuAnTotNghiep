@@ -671,7 +671,8 @@ const fetchShippingFee = async () => {
   }
 };
 watch(selectedAddress, (newVal) => {
-  if (newVal) fetchShippingFee();
+  // if (newVal) fetchShippingFee();
+  shippingFee.value = 0; // set phí ship = 0 để test
 });
 
 
@@ -712,6 +713,7 @@ const handlePayment = async () => {
     }
 
   const orderPayload = {
+//orderId: uniqueOrderId,
   accountId: accountId.value,
   shippingAddress: selectedAddress.value?.fulladdress || "", // thay đổi đây
   paymentMethodId: selectedPaymentMethod.value,
@@ -735,6 +737,8 @@ console.log("Order Payload:", orderPayload);
     if (selectedPaymentMethod.value === 1) {
       const res = await axios.post("/api/vnpay/create", {
         amount: orderPayload.total,
+          // orderId: uniqueOrderId,   // gửi orderId từ FE
+
         orderInfo: orderPayload.orderId,
       });     
 
@@ -753,58 +757,37 @@ console.log("Order Payload:", orderPayload);
 
     // Xử lý thanh toán qua MOMO
    // MOMO
-if (selectedPaymentMethod.value === 3) {
+if (selectedPaymentMethod.value === 3) { // MOMO
   try {
-    const res = await axios.post("/api/momo/create", {
-      amount: orderPayload.total,
-      orderInfo: "Thanh toán đơn hàng qua MOMO",
-    });
+    const res = await axios.post("/api/momo/create", orderPayload);
 
-    console.log("MOMO create response:", res);
+    console.log("MOMO create response:", res.data);
 
-    // MoMo service có thể trả payUrl (từ MoMo) hoặc paymentUrl (nếu backend map lại)
-    const paymentUrl =
-      res?.data?.paymentUrl || res?.data?.payUrl || res?.data?.data?.payUrl || null;
+    // Lấy link thanh toán
+    const paymentUrl = res?.data?.payUrl || res?.data?.data?.payUrl;
 
-    // Nếu backend trả nguyên momoResponse object (chứa payUrl)
     if (paymentUrl) {
-      // Lưu pending order trước khi redirect để callback còn dùng
-      sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
+      // redirect sang MoMo
       window.location.href = paymentUrl;
       return;
     } else {
-      // Hiển thị lỗi chi tiết nếu backend trả message hoặc resultCode
-      const backendMsg =
-        res?.data?.message ||
-        res?.data?.msg ||
-        JSON.stringify(res?.data) ||
-        "Không nhận được URL thanh toán từ MoMo";
       Swal.fire({
         icon: "error",
         title: "Không thể khởi tạo thanh toán MOMO",
-        text: backendMsg,
+        text: JSON.stringify(res?.data),
       });
-      console.error("MOMO create unexpected response:", res?.data);
       return;
     }
   } catch (err) {
-    console.error("MOMO create error:", err);
-    const serverMessage =
-      err?.response?.data ||
-      err?.response?.data?.message ||
-      err?.message ||
-      "Lỗi khi kết nối tới server";
+    console.error(err);
     Swal.fire({
       icon: "error",
-      title: "Lỗi khi khởi tạo MOMO",
-      text:
-        typeof serverMessage === "string"
-          ? serverMessage
-          : JSON.stringify(serverMessage),
+      title: "Lỗi khi kết nối MOMO",
+      text: err?.response?.data?.message || err.message,
     });
-    return;
   }
 }
+
 
 
     // Xử lý COD
@@ -834,16 +817,18 @@ if (selectedPaymentMethod.value === 3) {
 
 // Handle callback from payment gateways
 
+
 const handlePaymentCallback = async () => {
+  console.log("🔥 handlePaymentCallback chạy rồi");
+
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
     const momoResultCode = urlParams.get("resultCode");
-    const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
 
     const pendingOrderStr = sessionStorage.getItem("pendingOrder");
     const token = localStorage.getItem("token"); // JWT lưu trong localStorage
-console.log(localStorage.getItem("token"));
+    console.log("JWT token:", token);
 
     if (!token) {
       await Swal.fire({
@@ -855,70 +840,86 @@ console.log(localStorage.getItem("token"));
       return;
     }
 
-    if (pendingOrderStr) {
-      const orderPayload = JSON.parse(pendingOrderStr);
+    // ----- Xử lý MOMO -----
+    if (momoResultCode === "0") {
+      // MOMO đã thanh toán thành công trước đó, chỉ thông báo
+      sessionStorage.removeItem("pendingOrder");
+      await Swal.fire({
+        icon: "success",
+        title: "Thanh toán MOMO thành công!",
+        text: "Đơn hàng của bạn đã được ghi nhận.",
+      });
+      window.location.href = "/orders";
+      return;
+    }
 
-      if (paymentSuccess) {
-        try {
-          // Tạo order trên backend
-          console.log("Token sent to backend:", token);
-          const createdOrderRes = await axios.post("http://localhost:8080/api/order", orderPayload, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const orderId = createdOrderRes.data?.id || createdOrderRes.data;
-
-          // Gọi endpoint xác nhận thanh toán VNPAY nếu backend có
-          try {
-            await axios.post(
-              `http://localhost:8080/api/order/vnpay-success/${orderId}`,
-              {},
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-          } catch (e) {
-            console.warn("Không thể gọi /vnpay-success:", e);
-          }
-
-          // Xóa session tạm
-          sessionStorage.removeItem("pendingOrder");
-          sessionStorage.removeItem("cart");
-          sessionStorage.removeItem("checkoutItems");
-          cartItems.value = [];
-
-          // Thông báo thành công
-          await Swal.fire({
-            icon: "success",
-            title: "Thanh toán thành công!",
-            text: "Đơn hàng của bạn đã được ghi nhận.",
-          });
-          window.location.href = "/orders";
-        } catch (err) {
-          console.error("Lỗi khi tạo đơn hàng sau thanh toán:", err);
-          await Swal.fire({
-            icon: "error",
-            title: "Lỗi khi lưu đơn hàng",
-            text: "Vui lòng liên hệ quản trị viên.",
-          });
-          window.location.href = "/cart";
-        }
-      } else {
-        // Thanh toán thất bại
-        sessionStorage.removeItem("pendingOrder");
+    // ----- Xử lý VNPAY -----
+    if (vnp_ResponseCode === "00") {
+      if (!pendingOrderStr) {
         await Swal.fire({
           icon: "error",
-          title: "Thanh toán thất bại hoặc đã bị hủy!",
+          title: "Không tìm thấy thông tin đơn hàng!",
+          text: "Vui lòng kiểm tra lại giỏ hàng.",
+        });
+        window.location.href = "/cart";
+        return;
+      }
+
+      const orderPayload = JSON.parse(pendingOrderStr);
+      try {
+        // Tạo order trên backend
+        console.log("Token sent to backend:", token);
+        const createdOrderRes = await axios.post(
+          "http://localhost:8080/api/order",
+          orderPayload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const orderId = createdOrderRes.data?.id || createdOrderRes.data;
+
+        // Gọi backend thông báo VNPAY success
+        try {
+          await axios.post(
+            `http://localhost:8080/api/order/vnpay-success/${orderId}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (e) {
+          console.warn("Không thể gọi /vnpay-success:", e);
+        }
+
+        // Xóa session tạm
+        sessionStorage.removeItem("pendingOrder");
+        sessionStorage.removeItem("cart");
+        sessionStorage.removeItem("checkoutItems");
+
+        // Thông báo thành công
+        await Swal.fire({
+          icon: "success",
+          title: "Thanh toán VNPAY thành công!",
+          text: "Đơn hàng của bạn đã được ghi nhận.",
+        });
+        window.location.href = "/orders";
+      } catch (err) {
+        console.error("Lỗi khi tạo đơn hàng VNPAY:", err);
+        await Swal.fire({
+          icon: "error",
+          title: "Lỗi khi lưu đơn hàng",
+          text: "Vui lòng liên hệ quản trị viên.",
         });
         window.location.href = "/cart";
       }
-    } else if (vnp_ResponseCode || momoResultCode) {
-      // Có callback nhưng không có pendingOrder
-      await Swal.fire({
-        icon: "error",
-        title: "Không tìm thấy thông tin đơn hàng!",
-        text: "Vui lòng kiểm tra lại giỏ hàng.",
-      });
-      window.location.href = "/cart";
+      return;
     }
+
+    // ----- Thanh toán thất bại hoặc hủy -----
+    sessionStorage.removeItem("pendingOrder");
+    await Swal.fire({
+      icon: "error",
+      title: "Thanh toán thất bại hoặc đã bị hủy!",
+    });
+    window.location.href = "/cart";
+
   } catch (err) {
     console.error("handlePaymentCallback unexpected error:", err);
     await Swal.fire({
@@ -936,6 +937,7 @@ console.log(localStorage.getItem("token"));
     );
   }
 };
+
 
 
 onMounted(async () => {

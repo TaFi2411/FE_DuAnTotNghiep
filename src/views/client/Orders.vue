@@ -148,7 +148,7 @@
                             class="product-img me-3"
                           />
                           <div class="flex-grow-1">
-                            <div class="fw-bold">{{ item.productName }}</div>
+                            <div class="fw-bold">Tên sản phẩm: {{ item.productName }}</div>
                             <div
                               v-if="
                                 item.skuAttributes && item.skuAttributes.length
@@ -166,6 +166,14 @@
                             <div class="small text-dark">
                               Số lượng: {{ item.quantity }}
                             </div>
+ <div v-if="item.attributes">
+  <div v-for="(value, key) in item.attributes" :key="key" class="item-attribute">
+    <strong>{{ key }}:</strong> {{ value }}
+  </div>
+</div>
+
+
+                       
                             <div class="small text-dark">
                               Giá: {{ formatCurrency(item.price) }}
                             </div>
@@ -486,6 +494,8 @@ async function loadOrders() {
 
   try {
     const res = await axios.get(`/api/order/account/${accountId}`);
+        // In dữ liệu trả về từ backend ra console
+    console.log("Dữ liệu trả về từ backend:", res.data);
     orders.value = (res.data || [])
       .map((o) => ({ ...o, items: o.items || [] }))
       .sort((a, b) => b.id - a.id);
@@ -590,6 +600,12 @@ onMounted(() => {
 
 <style scoped>
 /* ---------------- layout ---------------- */
+.item-attribute {
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
 .orders-page {
   min-height: 80vh;
   padding-top: 30px;
