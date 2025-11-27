@@ -76,10 +76,7 @@
           </div>
 
           <button type="submit" class="btn-save me-2">
-            <i
-              class="bi"
-              :class="editModeSku ? 'bi-check-lg' : 'bi-plus-lg'"
-            ></i>
+            <i class="bi" :class="editModeSku ? 'bi-check-lg' : 'bi-plus-lg'"></i>
             {{ editModeSku ? "Cập nhật" : "Thêm mới" }}
           </button>
           <button
@@ -153,13 +150,7 @@ import Swal from "sweetalert2";
 import "vue-good-table-next/dist/vue-good-table-next.css";
 // ✅ Import Vuelidate
 import useVuelidate from "@vuelidate/core";
-import {
-  required,
-  numeric,
-  between,
-  minValue,
-  helpers,
-} from "@vuelidate/validators";
+import { required, numeric, between, minValue, helpers } from "@vuelidate/validators";
 
 const router = useRouter();
 const flashSales = ref([]);
@@ -285,32 +276,77 @@ async function fetchFlashSaleSku() {
   }
 }
 
-
-
 // 🧱 CRUD (Đã cập nhật Vuelidate)
 async function createSku() {
   const isValid = await v$.value.$validate();
-  // ✅ Đã bỏ Swal "Form chưa hợp lệ"
   if (!isValid) return;
 
   try {
-    await axios.post("/api/flash-sale-sku", {
-      flashSaleId: Number(skuForm.flashSaleId),
-      skuId: Number(skuForm.skuId),
-      discount: Number(skuForm.discount),
-      quantity: Number(skuForm.quantity),
-    });
-    Swal.fire("Thành công", "Thêm SKU thành công!", "success");
+    // 🔥 Load dữ liệu mới nhất từ server (không dùng table)
+    const res = await axios.get("/api/flash-sale-sku");
+    const list = res.data.data || res.data.content || res.data || [];
+
+    const flashId = Number(skuForm.flashSaleId);
+    const skuId = Number(skuForm.skuId);
+    const newQuantityInput = Number(skuForm.quantity);
+    const newDiscountInput = Number(skuForm.discount);
+
+    // 🔥 Kiểm tra xem đã có bản ghi trùng hay chưa
+    const existing = list.find(
+      (item) => item.flashSaleId === flashId && item.skuId === skuId
+    );
+
+    if (existing) {
+      // 👉 Lấy số lượng cũ + mới
+      const totalQuantity = existing.quantity + newQuantityInput;
+
+      // 👉 Check tồn kho
+      const skuStock = skus.value.find((x) => x.id === skuId)?.quantity || 0;
+      if (totalQuantity > skuStock) {
+        Swal.fire(
+          "Lỗi",
+          `Số lượng cộng dồn (${totalQuantity}) vượt quá tồn kho (${skuStock})!`,
+          "error"
+        );
+        return;
+      }
+
+      // 👉 Lấy giảm giá lớn hơn
+      const finalDiscount = Math.max(existing.discount, newDiscountInput);
+
+      // 👉 UPDATE thay vì thêm mới
+      await axios.put(`/api/flash-sale-sku/${existing.id}`, {
+        flashSaleId: flashId,
+        skuId: skuId,
+        discount: finalDiscount,
+        quantity: totalQuantity,
+      });
+
+      Swal.fire("Đã cập nhật", "Đã cộng dồn số lượng cho SKU!", "success");
+    } else {
+      // 👉 Nếu chưa tồn tại → thêm mới
+      await axios.post("/api/flash-sale-sku", {
+        flashSaleId: flashId,
+        skuId: skuId,
+        discount: newDiscountInput,
+        quantity: newQuantityInput,
+      });
+
+      Swal.fire("Thành công", "Thêm SKU mới thành công!", "success");
+    }
+
     await fetchFlashSaleSku();
     cancelEditSku();
+
   } catch (err) {
     Swal.fire(
       "Lỗi",
-      err.response?.data?.message || "Không thể thêm SKU!",
+      err.response?.data?.message || "Không thể xử lý yêu cầu!",
       "error"
     );
   }
 }
+
 
 async function updateSku() {
   const isValid = await v$.value.$validate();
@@ -328,11 +364,7 @@ async function updateSku() {
     await fetchFlashSaleSku();
     cancelEditSku();
   } catch (err) {
-    Swal.fire(
-      "Lỗi",
-      err.response?.data?.message || "Không thể cập nhật SKU!",
-      "error"
-    );
+    Swal.fire("Lỗi", err.response?.data?.message || "Không thể cập nhật SKU!", "error");
   }
 }
 
