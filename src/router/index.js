@@ -27,6 +27,7 @@ import Cart from "@/views/client/Cart.vue";
 import Checkout from "@/views/client/Checkout.vue";
 import Violate from "@/views/403.vue";
 import PaymentResult from "@/views/client/PaymentResult.vue";
+import Profile from "@/views/client/Profile.vue";
 
 // Admin
 import Dashboard from '@/views/admin/Dashboard.vue';
@@ -175,6 +176,11 @@ const clientRouter = [
     path: 'introduce',
     name: 'Introduce',
     component: Introduce
+  },
+  {
+    path: 'profile',
+    name: 'Profile',
+    component: Profile
   },
   {
     path: 'support',

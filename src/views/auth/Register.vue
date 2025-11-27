@@ -4,11 +4,11 @@
 
     <form @submit.prevent="handleRegister" class="mx-auto register-form">
 
-      <!-- Họ tên -->
+
       <div class="mb-3">
         <label for="fullname" class="form-label">Họ và tên</label>
         <input type="text" class="form-control" id="fullname" v-model="form.fullname" placeholder="Nguyễn Văn A"
-          @blur="v$.$touch()" />
+         />
         <small v-if="v$.fullname.$error" class="text-danger">
           Họ tên không được để trống
         </small>
@@ -17,10 +17,10 @@
         </small>
       </div>
 
-      <!-- Email -->
+
       <div class="mb-3">
         <label>Email</label>
-        <input type="text" v-model="form.email" class="form-control" placeholder="Email" @blur="v$.$touch()" />
+        <input type="text" v-model="form.email" class="form-control" placeholder="Email" />
         <small v-if="v$.email.$error" class="text-danger">
           Email không được để trống hoặc không hợp lệ
         </small>
@@ -29,11 +29,11 @@
         </small>
       </div>
 
-      <!-- Số điện thoại -->
+
       <div class="mb-3">
         <label for="phone" class="form-label">Số điện thoại</label>
         <input type="text" class="form-control" id="phone" v-model="form.phone" placeholder="0123456789" maxlength="10"
-          @blur="v$.$touch()" />
+         />
         <small v-if="v$.phone.$error" class="text-danger">
           Số điện thoại không được để trống và phải đúng 10 số
         </small>
@@ -42,12 +42,12 @@
         </small>
       </div>
 
-      <!-- Mật khẩu -->
+
       <div class="mb-3">
         <label class="form-label">Mật khẩu</label>
         <div class="position-relative">
           <input v-model="form.password" :type="showPassword ? 'text' : 'password'" class="form-control pe-5"
-            placeholder="Nhập mật khẩu" @blur="v$.$touch()" />
+            placeholder="Nhập mật khẩu"  />
           <i class="bi position-absolute end-0 top-50 translate-middle-y me-3"
             :class="showPassword ? 'bi-eye-slash' : 'bi-eye'" @click="togglePassword"
             style="cursor: pointer; color: #777;"></i>
@@ -60,7 +60,7 @@
         </small>
       </div>
 
-      <!-- Giới tính -->
+      
       <div class="mb-3">
         <label class="form-label">Giới tính</label>
         <div>
@@ -77,7 +77,7 @@
         </div>
       </div>
 
-      <!-- OTP -->
+     
       <div class="mb-3">
         <label>Mã OTP</label>
         <div class="input-group">
@@ -88,7 +88,7 @@
         </div>
       </div>
 
-      <!-- Submit -->
+      
       <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
         Đăng ký
       </button>
@@ -106,11 +106,11 @@ import { required, email, minLength, helpers } from "@vuelidate/validators";
 
 const router = useRouter();
 
-// API
+
 const API_SEND_OTP = "http://localhost:8080/auth/send-otp";
 const API_VERIFY_REGISTER = "http://localhost:8080/auth/verify-otp-register";
 
-// FORM
+
 const form = reactive({
   fullname: "",
   email: "",
@@ -121,7 +121,7 @@ const form = reactive({
   active: true,
 });
 
-// Server errors
+
 const serverErrors = reactive({
   fullname: "",
   email: "",
@@ -129,17 +129,14 @@ const serverErrors = reactive({
   password: "",
 });
 
-// OTP
+
 const otp = ref("");
 const sendingOtp = ref(false);
 
-// Password toggle
+
 const showPassword = ref(false);
 const togglePassword = () => (showPassword.value = !showPassword.value);
 
-// -------------------
-// Validation rules
-// -------------------
 const rules = {
   fullname: { required },
   email: { required, email },
@@ -149,12 +146,8 @@ const rules = {
   password: { required, minLength: minLength(6) }
 };
 
-// Validation
 const v$ = useVuelidate(rules, form);
 
-// -------------------
-// 1️⃣ GỬI OTP
-// -------------------
 const sendOtp = async () => {
   serverErrors.email = "";
   v$.value.email.$touch();

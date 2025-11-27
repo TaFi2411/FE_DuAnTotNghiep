@@ -621,7 +621,6 @@ async function bulkUploadSkuImages(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
 
-  // Lọc SKU được chọn
   const selectedSkus = product.value.skus.filter((sku) => sku.selectedForBulk);
   if (!selectedSkus.length) {
     Swal.fire("Thông báo", "❗ Vui lòng chọn ít nhất 1 SKU để gán ảnh", "info");
@@ -644,7 +643,6 @@ async function bulkUploadSkuImages(event) {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Gán ảnh vừa upload cho tất cả SKU được chọn
       selectedSkus.forEach((sku) => {
         if (!sku.skuImages) sku.skuImages = [];
         sku.skuImages.push({ path: res.data });
@@ -658,7 +656,7 @@ async function bulkUploadSkuImages(event) {
       "success"
     );
 
-    // reset input
+
     event.target.value = "";
   } catch (err) {
     Swal.close();

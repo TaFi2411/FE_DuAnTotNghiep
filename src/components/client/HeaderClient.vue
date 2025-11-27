@@ -36,7 +36,7 @@
 
           <!-- Actions -->
           <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
-            <!-- Icon search (hiện khi ẩn thanh tìm kiếm) -->
+            <!-- Icon search (mobile) -->
             <button class="btn btn-link text-white p-0 d-lg-none" @click="showSearch = !showSearch">
               <i class="bi bi-search fs-5"></i>
             </button>
@@ -60,6 +60,7 @@
               </router-link>
             </template>
 
+            <!-- USER LOGGED IN DROPDOWN (ĐÃ THAY MỚI) -->
             <template v-else>
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
@@ -68,23 +69,41 @@
                   <span class="fw-semibold">{{ accountName }}</span>
                 </a>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 p-2">
-                  <li><strong class="dropdown-header text-secondary">Xin chào, {{ accountName }}</strong></li>
-                  <li><router-link class="dropdown-item py-2 rounded-2 text-white" to="/orders">Đơn hàng của tôi</router-link>
+                <ul class="dropdown-menu dropdown-menu-end user-dropdown shadow border-0 rounded-4 p-2">
+                  <li>
+                    <router-link class="dropdown-item custom-item" to="/profile">
+                      <i class="bi bi-person-lines-fill me-2"></i>
+                      Hồ sơ cá nhân
+                    </router-link>
                   </li>
+
+                  <li>
+                    <router-link class="dropdown-item custom-item" to="/orders">
+                      <i class="bi bi-bag-check me-2"></i>
+                      Đơn hàng của tôi
+                    </router-link>
+                  </li>
+
                   <li v-if="isAdmin">
-                    <router-link class="dropdown-item py-2 rounded-2 text-white" to="/admin">Quản lý hệ thống</router-link>
+                    <router-link class="dropdown-item custom-item" to="/admin">
+                      <i class="bi bi-speedometer2 me-2"></i>
+                      Quản lý hệ thống
+                    </router-link>
                   </li>
+
                   <li>
-                    <router-link class="dropdown-item py-2 rounded-2 text-white" to="/auth/change-password">Đổi mật
-                      khẩu</router-link>
+                    <router-link class="dropdown-item custom-item" to="/auth/change-password">
+                      <i class="bi bi-shield-lock me-2"></i>
+                      Đổi mật khẩu
+                    </router-link>
                   </li>
+
+                  <li><hr class="dropdown-divider" /></li>
+
                   <li>
-                    <hr class="dropdown-divider bg-secondary" />
-                  </li>
-                  <li>
-                    <a class="dropdown-item py-2 rounded-2 text-danger" href="#" @click.prevent="logoutHandler">
-                      <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                    <a class="dropdown-item custom-item text-danger" href="#" @click.prevent="logoutHandler">
+                      <i class="bi bi-box-arrow-right me-2"></i>
+                      Đăng xuất
                     </a>
                   </li>
                 </ul>
@@ -95,7 +114,7 @@
       </div>
     </div>
 
-    <!-- Ô tìm kiếm nổi khi mobile -->
+    <!-- Mobile search -->
     <transition name="fade">
       <div v-if="showSearch" class="mobile-search-box bg-dark position-absolute top-100 start-0 end-0 p-3">
         <div class="input-group">
@@ -109,6 +128,7 @@
     </transition>
   </nav>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
@@ -211,6 +231,45 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* User dropdown new design */
+.user-dropdown {
+  background: #ffffff !important;
+  border-radius: 14px;
+  padding: 10px;
+  min-width: 240px;
+  animation: dropdownFade 0.2s ease-out;
+}
+
+.custom-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #000 !important;
+  font-weight: 500;
+  transition: all 0.25s ease;
+}
+
+.custom-item:hover {
+  background: #f2f2f2;
+}
+
+.dropdown-divider {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .glass-dark-header {
   background: rgb(0, 0, 0);
   backdrop-filter: blur(12px);

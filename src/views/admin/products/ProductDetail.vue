@@ -7,14 +7,12 @@
       </button>
     </div>
 
-
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
       <p class="mt-2">Đang tải dữ liệu...</p>
     </div>
 
     <div v-else-if="product" class="content-box">
-
       <div class="row">
         <div class="col-lg-4 text-center mb-4">
           <img :src="product.image" class="main-image" alt="Ảnh sản phẩm" />
@@ -24,8 +22,6 @@
           <div class="row">
             <h4 class="fw-bold mb-2">{{ product.name }}</h4>
             <div class="col-lg-6">
-              
-
               <div class="info-row">
                 <strong>Slug:</strong> {{ product.slug }}
               </div>
@@ -33,48 +29,61 @@
               <div class="info-row">
                 <strong>Danh mục:</strong> {{ product.categoryName }}
               </div>
+              <div class="info-row">
+                <strong>Trạng thái:</strong>
+                <span class="badge-status">
+                  {{ product.status ? "Đang bán" : "Ngừng bán" }}
+                </span>
+              </div>
+
+
+
             </div>
+            
             <div class="col-lg-6">
-                        <div class="info-row">
-            <strong>Giá:</strong>
-            <span class="text-primary fw-bold">
-              {{ minPrice && maxPrice ? formatCurrency(minPrice) + ' - ' + formatCurrency(maxPrice) : '—' }}
-            </span>
-          </div>
+              <div class="info-row">
+                <strong>Giá:</strong>
+                <span class="text-primary fw-bold">
+                  {{
+                    minPrice && maxPrice
+                      ? formatCurrency(minPrice) +
+                      " - " +
+                      formatCurrency(maxPrice)
+                      : "—"
+                  }}
+                </span>
+              </div>
 
-          <div class="info-row">
-            <strong>Tổng tồn kho:</strong>
-            <span class="text-info fw-bold">{{ totalStock }}</span>
-          </div>
-
-          <div class="info-row">
-            <strong>Trạng thái:</strong>
-            <span class="badge-status">
-              {{ product.status ? 'Đang bán' : 'Ngừng bán' }}
-            </span>
-          </div>
-
-          <div class="mt-3">
-            <strong>Mô tả sản phẩm:</strong>
-            <p class="mt-1">{{ product.description || 'Không có mô tả' }}</p>
-          </div>
+              <div class="info-row">
+                <strong>Tổng tồn kho:</strong>
+                <span class="text-info fw-bold">{{ totalStock }}</span>
+              </div>
             </div>
+
+
+              <div class="mt-3 product-description">
+                <strong>Mô tả sản phẩm:</strong>
+
+                <div class="description-box" :class="{ expanded: showFullDescription }"
+                  v-html="showFullDescription ? product.description : shortDescription"></div>
+
+                <button v-if="product.description && product.description.length > 300"
+                  class="btn btn-sm btn-outline-primary mt-2 toggle-desc"
+                  @click="showFullDescription = !showFullDescription">
+                  {{ showFullDescription ? "Thu gọn ▲" : "Xem thêm ▼" }}
+                </button>
+              </div>
+
           </div>
-
-
-
         </div>
       </div>
-
+      
       <hr />
 
-      <!-- ====== DANH SÁCH SKU ====== -->
-      <h5 class="fw-bold mb-3">Danh sách biến thể </h5>
+      <h5 class="fw-bold mb-3">Danh sách biến thể</h5>
 
       <div v-for="sku in product.skus" :key="sku.id" class="sku-card">
-
         <div class="row">
-
           <div class="col-lg-3">
             <div class="d-flex flex-wrap gap-2 mt-2">
               <img v-for="img in sku.skuImages" :key="img.id" :src="img.path" class="sku-image"
@@ -83,20 +92,16 @@
           </div>
 
           <span class="col-lg-3" v-for="attr in sku.skuAttributes" :key="attr.id">
-            {{ attr.optionAttributeName }}:<strong>{{ attr.valueAttributeName }}</strong>
+            {{ attr.optionAttributeName }}:<strong>{{
+              attr.valueAttributeName
+            }}</strong>
           </span>
 
           <div class="col-lg-3">
-            <div>
-              <strong>Giá:</strong> {{ formatCurrency(sku.price) }}
-            </div>
-            <div>
-              <strong>Tồn kho:</strong> {{ sku.quantity }}
-            </div>
+            <div><strong>Giá:</strong> {{ formatCurrency(sku.price) }}</div>
+            <div><strong>Tồn kho:</strong> {{ sku.quantity }}</div>
           </div>
-
         </div>
-
       </div>
     </div>
 
@@ -113,53 +118,66 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import axios from '@/composables/axios.js'
+import { ref, onMounted, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import axios from "@/composables/axios.js";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const product = ref(null)
-const loading = ref(false)
-const previewImage = ref(null)
+const product = ref(null);
+const loading = ref(false);
+const previewImage = ref(null);
 
-const minPrice = ref(null)
-const maxPrice = ref(null)
-const totalStock = ref(0)
+const minPrice = ref(null);
+const maxPrice = ref(null);
+const totalStock = ref(0);
+
+
 
 onMounted(async () => {
-  const id = route.params.id
-  loading.value = true
+  const id = route.params.id;
+  loading.value = true;
 
   try {
-    const res = await axios.get(`/api/product/${id}`)
-    product.value = res.data
+    const res = await axios.get(`/api/product/${id}`);
+    product.value = res.data;
 
-    const prices = product.value.skus.map(s => s.price)
-    minPrice.value = Math.min(...prices)
-    maxPrice.value = Math.max(...prices)
+    const prices = product.value.skus.map((s) => s.price);
+    minPrice.value = Math.min(...prices);
+    maxPrice.value = Math.max(...prices);
 
-    totalStock.value = product.value.skus.reduce((sum, s) => sum + s.quantity, 0)
+    totalStock.value = product.value.skus.reduce(
+      (sum, s) => sum + s.quantity,
+      0
+    );
   } catch (err) {
-    console.error('❌ Lỗi khi tải sản phẩm:', err)
-    alert('Không thể tải chi tiết sản phẩm!')
+    console.error("❌ Lỗi khi tải sản phẩm:", err);
+    alert("Không thể tải chi tiết sản phẩm!");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
 function formatCurrency(value) {
-  if (!value) return '—'
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND'
-  }).format(value)
+  if (!value) return "—";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(value);
 }
 
 function openImage(url) {
-  previewImage.value = url
+  previewImage.value = url;
 }
+
+const showFullDescription = ref(false);
+const shortDescription = computed(() => {
+  if (!product.value?.description) return "<i>Không có mô tả</i>";
+  const text = product.value.description;
+  return text.length > 100 ? text.substring(0, 100) + "..." : text;
+});
+
 </script>
 
 <style scoped>

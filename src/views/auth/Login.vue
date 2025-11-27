@@ -7,12 +7,7 @@
       <!-- EMAIL -->
       <div class="mb-3">
         <label class="form-label">Email</label>
-        <input
-          v-model="email"
-          type="email"
-          class="form-control"
-          placeholder="Nhập email"
-        />
+        <input v-model="email" type="email" class="form-control" placeholder="Nhập email" />
         <small v-if="v$.email.$error" class="text-danger">
           Email không được để trống hoặc không hợp lệ
         </small>
@@ -25,18 +20,11 @@
       <div class="mb-3">
         <label class="form-label">Mật khẩu</label>
         <div class="position-relative">
-          <input
-            v-model="password"
-            :type="showPassword ? 'text' : 'password'"
-            class="form-control pe-5"
-            placeholder="Nhập mật khẩu"
-          />
-          <i
-            class="bi position-absolute end-0 top-50 translate-middle-y me-3"
-            :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"
-            @click="togglePassword"
-            style="cursor: pointer; color: #777;"
-          ></i>
+          <input v-model="password" :type="showPassword ? 'text' : 'password'" class="form-control pe-5"
+            placeholder="Nhập mật khẩu" />
+          <i class="bi position-absolute end-0 top-50 translate-middle-y me-3"
+            :class="showPassword ? 'bi-eye-slash' : 'bi-eye'" @click="togglePassword"
+            style="cursor: pointer; color: #777;"></i>
         </div>
         <small v-if="v$.password.$error" class="text-danger">
           Mật khẩu không được để trống
@@ -54,7 +42,7 @@
         </div>
         <RouterLink to="/auth/forgot-password" class="text-decoration-none small text-primary">
           Quên mật khẩu?
-        </RouterLink> 
+        </RouterLink>
       </div>
 
       <!-- LOGIN BUTTON -->
@@ -66,28 +54,17 @@
     <!-- OR DIVIDER -->
     <div class="text-center position-relative my-4" style="max-width: 400px; margin: 0 auto;">
       <span class="bg-white px-3 text-muted small">hoặc</span>
-      <hr
-        class="position-absolute top-50 start-0 w-100 translate-middle-y border-secondary-subtle"
-      />
+      <hr class="position-absolute top-50 start-0 w-100 translate-middle-y border-secondary-subtle" />
     </div>
 
     <!-- SOCIAL LOGIN -->
-    <div
-      class="d-flex flex-column flex-md-row gap-2 mb-3 mx-auto"
-      style="max-width: 400px;"
-    >
-      <button
-        class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
-        @click="loginWithFacebook"
-        type="button"
-      >
+    <div class="d-flex flex-column flex-md-row gap-2 mb-3 mx-auto" style="max-width: 400px;">
+      <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2"
+        @click="loginWithFacebook" type="button">
         <i class="bi bi-facebook"></i> Facebook
       </button>
-      <button
-        class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
-        @click="loginWithGoogle"
-        type="button"
-      >
+      <button class="btn btn-danger w-100 d-flex align-items-center justify-content-center gap-2"
+        @click="loginWithGoogle" type="button">
         <i class="bi bi-google"></i> Google
       </button>
     </div>
@@ -158,7 +135,7 @@ const login = async () => {
     const role = roles.length > 0 ? roles[0] : null;
     if (role) localStorage.setItem("role", role);
 
-  
+
     await Swal.fire({
       icon: "success",
       title: "Đăng nhập thành công",

@@ -762,13 +762,13 @@ if (selectedPaymentMethod.value === 3) {
 
     console.log("MOMO create response:", res);
 
-    // MoMo service có thể trả payUrl (từ MoMo) hoặc paymentUrl (nếu backend map lại)
+
     const paymentUrl =
       res?.data?.paymentUrl || res?.data?.payUrl || res?.data?.data?.payUrl || null;
 
-    // Nếu backend trả nguyên momoResponse object (chứa payUrl)
+  
     if (paymentUrl) {
-      // Lưu pending order trước khi redirect để callback còn dùng
+     
       sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
       window.location.href = paymentUrl;
       return;
@@ -832,7 +832,6 @@ if (selectedPaymentMethod.value === 3) {
   }
 };
 
-// Handle callback from payment gateways
 
 const handlePaymentCallback = async () => {
   try {
@@ -842,7 +841,7 @@ const handlePaymentCallback = async () => {
     const paymentSuccess = vnp_ResponseCode === "00" || momoResultCode === "0";
 
     const pendingOrderStr = sessionStorage.getItem("pendingOrder");
-    const token = localStorage.getItem("token"); // JWT lưu trong localStorage
+    const token = localStorage.getItem("token");
 console.log(localStorage.getItem("token"));
 
     if (!token) {
