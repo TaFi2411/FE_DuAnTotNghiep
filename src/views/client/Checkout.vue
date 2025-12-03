@@ -5,7 +5,7 @@
     <div>
       <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 class="fw-bold mb-0">Địa chỉ giao hàng</h5>
+          <h5 class="fw-bold mb-0">Thông tin giao hàng của bạn</h5>
           <div>
             <button
               class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2"
@@ -22,32 +22,53 @@
           </div>
         </div>
 
-        <div v-if="selectedAddress" class="rounded-3 p-3">
-          <strong>Địa chỉ giao hàng:</strong> {{ selectedAddress.fulladdress }}
-        </div>
-
-        <div v-else class="text-muted fst-italic">
-          Chưa chọn địa chỉ giao hàng nào.
-        </div>
-
-        <div class="mb-3 mt-3">
-          <label for="shippingPhone" class="form-label fw-semibold"
-            >Số điện thoại người nhận</label
+        <div v-if="selectedAddress">
+          <div>
+            <strong>Địa chỉ giao hàng:</strong> {{ selectedAddress.fulladdress }}
+          </div>
+          <div>
+            <strong>Tên người nhận: </strong>
+            <span v-if="!editing"> {{ selectedAddress.receiverName }}</span>
+            <input
+              type="text"
+              v-else
+              v-model="shippingName"
+              class="form-control"
+            />
+            <div v-if="errorName" class="text-danger small">
+              Tên người nhận không được để trống.
+            </div>
+          </div>
+          <div>
+            <strong>Số điện thoại: </strong>
+            <span v-if="!editing"> {{ selectedAddress.receiverPhone }}</span>
+            <input
+              type="tel"
+              v-else
+              v-model="shippingPhone"
+              class="form-control"
+            />
+            <div v-if="errorPhone" class="text-danger small">
+              Số điện thoại không hợp lệ. (Yêu cầu 10 chữ số)
+            </div>
+          </div>
+          <button v-if="!editing" @click="editing = true" class="btn btn-sm btn-outline-primary mt-2">
+            Sửa
+          </button>
+          <button
+            v-else
+            @click="updateAddress"
+            :disabled="!shippingName || !shippingPhone"
+            class="btn btn-sm btn-primary mt-2"
           >
-          <input
-            id="shippingPhone"
-            type="tel"
-            v-model="shippingPhone"
-            class="form-control"
-            placeholder="Nhập số điện thoại..."
-          />
+            Cập nhật
+          </button>
         </div>
       </div>
 
       <div class="summary-box bg-white rounded-4 shadow-sm p-4">
         <h5 class="fw-bold mb-3">Đơn hàng</h5>
 
-        <!-- Sản phẩm trong giỏ -->
         <div
           v-for="(item, idx) in cartItems"
           :key="item.skuId || item.id || idx"
@@ -94,7 +115,6 @@
                   <span class="text-muted">(Giá gốc)</span>
                 </div>
               </div>
-
             </div>
           </div>
           <div class="fw-semibold">
@@ -116,8 +136,11 @@
             VNĐ</strong
           >
         </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span>Khối lượng</span>
+          <strong>{{ (Number(totalWeight) / 1000 || 0).toLocaleString("vi-VN") }} kg</strong>
+        </div>
 
-        <!-- Voucher -->
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="fw-semibold">Mã giảm giá</span>
           <button
@@ -128,28 +151,39 @@
           </button>
         </div>
 
-        <!-- Giảm giá hiển thị -->
-        <div
-          v-if="selectedVoucher"
-          class="d-flex justify-content-between text-success fw-semibold mb-2"
-        >
-          <span>Giảm giá</span>
-          <span
-            >-{{
-              (Number(discountAmount) || 0).toLocaleString("vi-VN")
-            }}
-            VNĐ</span
-          >
-        </div>
+   <div v-if="productVoucher" class="d-flex justify-content-between align-items-center mb-2">
+  <span class="d-flex align-items-center">
+    Giảm giá sản phẩm ({{ productVoucher.code }})
+    <button class="btn btn-sm btn-outline-danger ms-2 p-0 px-1 py-0" @click="applyVoucher(productVoucher)">
+      Bỏ
+    </button>
+  </span>
+  <span class="text-success fw-semibold">
+    -{{ (Number(productDiscountAmount) || 0).toLocaleString("vi-VN") }} VNĐ
+  </span>
+</div>
 
-        <div class="d-flex justify-content-between fw-bold border-top pt-2">
+<div v-if="shippingVoucher" class="d-flex justify-content-between align-items-center mb-2">
+  <span class="d-flex align-items-center">
+    Giảm giá vận chuyển ({{ shippingVoucher.code }})
+    <button class="btn btn-sm btn-outline-danger ms-2 p-0 px-1 py-0" @click="applyVoucher(shippingVoucher)">
+      Bỏ
+    </button>
+  </span>
+  <span class="text-success fw-semibold">
+    -{{ (Number(shippingDiscountAmount) || 0).toLocaleString("vi-VN") }} VNĐ
+  </span>
+</div>
+
+
+
+<div class="d-flex justify-content-between fw-bold border-top pt-2">
           <span>Tổng thanh toán</span>
           <span
             >{{ (Number(totalPayment) || 0).toLocaleString("vi-VN") }} VNĐ</span
           >
         </div>
 
-        <!-- Chọn phương thức thanh toán -->
         <h5 class="fw-bold mb-2 mt-3">Phương thức thanh toán</h5>
         <div
           v-for="method in paymentMethods"
@@ -177,28 +211,38 @@
       </div>
     </div>
 
-    <!-- MODAL CHỌN / XÓA ĐỊA CHỈ -->
     <div
       v-if="showAddressModal"
       class="modal fade show d-block"
-      style="
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 2000;
-        position: fixed;
-        inset: 0;
-      "
+      style="background: rgba(0, 0, 0, 0.5); z-index: 2000; position: fixed; inset: 0; max-width: 500px; margin: 1.75rem auto;"
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4">
           <div class="modal-header">
             <h5 class="modal-title fw-bold">Thêm địa chỉ mới</h5>
-            <button
-              type="button"
-              class="btn-close"
-              @click="closeModal"
-            ></button>
+            <button type="button" class="btn-close" @click="closeModal"></button>
           </div>
           <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Tên người nhận</label>
+              <input
+                type="text"
+                v-model="shippingName"
+                class="form-control"
+                placeholder="Nhập tên người nhận"
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Số điện thoại người nhận</label>
+              <input
+                type="tel"
+                v-model="shippingPhone"
+                class="form-control"
+                placeholder="Nhập số điện thoại"
+              />
+            </div>
+
             <div class="mb-3">
               <label class="form-label fw-semibold">Tỉnh/Thành phố</label>
               <select
@@ -301,8 +345,10 @@
                 :class="{
                   'border-primary bg-light': selectedAddress?.id === a.id,
                 }"
+                @click="selectAddress(a)"
+                style="cursor: pointer"
               >
-                <div @click="selectAddress(a)" style="cursor: pointer; flex: 1">
+                <div style="flex: 1">
                   <strong>{{ a.fulladdress }}</strong>
                 </div>
                 <button
@@ -327,7 +373,6 @@
       </div>
     </div>
 
-    <!-- MODAL CHỌN VOUCHER -->
     <div
       v-if="showVoucherModal"
       class="modal fade show d-block"
@@ -356,7 +401,10 @@
                 v-for="v in vouchers"
                 :key="v.id"
                 class="border p-3 rounded-3 mb-2 voucher-item"
-                :class="{ active: selectedVoucher?.id === v.id }"
+                :class="{ 
+                  active: (v.type === true && productVoucher?.id === v.id) || 
+                          (v.type === false && shippingVoucher?.id === v.id) 
+                }"
                 @click="applyVoucher(v)"
               >
                 <div class="fw-bold">{{ v.title || "Voucher" }}</div>
@@ -366,7 +414,7 @@
                   Giảm:
                   <span class="text-success fw-semibold">
                     {{
-                      v.type
+                      (v.type === true || v.type === 1)
                         ? v.discount
                           ? v.discount + "%"
                           : "0%"
@@ -429,13 +477,20 @@ const accountId = ref(null);
 
 const showVoucherModal = ref(false);
 const vouchers = ref([]);
-const selectedVoucher = ref(null);
-const discountAmount = ref(0);
+const productVoucher = ref(null); // Lưu voucher Sản phẩm (type = true/1)
+const shippingVoucher = ref(null); // Lưu voucher Vận chuyển (type = false/0)
+// Thay thế discountAmount bằng 2 biến chi tiết hơn
+const productDiscountAmount = ref(0); // Giảm giá sản phẩm (type = 1)
+const shippingDiscountAmount = ref(0); // Giảm giá vận chuyển (type = 0)
 const showSelectAddressModal = ref(false);
 
 const paymentMethods = ref([]);
 const selectedPaymentMethod = ref(null);
-
+const shippingName = ref(""); // Tên người nhận
+const shippingPhone = ref(""); // Số điện thoại người nhận
+const editing = ref(false); // trạng thái chỉnh sửa
+   const errorName = ref(false);  // Khai báo errorName là ref
+    const errorPhone = ref(false); // Khai báo errorPhone là ref
 // --- Helpers ---
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
@@ -457,11 +512,20 @@ const totalProductPrice = computed(() =>
 );
 
 const totalPayment = computed(() => {
-  return (
-    (totalProductPrice.value || 0) +
-    (Number(shippingFee.value) || 0) -
-    (Number(discountAmount.value) || 0)
-  );
+    // Phí vận chuyển cuối cùng = Phí vận chuyển gốc - Giảm giá vận chuyển
+    const finalShippingFee = Math.max(0, (Number(shippingFee.value) || 0) - (Number(shippingDiscountAmount.value) || 0));
+
+    // Tổng thanh toán = Tổng tiền hàng - Giảm giá sản phẩm + Phí vận chuyển cuối cùng
+    return (
+        (totalProductPrice.value || 0) -
+        (Number(productDiscountAmount.value) || 0) +
+        finalShippingFee
+    );
+});
+
+// Thêm computed cho tổng giảm giá để hiển thị trên giao diện (nếu muốn)
+const totalDiscountAmount = computed(() => {
+    return (Number(productDiscountAmount.value) || 0) + (Number(shippingDiscountAmount.value) || 0);
 });
 
 const fetchPaymentMethods = async () => {
@@ -477,6 +541,7 @@ const fetchPaymentMethods = async () => {
 
 const fetchCartFromSessionStorage = () => {
   const stored = JSON.parse(sessionStorage.getItem("checkoutItems") || "[]");
+  const DEFAULT_ITEM_WEIGHT = 500;
   cartItems.value = stored.map((item) => ({
     id: item.id,
     skuId: item.skuId,
@@ -486,7 +551,10 @@ const fetchCartFromSessionStorage = () => {
     image: item.image || "/images/default-product.png",
     skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
     stock: item.stock || 0,
+    weight: Number(item.weight) || DEFAULT_ITEM_WEIGHT,
   }));
+  console.log("Cart Items:", cartItems.value);  // Kiểm tra cartItems
+
 };
 
 const fetchVouchers = async () => {
@@ -499,34 +567,148 @@ const fetchVouchers = async () => {
 };
 
 const applyVoucher = (v) => {
-  const usageCond = Number(v?.usage_condition) || 0;
-  if (totalProductPrice.value < usageCond) {
-    Swal.fire({
-      icon: "warning",
-      title: "Không đủ điều kiện!",
-      text: `Đơn hàng cần tối thiểu ${usageCond.toLocaleString(
-        "vi-VN"
-      )} ₫ để áp dụng mã này.`,
-      confirmButtonText: "Đã hiểu",
-    });
-    return;
-  }
+    // 1. Xử lý logic chọn/hủy voucher
+    
+    let isCancelled = false;
+    
+    // Voucher Sản phẩm (type = true/1)
+    if ((v.type === true || v.type === 1) && productVoucher.value?.id === v.id) {
+        productVoucher.value = null; // Hủy chọn
+        isCancelled = true;
+    } 
+    // Voucher Vận chuyển (type = false/0)
+    else if ((v.type === false || v.type === 0) && shippingVoucher.value?.id === v.id) {
+        shippingVoucher.value = null; // Hủy chọn
+        isCancelled = true;
+    }
 
-  selectedVoucher.value = v;
-  const discount = v?.type
-    ? (totalProductPrice.value * (Number(v.discount) || 0)) / 100
-    : Number(v.discount) || 0;
-  discountAmount.value = Math.min(
-    discount,
-    Number(v?.discount_max) || discount
-  );
-  showVoucherModal.value = false;
+    if (isCancelled) {
+        // Sau khi hủy chọn, tính lại tổng tiền
+        calculateDiscounts();
+        showVoucherModal.value = false;
+        return;
+    }
+
+    // 2. Kiểm tra điều kiện sử dụng (usage_condition) khi ÁP DỤNG MỚI
+    const usageCond = Number(v?.usage_condition) || 0;
+    if (totalProductPrice.value < usageCond) {
+        Swal.fire({
+            icon: "warning",
+            title: "Không đủ điều kiện!",
+            text: `Đơn hàng cần tối thiểu ${usageCond.toLocaleString("vi-VN")} ₫ để áp dụng mã này.`,
+            confirmButtonText: "Đã hiểu",
+        });
+        return;
+    }
+
+    // 3. Áp dụng voucher mới: LƯU VÀO BIẾN ĐÚNG LOẠI
+    // KHÔNG ghi đè voucher loại khác
+    if (v.type === true || v.type === 1) {
+        productVoucher.value = v;
+    } else if (v.type === false || v.type === 0) {
+        shippingVoucher.value = v;
+    } else {
+        // Xử lý trường hợp type không rõ ràng
+        console.error("Voucher type không hợp lệ");
+    }
+    
+    // 4. Tính toán giảm giá ngay sau khi chọn
+    calculateDiscounts(); 
+
+    // 5. Đóng modal
+    showVoucherModal.value = false;
+};
+// Hàm tính toán và cập nhật các ref giảm giá
+// Hàm tính toán và cập nhật các ref giảm giá
+const calculateDiscounts = () => {
+    // 1. TÍNH GIẢM GIÁ SẢN PHẨM
+    let calculatedProductDiscount = 0;
+    if (productVoucher.value) {
+        const v = productVoucher.value;
+        const discountValue = Number(v.discount) || 0;
+        const discountMax = Number(v.discount_max) || 0;
+        const usageCond = Number(v.usage_condition) || 0; // Thêm dòng này
+
+        // CHỈ TÍNH KHI THỎA MÃN ĐIỀU KIỆN TỐI THIỂU
+        if (totalProductPrice.value >= usageCond) { // Thêm điều kiện này
+            if (v.type === true || v.type === 1) {
+                // VOUCHER SẢN PHẨM
+                if (discountValue > 0 && discountValue <= 100) {
+                    calculatedProductDiscount = (totalProductPrice.value * discountValue) / 100;
+                } else {
+                    calculatedProductDiscount = discountValue;
+                }
+                calculatedProductDiscount = Math.min(calculatedProductDiscount, discountMax);
+            }
+        }
+    }
+    productDiscountAmount.value = calculatedProductDiscount;
+    // 2. TÍNH GIẢM GIÁ VẬN CHUYỂN
+    let calculatedShippingDiscount = 0;
+    if (shippingVoucher.value) {
+        const v = shippingVoucher.value;
+        const currentShippingFee = Number(shippingFee.value) || 0;
+        const discountValue = Number(v.discount) || 0;
+        const discountMax = Number(v.discount_max) || 0;
+
+        if (v.type === false || v.type === 0) {
+            // VOUCHER VẬN CHUYỂN
+            calculatedShippingDiscount = Math.min(
+                discountValue, 
+                discountMax, 
+                currentShippingFee
+            );
+        }
+    }
+    shippingDiscountAmount.value = calculatedShippingDiscount;
 };
 
 // --- Address APIs ---
 const closeSelectAddressModal = () => {
   showSelectAddressModal.value = false;
 };
+const updateAddress = async () => {
+  if (!selectedAddress.value || !selectedAddress.value.id) {
+    alert("Chưa chọn địa chỉ để cập nhật!");
+    return;
+  }
+
+  // Kiểm tra tên người nhận
+  if (!shippingName.value || shippingName.value.trim() === "") {
+    errorName.value = true;
+    return;
+  } else {
+    errorName.value = false;
+  }
+
+  // Kiểm tra số điện thoại
+  const phonePattern = /^[0-9]{10}$/; // Định dạng số điện thoại (10 chữ số)
+  if (!shippingPhone.value || !phonePattern.test(shippingPhone.value)) {
+    errorPhone.value = true;
+    return;
+  } else {
+    errorPhone.value = false;
+  }
+
+  try {
+    // Cập nhật thông tin địa chỉ
+    await axios.put(`/api/address/${selectedAddress.value.id}`, {
+      receiverName: shippingName.value,
+      receiverPhone: shippingPhone.value
+    });
+
+    // Đồng bộ state sau khi cập nhật thành công
+    selectedAddress.value.receiverName = shippingName.value;
+    selectedAddress.value.receiverPhone = shippingPhone.value;
+    editing.value = false;
+
+    alert("Cập nhật thông tin thành công!");
+  } catch (err) {
+    console.error(err);
+    alert("Cập nhật thất bại!");
+  }
+};
+
 
 const deleteAddress = async (id) => {
   if (!confirm("Bạn có chắc muốn xóa địa chỉ này?")) return;
@@ -550,6 +732,7 @@ const fetchProvinces = async () => {
   }
 };
 
+
 const fetchDistricts = async () => {
   if (!selectedProvince.value) return;
   try {
@@ -560,6 +743,7 @@ const fetchDistricts = async () => {
     wards.value = [];
     selectedDistrict.value = "";
     selectedWard.value = "";
+    
   } catch (err) {
     console.error("fetchDistricts", err);
   }
@@ -587,15 +771,18 @@ const fetchAddresses = async () => {
     console.error("fetchAddresses", err);
   }
 };
-const fullAddress = computed(() => {
-  if (!selectedAddress.value) return "";
-  return selectedAddress.value.fulladdress || "";
-});
+
 const selectAddress = (a) => {
- 
-  selectedAddress.value = a; // computed fullAddress tự động cập nhật
-  showAddressModal.value = false;
+  selectedAddress.value = a;
+
+  // Gán đúng theo property từ backend
+  shippingName.value = a.receiverName || a.name || "";
+  shippingPhone.value = a.receiverPhone || a.phone || "";
+
+  showSelectAddressModal.value = false;
 };
+
+
 const closeModal = () => {
   showAddressModal.value = false;
   selectedProvince.value = "";
@@ -603,20 +790,30 @@ const closeModal = () => {
   selectedWard.value = "";
   specificAddress.value = "";
 };
-
 const saveAddress = async () => {
-  // Kiểm tra dữ liệu bắt buộc
-  if (!specificAddress.value || !selectedProvince.value || !selectedDistrict.value || !selectedWard.value) {
-    alert("Vui lòng nhập đầy đủ thông tin địa chỉ!");
+  if (
+    !specificAddress.value ||
+    !selectedProvince.value ||
+    !selectedDistrict.value ||
+    !selectedWard.value ||
+    !shippingName.value ||
+    !shippingPhone.value
+  ) {
+    alert("Vui lòng nhập đầy đủ thông tin địa chỉ và người nhận!");
     return;
   }
 
-  // Lấy tên tỉnh/quận/phường
-  const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || "";
-  const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || "";
-  const wardName = wards.value.find(w => w.WardCode === selectedWard.value)?.WardName || "";
+  const provinceName = provinces.value.find(
+    (p) => p.ProvinceID === selectedProvince.value
+  )?.ProvinceName || "";
+  const districtName = districts.value.find(
+    (d) => d.DistrictID === selectedDistrict.value
+  )?.DistrictName || "";
+  const wardName = wards.value.find((w) => w.WardCode === selectedWard.value)
+    ?.WardName || "";
 
-  // Cập nhật selectedAddress
+  const fulladdress = `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`;
+
   selectedAddress.value = {
     detail: specificAddress.value,
     ward: wardName,
@@ -625,54 +822,95 @@ const saveAddress = async () => {
     ward_code: selectedWard.value,
     district_id: selectedDistrict.value,
     province_id: selectedProvince.value,
-    fulladdress: `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`
+    fulladdress: `${specificAddress.value}, ${wardName}, ${districtName}, ${provinceName}`,
+    name: shippingName.value, // Gán tên người nhận
+    phone: shippingPhone.value, // Gán số điện thoại
   };
 
   try {
-    // Gửi lên backend
+    // Lưu thông tin địa chỉ vào backend
     await axios.post("/api/address", {
+      receiverName: shippingName.value,
+      receiverPhone: shippingPhone.value,
       province_id: selectedProvince.value,
       district_id: selectedDistrict.value,
       ward_code: selectedWard.value,
       address: specificAddress.value,
-      fulladdress: fullAddress.value, // dùng computed luôn
+      fulladdress: fulladdress,
       defaultAddress: false,
       active: true,
-      accountId: accountId.value,
+      accountId: accountId.value
     });
+    await fetchAddresses();  
+    const newAddress = addresses.value.find(
+      (address) => address.fulladdress === fulladdress
+    );
 
-    closeModal();       // Đóng modal và reset input
-    await fetchAddresses(); // Lấy lại danh sách địa chỉ
+    if (newAddress) {
+      selectedAddress.value = newAddress; 
+    }
+    closeModal();
   } catch (err) {
     console.error(err);
     alert("Không thể lưu địa chỉ.");
   }
 };
 
-// --- Shipping fee ---
+const totalWeight = computed(() =>
+  cartItems.value.reduce(
+    (sum, item) => sum + (Number(item.weight) || 0) * (Number(item.quantity) || 1),
+    0
+  )
+);
+
 const fetchShippingFee = async () => {
-  if (!selectedAddress.value || !selectedAddress.value.district_id) {
-    shippingFee.value = 0;
-    return;
-  }
-  try {
-    const res = await axios.get("/api/ghn/fee", {
-      params: {
-        fromDistrictId: storeDistrictId,
-        toDistrictId: Number(selectedAddress.value.district_id),
-        toWardCode: String(selectedAddress.value.ward_code),
-        weight: 1000,
-      },
-    });
-    shippingFee.value = res.data?.total || res.data?.data?.total || 0;
-  } catch (err) {
-    shippingFee.value = 0;
-    console.error(err);
-  }
+ if (!selectedAddress.value || !selectedAddress.value.district_id) {
+  shippingFee.value = 0;
+  return;
+ }
+
+ try {
+  // 1. TẠO TRỌNG LƯỢNG GỬI ĐI
+ // Dựa trên logic bạn mong muốn (Backend đã cố định 500g để tính phí),
+ // chúng ta vẫn gửi totalWeight.value. Nếu Backend của bạn đã fix, nó sẽ 
+ // tự động override bằng 500g.
+ const weightToSend = totalWeight.value; 
+
+ console.log("Tổng khối lượng GỬI ĐI:", weightToSend); 
+
+ const res = await axios.get("/api/ghn/fee", {
+ params: {
+ fromDistrictId: storeDistrictId,
+  toDistrictId: Number(selectedAddress.value.district_id),
+  toWardCode: String(selectedAddress.value.ward_code),
+   weight: weightToSend, // Sử dụng tổng khối lượng đã tính
+},
+ });
+
+ console.log('GHN Fee Response:', res.data);
+
+ // 2. CẬP NHẬT PHÍ SHIP
+ shippingFee.value = res.data?.total || res.data?.data?.total || 0;
+
+ // 🛑 LOẠI BỎ TOÀN BỘ LOGIC GHI ĐÈ SAI DƯỚI ĐÂY:
+ // const weightFromBackend = res.data?.weight || 0; 
+ // cartItems.value.forEach(item => { item.weight = weightFromBackend; }); 
+
+ } catch (err) {
+ shippingFee.value = 0;
+ console.error("fetchShippingFee error", err);
+ }
 };
+
+
+
 watch(selectedAddress, (newVal) => {
-   if (newVal) fetchShippingFee() ;
-  //shippingFee.value = 0; // set phí ship = 0 để test
+    if (newVal) fetchShippingFee();
+});
+
+watch(shippingFee, () => {
+    // Khi phí vận chuyển thay đổi, tính lại giảm giá vận chuyển
+    calculateDiscounts();
 });
 
 
@@ -713,23 +951,31 @@ const handlePayment = async () => {
     }
 
   const orderPayload = {
-//orderId: uniqueOrderId,
-  accountId: accountId.value,
-  shippingAddress: selectedAddress.value?.fulladdress || "", // thay đổi đây
-  paymentMethodId: selectedPaymentMethod.value,
-  feeship: Number(shippingFee.value) || 0,
-  total: Number(totalPayment.value) || 0,
-  paymentStatus: false, // camelCase
-  discount: Number(discountAmount.value) || 0,
-  voucherId: selectedVoucher.value ? selectedVoucher.value.id : null,
-  shippingPhone: shippingPhone.value,
+  accountId: accountId.value,
+  shippingAddress: selectedAddress.value?.fulladdress || "",
+  shippingPhone: shippingPhone.value,
+  shippingName: shippingName.value,
+  paymentMethodId: selectedPaymentMethod.value,
+  feeship: Number(shippingFee.value) || 0,
+  total: Number(totalPayment.value) || 0,
+  paymentStatus: false,
+
+  // Tổng giảm giá
+  discount: Number(totalDiscountAmount.value) || 0,
+  discountProduct: Number(productDiscountAmount.value) || 0, 
+  discountShipping: Number(shippingDiscountAmount.value) || 0,
+
+  // ID Voucher
+  productVoucherId: productVoucher.value ? productVoucher.value.id : null,
+  shippingVoucherId: shippingVoucher.value ? shippingVoucher.value.id : null,
+
   statusId: 1, // PENDING
-  orderDetails: cartItems.value.map((i) => ({
-    skuId: i.skuId,
-    quantity: i.quantity,
-    price: i.price,
-    // productId: i.productId // thêm nếu backend cần
-  })),
+  totalWeight: totalWeight.value,
+  orderDetails: cartItems.value.map((i) => ({
+    skuId: i.skuId,
+    quantity: i.quantity,
+    price: i.price,
+  })),
 };
 
 console.log("Order Payload:", orderPayload);
@@ -793,6 +1039,8 @@ if (selectedPaymentMethod.value === 3) { // MOMO
     // Xử lý COD
     if (selectedPaymentMethod.value === 2) {
       const orderRes = await axios.post("/api/order", orderPayload);
+      console.log(localStorage.getItem('token'));
+
       sessionStorage.removeItem("cart");
       sessionStorage.removeItem("checkoutItems");
       cartItems.value = [];
@@ -953,8 +1201,10 @@ const urlParams = new URLSearchParams(window.location.search);
   }
 });
 </script>
-
 <style scoped>
+.text-danger {
+  color: red;
+}
 .checkout-page {
   color: #1d1d1f;
   max-width: 900px;
@@ -981,8 +1231,78 @@ const urlParams = new URLSearchParams(window.location.search);
   border-color: #0d6efd;
 }
 .modal.show.d-block {
-  z-index: 1 !important;
+  z-index: 1050 !important;
   position: fixed !important;
   inset: 0 !important;
+  background: rgba(0, 0, 0, 0.5); 
+}
+/* Modal Setup */
+.modal-dialog {
+  max-width: 500px; 
+  margin: 1.75rem auto; 
+  position: relative;
+  z-index: 1050;
+}
+
+.modal-content {
+  padding: 1rem; 
+  border-radius: 0.75rem; 
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-body {
+  padding-bottom: 1rem; 
+  height: auto; 
+  overflow-y: hidden;
+}
+
+.modal-body::-webkit-scrollbar {
+  display: none; 
+}
+
+.form-label {
+  font-size: 0.875rem;
+}
+
+.form-control {
+  font-size: 0.875rem; 
+  padding: 0.5rem; 
+  height: auto; 
+}
+
+.mb-3 {
+  margin-bottom: 1rem; 
+}
+
+.modal-header {
+  padding: 1rem 1rem; 
+}
+
+.modal-footer {
+  padding: 1rem 1rem; 
+}
+
+.btn-close {
+  padding: 0.5rem; 
+}
+
+.modal.show.d-block {
+  z-index: 2000 !important;
+  position: fixed;
+  inset: 0;
+}
+/* Thêm CSS cho trạng thái chọn voucher trong modal */
+.voucher-item {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.voucher-item:hover {
+  background-color: #f8f9fa; /* Light gray background on hover */
+}
+
+.voucher-item.active {
+  border-color: var(--bs-primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 </style>

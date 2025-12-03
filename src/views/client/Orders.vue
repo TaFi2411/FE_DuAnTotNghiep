@@ -1,7 +1,6 @@
 <template>
   <div class="orders-page container-fluid py-5">
     <div class="row gx-4">
-      <!-- SIDEBAR -->
       <aside class="col-lg-3 mb-4">
         <div class="profile-card p-4 rounded shadow-sm bg-white">
           <div class="d-flex align-items-center gap-3">
@@ -42,10 +41,8 @@
         </div>
       </aside>
 
-      <!-- MAIN CONTENT -->
       <main class="col-lg-9">
         <div class="main-card p-4 rounded shadow-sm bg-white">
-          <!-- THÔNG TIN CÁ NHÂN -->
           <div v-if="currentMenu === 'Thông tin cá nhân'">
             <h5>Thông tin cá nhân</h5>
             <p><strong>Họ và tên:</strong> {{ userName }}</p>
@@ -53,14 +50,12 @@
             <p><strong>Số điện thoại:</strong> {{ userPhone }}</p>
           </div>
 
-          <!-- ĐƠN HÀNG -->
           <div v-else-if="currentMenu === 'Đơn hàng của tôi'">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="mb-0">Đơn hàng của tôi</h5>
               <small class="text-muted">Tổng: {{ orders.length }} đơn</small>
             </div>
 
-            <!-- FILTER TABS -->
             <div class="filter-tabs mb-3">
               <button
                 v-for="filter in filtersWithCount"
@@ -75,12 +70,10 @@
               </button>
             </div>
 
-            <!-- LOADING -->
             <div v-if="loading" class="py-5 text-center">
               <div class="spinner-border" role="status"></div>
             </div>
 
-            <!-- NO ORDERS -->
             <div
               v-else-if="filteredOrders.length === 0"
               class="alert alert-light border text-center"
@@ -88,7 +81,6 @@
               Không có đơn hàng nào thuộc trạng thái này.
             </div>
 
-            <!-- ORDER LIST -->
             <div v-else class="order-list">
               <div
                 v-for="order in filteredOrders"
@@ -129,7 +121,6 @@
                   </div>
                 </div>
 
-                <!-- body (expand) -->
                 <transition name="slide-fade">
                   <div
                     v-if="expandedOrder === order.id"
@@ -166,29 +157,14 @@
                             <div class="small text-dark">
                               Số lượng: {{ item.quantity }}
                             </div>
- <div v-if="item.attributes">
-  <div v-for="(value, key) in item.attributes" :key="key" class="item-attribute">
-    <strong>{{ key }}:</strong> {{ value }}
-  </div>
-</div>
-
-
-                       
-                            <div class="small text-dark">
-                              Giá: {{ formatCurrency(item.price) }}
+                            <div v-if="item.attributes">
+                              <div v-for="(value, key) in item.attributes" :key="key" class="item-attribute">
+                                <strong>{{ key }}:</strong> {{ value }}
+                              </div>
                             </div>
-                            <div class="small text-dark">
-                              Phí vận chuyển:
-                              {{ formatCurrency(order.feeship) }}
-                            </div>
+                        
                           </div>
-                          <div class="fw-bold text-end">
-                            {{
-                              formatCurrency(
-                                (item.price || 0) * (item.quantity || 1)
-                              )
-                            }}
-                          </div>
+                      
                         </div>
 
                         <div class="mt-2">
@@ -198,6 +174,8 @@
                           </div>
                           <div class="small text-muted mt-2">SĐT:</div>
                           <div>{{ order.shippingPhone }}</div>
+                          <div class="small text-muted mt-2">Tên người nhận:</div>
+                          <div>{{ order.shippingName }}</div>
                           <div class="small text-muted mt-2">Phương thức:</div>
                           <div>{{ order.paymentMethodName }}</div>
                           <div class="small text-muted mt-2">
@@ -210,22 +188,87 @@
                                 : "Chưa thanh toán"
                             }}
                           </div>
-                        </div>
-                      </div>
-
+                          
+                          <div 
+                              v-if="order.statusName === 'CANCELLED' && order.note" 
+                              class="alert alert-danger p-2 mt-3 small"
+                          >
+                              <i class="bi bi-info-circle me-2"></i>
+                              <strong>Lý do hủy:</strong> {{ order.note }}
+                          </div>
+                          
+                          <div 
+                              v-if="order.statusName === 'REFUND_REQUESTED' && order.refundReason" 
+                              class="alert alert-warning p-2 mt-3 small"
+                          >
+                              <i class="bi bi-arrow-return-left me-2"></i>
+                              <strong>Lý do bạn yêu cầu hoàn trả:</strong> {{ order.refundReason }}
+                          </div>
+                          
+                          <div 
+                              v-if="(order.statusName === 'REFUND_PROCESSING' || order.statusName === 'REFUNDED' || order.statusName === 'REFUND_REJECTED') && order.adminRefundNote" 
+                              class="alert p-2 mt-3 small"
+                              :class="order.statusName === 'REFUND_REJECTED' ? 'alert-danger' : 'alert-info'"
+                          >
+                              <i class="bi bi-file-earmark-text me-2"></i>
+                              <strong>Ghi chú xử lý của Admin:</strong> {{ order.adminRefundNote }}
+                          </div>
+                          </div> 
+                      </div> 
                       <div
                         class="col-md-4 d-flex flex-column justify-content-between"
                       >
-                        <div class="text-end">
-                          <div class="total-label small text-muted">
-                            Tổng cộng
+                        <div class="summary-box">
+                          <table class="table table-borderless table-sm text-end mb-3 small">
+                            <tbody>
+                              <tr class="fw-normal">
+                                <td class="text-start text-muted">Tổng tiền sản phẩm:</td>
+                                <td class="text-end">{{ formatCurrency(getTotalProductPrice(order)) }}</td>
+                              </tr>
+                              <tr class="fw-normal">
+                                <td class="text-start text-muted">Phí vận chuyển :</td>
+                                <td class="text-end">{{ formatCurrency(order.feeship) }}</td>
+                              </tr>
+                              
+                              <tr v-if="order.discountProduct > 0" class="text-success fw-semibold ">
+                                <td class="text-start">Giảm giá Sản phẩm:</td>
+                                <td class="text-end">- {{ formatCurrency(order.discountProduct) }}</td>
+                              </tr>
+                              
+                              <tr v-if="order.discountShipping > 0" class="text-success fw-semibold">
+                                <td class="text-start">Giảm giá Vận chuyển:</td>
+                                <td class="text-end">- {{ formatCurrency(order.discountShipping) }}</td>
+                              </tr>
+                              
+                              <tr class="fw-bold  ">
+                                <td class="text-start fs-5">Tổng Thanh Toán:</td>
+                                <td class="text-danger fs-4">{{ formatCurrency(order.total) }}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          
+                          <div class="voucher-details small bg-light p-2 rounded text-start mt-3" v-if="order.productVoucherTitle || order.shippingVoucherTitle">
+                            <div class="fw-bold mb-1 text-dark"><i class="bi bi-tag-fill me-1"></i> Voucher đã áp dụng:</div>
+                            <ul class="list-unstyled mb-0 ms-2">
+                              <li>
+                                <span class="text-success">•</span> Sản phẩm: {{ order.productVoucherTitle || 'Không' }}
+                              </li>
+                              <li>
+                                <span class="text-success">•</span> Vận chuyển: {{ order.shippingVoucherTitle || 'Không' }}
+                              </li>
+                            </ul>
                           </div>
-                          <div class="total-amount fw-bold">
-                            {{ formatCurrency(order.total) }}
-                          </div>
+                          
                         </div>
 
                         <div class="text-end mt-3">
+                          <button
+                            v-if="order.statusName === 'PENDING'"
+                            class="btn btn-outline-secondary me-2"
+                            @click.stop="openEditShippingModal(order)"
+                          >
+                            Đổi thông tin nhận hàng
+                          </button>
                           <button
                             v-if="order.statusName === 'PENDING'"
                             class="btn btn-cancel me-2"
@@ -249,6 +292,13 @@
                           >
                             Đánh giá
                           </button>
+                          <button
+                            v-if="order.statusName === 'COMPLETED' && order.statusName !== 'CANCELLED'"
+                            class="btn btn-outline-danger"
+                            @click.stop="requestReturn(order.id)"
+                          >
+                            Yêu cầu Hoàn trả
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -261,7 +311,6 @@
       </main>
     </div>
 
-    <!-- REVIEW MODAL -->
     <div v-if="reviewModal" class="review-modal-backdrop">
       <div class="review-modal rounded-4 p-4 bg-white shadow-lg">
         <button class="btn-close float-end" @click="closeReviewModal"></button>
@@ -338,7 +387,106 @@
         </div>
       </div>
     </div>
+    
   </div>
+
+
+  <div v-if="editShippingModal" class="review-modal-backdrop">
+  <div class="review-modal rounded-4 p-4 bg-white shadow-lg" style="max-width: 500px">
+    <button class="btn-close float-end" @click="closeEditShippingModal"></button>
+    <h5 class="text-center mb-4">Đổi thông tin nhận hàng</h5>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Tên người nhận:</label>
+      <input 
+        v-model="editShippingForm.shippingName" 
+        type="text" 
+        class="form-control" 
+      />
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Số điện thoại:</label>
+      <input 
+        v-model="editShippingForm.shippingPhone" 
+        type="tel" 
+        class="form-control" 
+      />
+    </div>
+    
+    <hr class="my-3">
+    
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Chọn địa chỉ đã lưu:</label>
+      <select class="form-select" @change="selectShippingAddress($event)">
+        <option value="">-- Chọn địa chỉ --</option>
+        <option 
+          v-for="addr in addresses" 
+          :key="addr.id" 
+          :value="addr.id"
+          :selected="addr.fulladdress === editShippingForm.shipping_address"
+        >
+          {{ addr.fulladdress }} 
+        </option>
+      </select>
+      <div v-if="addresses.length === 0" class="small text-danger mt-1">
+        Không tìm thấy địa chỉ nào đã lưu. Vui lòng thêm địa chỉ mới ở trang tài khoản.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Địa chỉ chi tiết (Không chỉnh sửa Tỉnh/Huyện/Xã):</label>
+      <input
+        v-model="editShippingForm.shipping_address"
+        type="text"
+        class="form-control bg-light"
+        readonly 
+        placeholder="Địa chỉ sẽ được điền tự động khi bạn chọn ở trên"
+      />
+    </div>
+    
+    <hr class="my-3">
+    <div class="mb-3 p-3 border rounded" v-if="editShippingForm.selectedAddressId">
+        <h6 class="fw-bold mb-3">💰 Chi phí và Thanh toán mới</h6>
+        
+        <table class="table table-sm table-borderless text-end small">
+            <tbody>
+                <tr>
+                    <td class="text-start text-muted">Phí Ship cũ:</td>
+                    <td class="text-end">{{ formatCurrency(originalFeeship) }}</td>
+                </tr>
+                <tr class="fw-semibold">
+                    <td class="text-start text-dark border-bottom border-secondary">Phí Ship (Địa chỉ mới):</td>
+                    <td class="text-end border-bottom border-secondary">{{ formatCurrency(currentShippingFee) }}</td>
+                </tr>
+                
+                <tr v-if="currentProductDiscount > 0" class="text-success fw-semibold">
+                    <td class="text-start">Giảm giá Sản phẩm:</td>
+                    <td class="text-end">- {{ formatCurrency(currentProductDiscount) }}</td>
+                </tr>
+                <tr v-if="currentShippingDiscount > 0" class="text-success fw-semibold">
+                    <td class="text-start">Giảm giá Vận chuyển:</td>
+                    <td class="text-end">- {{ formatCurrency(currentShippingDiscount) }}</td>
+                </tr>
+                <tr class="fw-bold border-top border-2">
+                    <td class="text-start fs-5">Tổng Thanh Toán MỚI:</td>
+                    <td class="text-danger fs-5">{{ formatCurrency(currentTotalAmount) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mt-4">
+      <button 
+        class="btn btn-primary px-4" 
+        :disabled="isUpdatingShipping"
+        @click="submitEditShipping"
+      >
+        <span v-if="isUpdatingShipping" class="spinner-border spinner-border-sm me-2"></span>
+        {{ isUpdatingShipping ? 'Đang cập nhật...' : 'Cập nhật' }}
+      </button>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup>
@@ -350,12 +498,32 @@ const orders = ref([]);
 const loading = ref(true);
 const expandedOrder = ref(null);
 const currentFilter = ref("ALL");
+
+// --- KHAI BÁO MỚI ---
+const editShippingModal = ref(false);
+const isUpdatingShipping = ref(false);
+const editShippingForm = ref({
+    orderId: null,
+    shippingName: "",
+    shippingPhone: "",
+    shipping_address: "",
+    selectedAddressId: null, // Thêm trường này để theo dõi địa chỉ được chọn
+});
+const addresses = ref([]); // Danh sách địa chỉ từ DB
+// ⭐️ BỔ SUNG: Biến Reactive lưu trữ Phí Ship và Tổng Tiền Mới ⭐️
+const currentShippingFee = ref(0); // Phí ship hiện tại của đơn hàng đang mở modal
+const currentTotalAmount = ref(0); // Tổng tiền hiện tại của đơn hàng đang mở modal
+// ⭐️ Cần thêm 3 biến mới này ⭐️
+const currentShippingDiscount = ref(0); // Giảm giá VC mới
+const currentProductDiscount = ref(0);  // Giảm giá SP (lấy từ order gốc)
+const currentTotalDiscount = ref(0);    // Tổng giảm giá mới (SP + VC)
+const originalFeeship = ref(0);
 const reviewModal = ref(false);
 const reviewForm = ref({
-  star: 0,
-  description: "",
-  orderDetailId: null,
-  images: [],
+    star: 0,
+    description: "",
+    orderDetailId: null,
+    images: [],
 });
 const isUploading = ref(false);
 const fileInput = ref(null);
@@ -365,236 +533,534 @@ const userName = ref("");
 const userEmail = ref("");
 const userPhone = ref("");
 const userInitials = computed(() =>
-  userName.value
-    ? userName.value
-        .split(" ")
-        .map((s) => s[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : ""
+    userName.value
+        ? userName.value
+              .split(" ")
+              .map((s) => s[0])
+              .slice(0, 2)
+              .join("")
+              .toUpperCase()
+        : ""
 );
 
 const menu = [
-  { label: "Thông tin cá nhân", icon: "bi bi-person", active: false },
-  { label: "Đơn hàng của tôi", icon: "bi bi-bag-fill", active: true },
-  { label: "Đổi mật khẩu", icon: "bi bi-key", active: false },
+    { label: "Thông tin cá nhân", icon: "bi bi-person", active: false },
+    { label: "Đơn hàng của tôi", icon: "bi bi-bag-fill", active: true },
+    { label: "Đổi mật khẩu", icon: "bi bi-key", active: false },
 ];
 
 const filters = [
-  { label: "Tất cả", value: "ALL" },
-  { label: "Chờ xác nhận", value: "PENDING" },
-  { label: "Đang xử lý", value: "PROCESSING" },
-  { label: "Đang giao", value: "SHIPPING" },
-  { label: "Đã giao", value: "DELIVERED" }, // mới
-  { label: "Hoàn thành", value: "COMPLETED" },
-  { label: "Đã hủy", value: "CANCELLED" },
+    { label: "Tất cả", value: "ALL" },
+    { label: "Chờ xác nhận", value: "PENDING" },
+    { label: "Đang xử lý", value: "PROCESSING" },
+    { label: "Đang giao", value: "SHIPPING" },
+    { label: "Đã giao", value: "DELIVERED" }, 
+    { label: "Hoàn thành", value: "COMPLETED" },
+    { label: "Đang hoàn trả", value: "REFUND_REQUESTED" }, // <-- Thêm trạng thái mới
+    { label: "Đang xử lý hoàn", value: "REFUND_PROCESSING" }, // ID 8
+ { label: "Đã hoàn trả", value: "REFUNDED" },  // ID 9 (Trạng thái bạn cần)
+ { label: "Từ chối hoàn trả", value: "REFUND_REJECTED" }, // ID 10
+    { label: "Đã hủy", value: "CANCELLED" },
 ];
 
 const filtersWithCount = computed(() =>
-  filters.map((f) => ({
-    ...f,
-    count:
-      f.value === "ALL"
-        ? orders.value.length
-        : orders.value.filter((o) => o.statusName === f.value).length,
-  }))
+    filters.map((f) => ({
+        ...f,
+        count:
+            f.value === "ALL"
+                ? orders.value.length
+                : orders.value.filter((o) => o.statusName === f.value).length,
+    }))
 );
 
 const filteredOrders = computed(() =>
-  currentFilter.value === "ALL"
-    ? orders.value
-    : orders.value.filter((o) => o.statusName === currentFilter.value)
+    currentFilter.value === "ALL"
+        ? orders.value
+        : orders.value.filter((o) => o.statusName === currentFilter.value)
 );
 
 function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(value || 0);
+    return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+    }).format(value || 0);
 }
 function formatDate(dateStr) {
-  return dateStr ? new Date(dateStr).toLocaleString("vi-VN") : "";
+    return dateStr ? new Date(dateStr).toLocaleString("vi-VN") : "";
 }
 function getStatusText(status) {
-  switch (status) {
-    case "PENDING":
-      return "Chờ xác nhận";
-    case "PROCESSING":
-      return "Đang xử lý";
-    case "SHIPPING":
-      return "Đang giao hàng";
-    case "DELIVERED":
-      return "Đã giao"; // mới
-    case "COMPLETED":
-      return "Hoàn thành";
-    case "CANCELLED":
-      return "Đã hủy";
-    default:
-      return status;
-  }
+    switch (status) {
+        case "PENDING":
+            return "Chờ xác nhận";
+        case "PROCESSING":
+            return "Đang xử lý";
+        case "SHIPPING":
+            return "Đang giao hàng";
+        case "DELIVERED":
+            return "Đã giao"; 
+        case "COMPLETED":
+            return "Hoàn thành";
+        case "CANCELLED":
+            return "Đã hủy";
+            case "REFUND_REQUESTED":
+      return "Đang hoàn trả"; // <-- Thêm case cho trạng thái mới
+case "REFUND_PROCESSING":
+      return "Đang xử lý hoàn tiền"; // ID 8
+    case "REFUNDED":
+      return "Đã hoàn tiền thành công"; // ID 9 (Trạng thái bạn cần)
+    case "REFUND_REJECTED":
+      return "Yêu cầu hoàn bị từ chối"; // ID 10
+        default:
+            return status;
+    }
 }
 
 function toggleOrder(id) {
-  expandedOrder.value = expandedOrder.value === id ? null : id;
+    expandedOrder.value = expandedOrder.value === id ? null : id;
 }
-function selectMenu(item) {
-  currentMenu.value = item.label;
-  menu.forEach((m) => (m.active = m.label === item.label));
-}
+const getTotalProductPrice = (order) => {
+    // Tổng tiền sản phẩm GỐC = Tổng cuối (Total) + Tổng Giảm giá (TotalDiscount) - Phí Vận chuyển (Feeship)
+    const { total, totalDiscount, feeship } = order;
 
-function decodeJwtToken(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(
-      decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-          .join("")
-      )
-    );
-  } catch {
-    return null;
-  }
-}
-
-async function loadUserProfile() {
-  try {
+    if (total !== undefined && totalDiscount !== undefined && feeship !== undefined) {
+        // Sử dụng giá trị từ Backend (tin cậy hơn)
+        return total + (totalDiscount || 0) - (feeship || 0);
+    }
+    
+    // Nếu dữ liệu Backend thiếu (Dự phòng: tính tay tổng giá các items)
+    return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+};
+// --- HÀM MỚI: TẢI DANH SÁCH ĐỊA CHỈ (ĐÃ CÓ TRONG CODE CŨ CỦA BẠN, CHỈ ĐIỀU CHỈNH VỊ TRÍ) ---
+async function loadAddresses() {
     const token = localStorage.getItem("token");
     if (!token) return;
     const payload = decodeJwtToken(token);
     const accountId = payload?.id;
     if (!accountId) return;
 
-    const res = await axios.get(`/api/account/${accountId}`);
-    const data = res.data;
-    userName.value = data.fullname || "";
-    userEmail.value = data.email || "";
-    userPhone.value = data.phone || "";
-  } catch (err) {
-    console.error("Không thể tải thông tin người dùng:", err);
-  }
+    try {
+        const res = await axios.get(`/api/address/account/${accountId}`);
+        addresses.value = res.data;
+    } catch (err) {
+        console.error("Lỗi khi tải danh sách địa chỉ:", err);
+    }
+}
+function selectShippingAddress(event) {
+    const selectedId = event.target.value;
+    const selected = addresses.value.find(a => a.id.toString() === selectedId);
+
+    if (selected) {
+        // ... (Cập nhật các trường form: shipping_address, selectedAddressId, v.v.)
+        editShippingForm.value.shipping_address = selected.fulladdress;
+        editShippingForm.value.selectedAddressId = selected.id;
+        editShippingForm.value.shippingName = selected.receiverName;
+        editShippingForm.value.shippingPhone = selected.receiverPhone;
+
+        // ⭐️ SỬA LỖI: Lấy orderId từ chính form chỉnh sửa ⭐️
+        const orderIdToUpdate = editShippingForm.value.orderId;
+
+        if (orderIdToUpdate) { // Đảm bảo ID đơn hàng tồn tại
+            // Gọi hàm tính phí với addressId và orderId
+            updateShippingFee(selected.id, orderIdToUpdate); // Truyền thêm orderId vào hàm updateShippingFee (nếu cần)
+        } else {
+            console.error("Lỗi: Không tìm thấy ID đơn hàng trong editShippingForm.value.orderId.");
+        }
+        
+    } else {
+        // Nếu chọn "Chọn địa chỉ" mặc định
+        editShippingForm.value.shipping_address = '';
+        editShippingForm.value.selectedAddressId = null;
+        
+        // ⭐️ OPTIONAL: Xóa/Reset phí ship nếu không chọn địa chỉ ⭐️
+        // Ví dụ: this.shippingFee = 0;
+    }
+}
+
+
+
+
+
+
+// Thêm hàm hỗ trợ
+function addDays(date, days) {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
+// Hàm kiểm tra điều kiện hoàn trả (SỬ DỤNG MỐC completed_date CHÍNH XÁC)
+function isReturnable(order) {
+    const RETURN_DAYS_LIMIT = 7; // Giới hạn hoàn trả là 7 ngày
+
+    // 1. CHỈ CHO PHÉP HOÀN TRẢ KHI ĐƠN HÀNG ĐÃ HOÀN THÀNH
+    // Tránh trường hợp đơn hàng còn ở trạng thái Đang giao hoặc Đang xử lý
+    if (order.statusName !== 'COMPLETED') {
+        return false;
+    }
+
+    // 2. LẤY NGÀY BẮT ĐẦU TÍNH HẠN: Sử dụng completed_date
+   const startDateStr = order.completedDate; // Đã sửa từ completed_date
+    
+    // Đảm bảo dữ liệu ngày hoàn thành tồn tại (nếu đã COMPLETED thì phải có ngày này)
+    if (!startDateStr) {
+        console.warn(`Đơn hàng ${order.id} ở trạng thái COMPLETED nhưng thiếu completed_date.`);
+        return false;
+    }
+    
+    const startDate = new Date(startDateStr);
+
+    // 3. Tính ngày cuối cùng có thể hoàn trả (7 ngày sau ngày hoàn thành)
+    const returnDeadline = addDays(startDate, RETURN_DAYS_LIMIT);
+    const currentDate = new Date();
+
+    // 4. So sánh ngày hiện tại với ngày hết hạn hoàn trả
+    // Trả về TRUE nếu ngày hiện tại <= ngày hết hạn
+    return currentDate <= returnDeadline;
+}
+
+
+// Hàm để hoàn trả đơn hàng
+async function requestReturn(orderId) {
+    try {
+        const order = orders.value.find(o => o.id === orderId);
+        if (!order) {
+            Swal.fire('Lỗi', 'Không tìm thấy đơn hàng.', 'error');
+            return;
+        }
+
+        // 1. KIỂM TRA ĐIỀU KIỆN HOÀN TRẢ
+        if (!isReturnable(order)) {
+            Swal.fire('Lỗi', 'Đơn hàng không đủ điều kiện hoàn trả (đã quá 7 ngày hoặc chưa hoàn thành).', 'warning');
+            return;
+        }
+
+        // 2. YÊU CẦU LÝ DO HOÀN TRẢ TỪ NGƯỜI DÙNG
+        const { value: reason } = await Swal.fire({
+            title: 'Yêu cầu Hoàn trả',
+            text: `Nhập lý do bạn muốn hoàn trả đơn hàng ${orderId}:`,
+            input: 'textarea', // Sử dụng textarea để nhập lý do
+            inputLabel: 'Lý do hoàn trả (tối đa 500 ký tự)',
+            inputPlaceholder: 'Sản phẩm lỗi, không đúng mô tả, ...',
+            showCancelButton: true,
+            confirmButtonText: 'Gửi yêu cầu',
+            cancelButtonText: 'Hủy bỏ',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Vui lòng nhập lý do hoàn trả!';
+                }
+                if (value.length > 500) {
+                    return 'Lý do không được vượt quá 500 ký tự.';
+                }
+            }
+        });
+
+        if (reason) {
+            // 3. GỌI API VỚI BODY { reason: reason }
+            // API: PUT /api/order/{id}/request-refund
+            const payload = { reason: reason };
+            
+            await axios.put(`/api/order/${orderId}/request-refund`, payload);
+            
+            // 4. Cập nhật trạng thái trong local
+            order.statusName = 'RETURNING';
+            
+            Swal.fire('Thành công', `Yêu cầu hoàn trả đơn hàng ${orderId} đã được gửi và đang chờ xử lý.`, 'success');
+        }
+    } catch (error) {
+        console.error("Lỗi hoàn trả đơn hàng:", error);
+        // Lấy thông báo lỗi từ Backend nếu có
+        const errorMessage = error.response?.data || 'Có lỗi xảy ra khi yêu cầu hoàn trả.';
+        Swal.fire('Lỗi', errorMessage, 'error');
+    }
+}
+
+
+
+
+
+
+
+
+// --- CẬP NHẬT: openEditShippingModal ---
+function openEditShippingModal(order) {
+    editShippingForm.value = {
+        orderId: order.id,
+        shippingName: order.shippingName,
+        shippingPhone: order.shippingPhone,
+        shipping_address: order.shippingAddress, // Giả sử trường này là shippingAddress/shipping_address
+        selectedAddressId: null, // 
+        
+    };
+    
+    // ⭐️ BỔ SUNG: Gán phí ship và tổng tiền của đơn hàng hiện tại ⭐️
+    currentShippingFee.value = order.feeship || 0;
+    currentTotalAmount.value = order.total || 0; // Giả định order.total là tổng cuối cùng
+originalFeeship.value = order.feeship;
+    editShippingModal.value = true;
+    loadAddresses(); 
+}
+// --- BỔ SUNG: HÀM GỌI API TÍNH LẠI PHÍ SHIP ---
+async function updateShippingFee(addressId) {
+    const orderId = editShippingForm.value.orderId; 
+    
+    if (!orderId || !addressId) return;
+
+    try {
+        const response = await axios.get('/api/ghn/calculate-fee', {
+            params: {
+                orderId: orderId,
+                addressId: addressId
+            }
+        });
+
+        const data = response.data;
+        
+        // ⭐️ CẬP NHẬT UI: Gán phí ship và tổng tiền mới vào biến reactive ⭐️
+        currentShippingFee.value = data.newFeeship; // Tên trường trả về từ BE là newFeeship
+        currentTotalAmount.value = data.newTotalAmount;
+        
+        // ✅ BỔ SUNG LƯU CÁC GIÁ TRỊ GIẢM GIÁ MỚI
+        // Giảm giá SP (lấy từ Order gốc)
+        // Lưu ý: Backend không tính lại Product Discount, nên bạn phải lấy từ order gốc 
+        // hoặc yêu cầu BE trả kèm productDiscount trong response
+        // => TẠM THỜI SỬ DỤNG GIÁ TRỊ TỪ RESPONSE CỦA BE (nếu có):
+        currentShippingDiscount.value = data.newShippingDiscount || 0; 
+        currentTotalDiscount.value = data.newTotalDiscount || 0;
+        
+        // Để hiển thị chi tiết giảm giá SP, bạn cần lấy từ đơn hàng gốc đang hiển thị
+        const originalOrder = orders.value.find(o => o.id === orderId);
+        if (originalOrder) {
+             currentProductDiscount.value = originalOrder.discountProduct || 0; 
+        }
+
+        console.log(`Phí ship mới: ${data.newFeeship}, Giảm giá VC: ${data.newShippingDiscount}, Tổng tiền mới: ${data.newTotalAmount}`);
+
+    } catch (error) {
+        console.error("Lỗi khi tính lại phí vận chuyển:", error);
+        // Tùy chọn: Đặt lại phí ship về 0 hoặc phí cũ
+        Swal.fire("Lỗi tính phí", "Không thể tính lại phí vận chuyển cho địa chỉ này.", "error");
+    }
+}
+function closeEditShippingModal() {
+    editShippingModal.value = false;
+    editShippingForm.value = { orderId: null, shippingName: "", shippingPhone: "", shipping_address: "", selectedAddressId: null };
+}
+
+async function submitEditShipping() {
+    // 1. Client-Side Validation 
+    const form = editShippingForm.value;
+
+    // ✅ BỔ SUNG: Kiểm tra xem người dùng đã chọn địa chỉ mới chưa (trừ khi họ chỉ sửa tên/SĐT)
+    // Nếu họ đã chọn địa chỉ mới, phải có selectedAddressId
+    if (!form.shippingName || !form.shippingPhone || !form.shipping_address) {
+        return Swal.fire("Thiếu thông tin", "Vui lòng điền đầy đủ Tên, SĐT và chọn Địa chỉ.", "warning");
+    }
+    
+    // ... (Kiểm tra regex SĐT) ...
+
+    if (form.orderId === null) return;
+    
+    isUpdatingShipping.value = true;
+    try {
+        // ⭐️ CẬP NHẬT PAYLOAD: Bổ sung 3 trường mới ⭐️
+        const payload = {
+            shippingName: form.shippingName,
+            shippingPhone: form.shippingPhone,
+            // ⚠️ Gửi địa chỉ chi tiết (chuỗi)
+            shippingAddress: form.shipping_address, 
+            
+            // ✅ GỬI ID ĐỊA CHỈ MỚI: Rất quan trọng để BE thay đổi địa chỉ Order
+            // Nếu người dùng không chọn địa chỉ, giá trị này sẽ là null
+            newAddressId: form.selectedAddressId, 
+            
+            // ✅ GỬI PHÍ SHIP VÀ TỔNG TIỀN MỚI
+            newFeeship: currentShippingFee.value,
+            newTotalAmount: currentTotalAmount.value,
+        };
+
+        // API này phải được sửa ở BE để chấp nhận và lưu 3 trường mới
+        const response = await axios.put(`/api/order/${form.orderId}/shipping-info`, payload);
+        
+        // Cập nhật dữ liệu trong orders.value
+        const updatedOrderData = response.data;
+        const orderIndex = orders.value.findIndex(o => o.id === form.orderId);
+        if (orderIndex !== -1) {
+            orders.value[orderIndex].shippingName = updatedOrderData.shippingName;
+            orders.value[orderIndex].shippingPhone = updatedOrderData.shippingPhone;
+            orders.value[orderIndex].shipping_address = updatedOrderData.shippingAddress || updatedOrderData.shipping_address; 
+            
+            // ✅ CẬP NHẬT PHÍ SHIP VÀ TỔNG TIỀN TRONG MẢNG ĐƠN HÀNG
+            orders.value[orderIndex].feeship = updatedOrderData.feeship; 
+            orders.value[orderIndex].total = updatedOrderData.total;
+        }
+
+        Swal.fire("🎉 Thành công", "Thông tin nhận hàng và phí ship đã được cập nhật!", "success");
+        closeEditShippingModal();
+    } catch (err) {
+        // ... (Xử lý lỗi) ...
+        // ...
+    } finally {
+        isUpdatingShipping.value = false;
+    }
+}
+// --- KẾT THÚC CẬP NHẬT HÀM SỬA CHỮA ---
+
+function selectMenu(item) {
+    currentMenu.value = item.label;
+    menu.forEach((m) => (m.active = m.label === item.label));
+}
+
+function decodeJwtToken(token) {
+    try {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(
+            decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            )
+        );
+    } catch {
+        return null;
+    }
+}
+
+async function loadUserProfile() {
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const payload = decodeJwtToken(token);
+        const accountId = payload?.id;
+        if (!accountId) return;
+
+        const res = await axios.get(`/api/account/${accountId}`);
+        const data = res.data;
+        userName.value = data.fullname || "";
+        userEmail.value = data.email || "";
+        userPhone.value = data.phone || "";
+    } catch (err) {
+        console.error("Không thể tải thông tin người dùng:", err);
+    }
 }
 
 async function loadOrders() {
-  loading.value = true;
-  const token = localStorage.getItem("token");
-  if (!token) {
-    loading.value = false;
-    return;
-  }
-  const payload = decodeJwtToken(token);
-  const accountId = payload?.id;
-  if (!accountId) {
-    loading.value = false;
-    return;
-  }
+    loading.value = true;
+    const token = localStorage.getItem("token");
+    if (!token) {
+        loading.value = false;
+        return;
+    }
+    const payload = decodeJwtToken(token);
+    const accountId = payload?.id;
+    if (!accountId) {
+        loading.value = false;
+        return;
+    }
 
-  try {
-    const res = await axios.get(`/api/order/account/${accountId}`);
-        // In dữ liệu trả về từ backend ra console
-    console.log("Dữ liệu trả về từ backend:", res.data);
-    orders.value = (res.data || [])
-      .map((o) => ({ ...o, items: o.items || [] }))
-      .sort((a, b) => b.id - a.id);
-  } catch (err) {
-    console.error("Lỗi khi tải đơn hàng:", err);
-  } finally {
-    loading.value = false;
-  }
+    try {
+        const res = await axios.get(`/api/order/account/${accountId}`);
+        console.log("Dữ liệu trả về từ backend:", res.data);
+        orders.value = (res.data || [])
+            .map((o) => ({ ...o, items: o.items || [] }))
+            .sort((a, b) => b.id - a.id);
+    } catch (err) {
+        console.error("Lỗi khi tải đơn hàng:", err);
+    } finally {
+        loading.value = false;
+    }
 }
 
 async function cancelOrder(orderId) {
-  if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
-  try {
-    await axios.put(`/api/order/${orderId}/cancel`, { status: "CANCELLED" });
-    const order = orders.value.find((o) => o.id === orderId);
-    if (order) order.statusName = "CANCELLED";
-    alert("Đơn hàng đã được hủy thành công!");
-  } catch (err) {
-    console.error(err);
-    alert("Không thể hủy đơn hàng!");
-  }
+    if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
+    try {
+        await axios.put(`/api/order/${orderId}/cancel`, { status: "CANCELLED" });
+        const order = orders.value.find((o) => o.id === orderId);
+        if (order) order.statusName = "CANCELLED";
+        alert("Đơn hàng đã được hủy thành công!");
+    } catch (err) {
+        console.error(err);
+        alert("Không thể hủy đơn hàng!");
+    }
 }
 
 async function completeOrder(orderId) {
-  if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
-  try {
-    await axios.put(`/api/order/${orderId}/complete`);
-    const order = orders.value.find((o) => o.id === orderId);
-    if (order) order.statusName = "COMPLETED";
-    alert("Đơn hàng đã hoàn tất.");
-  } catch (err) {
-    console.error(err);
-    alert("Không thể cập nhật trạng thái!");
-  }
+    if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
+    try {
+        await axios.put(`/api/order/${orderId}/complete`);
+        const order = orders.value.find((o) => o.id === orderId);
+        if (order) order.statusName = "COMPLETED";
+        alert("Đơn hàng đã hoàn tất.");
+    } catch (err) {
+        console.error(err);
+        alert("Không thể cập nhật trạng thái!");
+    }
 }
 
 function openReviewModal(orderDetailId) {
-  reviewForm.value = { star: 0, description: "", orderDetailId, images: [] };
-  reviewModal.value = true;
+    reviewForm.value = { star: 0, description: "", orderDetailId, images: [] };
+    reviewModal.value = true;
 }
 function closeReviewModal() {
-  reviewModal.value = false;
+    reviewModal.value = false;
 }
 function openFilePicker() {
-  fileInput.value?.click();
+    fileInput.value?.click();
 }
 
 async function handleAutoUpload(event) {
-  const files = Array.from(event.target.files || []);
-  if (!files.length) return;
-  isUploading.value = true;
-  try {
-    for (const file of files.slice(0, 3 - reviewForm.value.images.length)) {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await axios.post("/api/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      reviewForm.value.images.push({ path: res.data });
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    isUploading.value = true;
+    try {
+        for (const file of files.slice(0, 3 - reviewForm.value.images.length)) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const res = await axios.post("/api/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            reviewForm.value.images.push({ path: res.data });
+        }
+    } catch (err) {
+        console.error(err);
+        Swal.fire("Lỗi", "Không thể tải ảnh lên", "error");
+    } finally {
+        isUploading.value = false;
+        event.target.value = "";
     }
-  } catch (err) {
-    console.error(err);
-    Swal.fire("Lỗi", "Không thể tải ảnh lên", "error");
-  } finally {
-    isUploading.value = false;
-    event.target.value = "";
-  }
 }
 
 function removeImage(index) {
-  reviewForm.value.images.splice(index, 1);
+    reviewForm.value.images.splice(index, 1);
 }
 
 async function submitReview() {
-  if (reviewForm.value.star === 0)
-    return Swal.fire("Thiếu thông tin", "Vui lòng chọn số sao!", "warning");
-  try {
-    await axios.post("/api/review", reviewForm.value);
-    Swal.fire("🎉 Thành công", "Cảm ơn bạn đã đánh giá!", "success");
-    closeReviewModal();
-  } catch (err) {
-    console.error(err);
-    Swal.fire(
-      "Lỗi 😥",
-      err.response?.data?.message || "Không thể gửi đánh giá",
-      "error"
-    );
-  }
+    if (reviewForm.value.star === 0)
+        return Swal.fire("Thiếu thông tin", "Vui lòng chọn số sao!", "warning");
+    try {
+        await axios.post("/api/review", reviewForm.value);
+        Swal.fire("🎉 Thành công", "Cảm ơn bạn đã đánh giá!", "success");
+        closeReviewModal();
+    } catch (err) {
+        console.error(err);
+        Swal.fire(
+            "Lỗi 😥",
+            err.response?.data?.message || "Không thể gửi đánh giá",
+            "error"
+        );
+    }
 }
 
 function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("userId");
-  window.location.href = "/login"; // hoặc trang login của bạn
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    window.location.href = "/login"; // hoặc trang login của bạn
 }
 
 onMounted(() => {
-  loadUserProfile();
-  loadOrders();
+    loadUserProfile();
+    loadOrders();
 });
 </script>
 
