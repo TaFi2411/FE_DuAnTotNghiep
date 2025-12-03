@@ -37,10 +37,19 @@
             <small class="text-muted">Mã: {{ props.row.code }}</small>
           </span>
 
-          <span v-else-if="props.column.field === 'discount'">
-            <span class="text-danger fw-bold">{{ props.row.discount }}%</span>
-          </span>
-
+<span v-else-if="props.column.field === 'discount'">
+    <span class="text-danger fw-bold">
+        <template v-if="props.row.type === true">
+            {{ props.row.discount }}%
+        </template>
+        <template v-else-if="props.row.type === false">
+            {{ Number(props.row.discount).toLocaleString('vi-VN') }} VNĐ
+        </template>
+        <template v-else>
+            N/A
+        </template>
+    </span>
+</span>
           <span v-else-if="props.column.field === 'type'">
             <strong>
               {{ props.row.type ? "Sản phẩm" : "Vận chuyển" }}
@@ -118,7 +127,7 @@ const selectedVoucherId = ref(null);
 
 const columns = [
   { label: "Tiêu đề", field: "title", sortable: true },
-  { label: "Giảm (%)", field: "discount", sortable: true },
+  { label: "Giảm", field: "discount", sortable: true },
   { label: "Số lượng", field: "quantity", sortable: true },
   { label: "Loại", field: "type" },
   { label: "Trạng thái", field: "active" },
@@ -203,6 +212,7 @@ const deleteVoucher = async (id) => {
   }
 };
 
+// ===========================================
 onMounted(fetchVouchers);
 </script>
 

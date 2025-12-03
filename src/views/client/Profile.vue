@@ -190,6 +190,8 @@
                           </div>
                           <div class="small text-muted mt-2">SĐT:</div>
                           <div>{{ order.shippingPhone }}</div>
+                            <div class="small text-muted mt-2">Tên người nhận:</div>
+                          <div>{{ order.shippingName }}</div>
                           <div class="small text-muted mt-2">Phương thức:</div>
                           <div>{{ order.paymentMethodName }}</div>
                           <div class="small text-muted mt-2">

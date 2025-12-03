@@ -1,96 +1,8 @@
 <template>
   <div class="container py-5">
+    <h2 class="mb-4">📊 Báo cáo Thống kê Chi tiết</h2>
 
-    <!-- 🔹 THỐNG KÊ DOANH THU & ĐƠN HÀNG -->
-    <!-- 🔹 THỐNG KÊ DOANH THU & ĐƠN HÀNG -->
-<div class="row g-4 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card bg-primary text-white d-flex flex-column align-items-center">
-      <h5>Tổng doanh thu đạt được</h5>
-      <p class="stat-value">{{ formatCurrency(totalRevenue) }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="stat-card bg-success text-white d-flex flex-column align-items-center">
-      <h5>Tổng số lượng đơn hàng</h5>
-      <p class="stat-value">{{ totalOrders }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="stat-card bg-warning text-dark d-flex flex-column align-items-center">
-      <h5>Tổng số lượng tồn kho</h5>
-      <p class="stat-value">{{ totalInventory }}</p>
-    </div>
-  </div>
-
-  <div class="col-md-3">
-    <div class="stat-card bg-info text-white d-flex flex-column align-items-center">
-      <h5>Tổng số sản phẩm đã bán</h5>
-      <p class="stat-value">{{ totalSoldProducts }}</p>
-    </div>
-  </div>
-</div>
-
-
-    <!-- 🔹 NHẬP THRESHOLD -->
-    <div class="mb-4 d-flex align-items-center gap-2">
-      <input type="number" v-model="threshold" placeholder="Nhập số lượng tối đa" class="form-control w-auto" @change="loadLowStockProducts()" />
-      <button class="btn btn-primary" @click="loadLowStockProducts()">Lọc</button>
-    </div>
-
-    <!-- 🔹 HIỂN THỊ SẢN PHẨM TỒN KHO THẤP -->
-    <div class="low-stock-products">
-      <h5>Sản phẩm tồn kho dưới {{ threshold }}</h5>
-
-      <div v-if="lowStockProducts.length === 0" class="alert alert-info mt-3">
-        Không có sản phẩm nào tồn kho thấp.
-      </div>
-
-      <ul v-else class="list-unstyled">
-        <li v-for="item in lowStockProducts" 
-            :key="item.skuId"
-            class="d-flex align-items-center mb-3 p-3 border rounded shadow-sm bg-light">
-          <img :src="item.productImage" width="70" height="70" class="me-3 rounded border"/>
-          <div class="flex-grow-1">
-            <h6 class="mb-1">{{ item.productName }}</h6>
-            <small class="text-muted">SKU ID: {{ item.skuId }}</small>
-            <div class="mt-1 small text-secondary">
-              <span v-for="(value, key) in item.attributes" :key="key">
-                <strong>{{ key }}:</strong> {{ value }} &nbsp;
-              </span>
-            </div>
-          </div>
-          <div class="fw-bold text-danger ms-3">
-            Số lượng: {{ item.quantity }}
-          </div>
-        </li>
-      </ul>
-    </div>
-<div class="top-selling-products mt-5">
-  <h5>Sản phẩm bán chạy nhất</h5>
-  <ul class="list-unstyled">
-    <li v-for="item in topSellingProducts" :key="item.skuId"
-        class="d-flex align-items-center mb-3 p-3 border rounded shadow-sm bg-light">
-      <img :src="item.productImage" width="70" height="70" class="me-3 rounded border"/>
-      <div class="flex-grow-1">
-        <h6 class="mb-1">{{ item.productName }}</h6>
-        <div class="mt-1 small text-secondary">
-          <span v-for="(value, key) in item.attributes" :key="key">
-            <strong>{{ key }}:</strong> {{ value }} &nbsp;
-          </span>
-        </div>
-      </div>
-      <div class="fw-bold text-success ms-3">
-        Đã bán: {{ item.quantitySold }}
-      </div>
-    </li>
-  </ul>
-</div>
-
-    <!-- 🔹 LỌC THEO NGÀY / TUẦN / THÁNG / NĂM -->
-    <div class="row g-3 mt-4">
+    <div class="row g-3 mb-5 p-3 border rounded shadow-sm bg-light">
       <div class="col-md-4">
         <label class="form-label">Kiểu thống kê:</label>
         <select v-model="timeFilter" class="form-control" @change="applyTimeFilter">
@@ -105,94 +17,273 @@
         <button class="btn btn-secondary w-100" @click="resetFilter">Xóa lọc</button>
       </div>
 
-      <!-- Chỉ hiển thị khi ở mode custom -->
       <div class="col-md-3" v-if="timeFilter === 'custom'">
         <label class="form-label">Ngày bắt đầu:</label>
-        <input type="date" v-model="startDate" class="form-control" @change="loadOrders()" />
+        <input type="date" v-model="startDate" class="form-control" @change="loadAllData()" />
       </div>
       <div class="col-md-3" v-if="timeFilter === 'custom'">
         <label class="form-label">Ngày kết thúc:</label>
-        <input type="date" v-model="endDate" class="form-control" @change="loadOrders()" />
+        <input type="date" v-model="endDate" class="form-control" @change="loadAllData()" />
+      </div>
+    </div>
+    
+    <div class="row g-4 mb-5">
+      <div class="col-md-3">
+        <div class="stat-card bg-primary text-white d-flex flex-column align-items-center">
+          <h5>Tổng doanh thu đạt được</h5>
+          <p class="stat-value">{{ formatCurrency(totalRevenue) }}</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card bg-success text-white d-flex flex-column align-items-center">
+          <h5>Tổng số lượng đơn hàng</h5>
+          <p class="stat-value">{{ totalOrders }}</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card bg-warning text-dark d-flex flex-column align-items-center">
+          <h5>Tổng số lượng tồn kho</h5>
+          <p class="stat-value">{{ totalInventory }}</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="stat-card bg-info text-white d-flex flex-column align-items-center">
+          <h5>Tổng số sản phẩm đã bán</h5>
+          <p class="stat-value">{{ totalSoldProducts }}</p>
+        </div>
       </div>
     </div>
 
-    <!-- LOADING -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
+
+    <div class="row g-4 mb-5">
+      <div class="col-lg-12">
+        <div class="card p-4 shadow-lg h-100">
+          <h5 class="fw-bold mb-4">📈 Xu hướng Doanh thu và Đơn hàng</h5>
+          
+          <div class="mb-3 d-flex gap-3 align-items-center">
+            <label class="form-label mb-0">Hiển thị theo:</label>
+            <select v-model="trendGranularity" class="form-control w-auto" @change="loadChartData">
+              <option value="DAY">Ngày</option>
+              <option value="MONTH">Tháng</option>
+            </select>
+          </div>
+          
+          <div v-if="loading" class="text-center py-5">Đang tải dữ liệu biểu đồ...</div>
+          <div v-else>
+            <ReusableChart 
+              chartId="revenueTrendChart"
+              chartType="line"
+              :chartData="revenueChartData"
+              :chartOptions="{
+                responsive: true, 
+                interaction: { mode: 'index', intersect: false },
+                scales: { 
+                  y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Doanh thu (VND)'} },
+                  y1: { type: 'linear', display: true, position: 'right', title: {display: true, text: 'Đơn hàng (SL)'}, grid: { drawOnChartArea: false } }
+                } 
+              }"
+            />
+          </div>
+        </div>
+        
+      </div>
     </div>
 
-    <!-- KHÔNG CÓ ĐƠN -->
-    <div v-else-if="totalOrders === 0" class="alert alert-info mt-3">
-      Không có đơn hàng nào.
+    <div class="row g-4 mb-5">
+      <div class="col-lg-6 col-md-12">
+        <div class="card p-4 shadow-lg h-100">
+          <h5 class="fw-bold mb-4">📊 Tỷ lệ Trạng thái Đơn hàng</h5>
+          <div v-if="loading" class="text-center py-5">Đang tải dữ liệu...</div>
+          <div v-else>
+            <ReusableChart 
+              chartId="statusRatioChart"
+              chartType="doughnut"
+              :chartData="statusRatioData"
+              :chartOptions="{responsive: true, maintainAspectRatio: false, plugins: {legend: {position: 'bottom'}}}"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-6 col-md-12">
+        <div class="card p-4 shadow-lg h-100">
+          <h5 class="fw-bold mb-4">⭐ Top {{ topLimit }} Sản phẩm Bán chạy</h5>
+          <div v-if="loading" class="text-center py-5">Đang tải dữ liệu...</div>
+          <div v-else>
+            <ReusableChart 
+              chartId="topSellingChart"
+              chartType="bar"
+              :chartData="topSellingChartData"
+              :chartOptions="{responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: {x: {beginAtZero: true}}}"
+            />
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- PHÂN TRANG -->
-    <nav v-if="totalPages > 1" class="mt-4 d-flex justify-content-center">
-      <ul class="pagination">
-        <li class="page-item" :class="{ disabled: currentPage === 0 }" @click="loadOrders(currentPage - 1)">
-          <a class="page-link" href="#">«</a>
-        </li>
-        <li v-for="page in totalPages" :key="page" class="page-item" :class="{ active: currentPage === page - 1 }" @click="loadOrders(page - 1)">
-          <a class="page-link" href="#">{{ page }}</a>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages - 1 }" @click="loadOrders(currentPage + 1)">
-          <a class="page-link" href="#">»</a>
+      <div class="mb-4 d-flex align-items-center gap-2">
+    <input type="number" v-model="threshold" placeholder="Nhập số lượng tối đa" class="form-control w-auto" @change="loadLowStockProducts()" />
+    <button class="btn btn-primary" @click="loadLowStockProducts()">Lọc</button>
+  </div>
+
+    <div class="low-stock-products">
+    <h5>Sản phẩm tồn kho dưới {{ threshold }}</h5>
+      <div v-if="loading" class="text-center py-5">Đang tải dữ liệu...</div>
+      <div v-else-if="lowStockProducts.length === 0" class="alert alert-info mt-3">
+    Không có sản phẩm nào tồn kho thấp.
+   </div>
+   <ul v-else class="list-unstyled">
+    <li v-for="item in lowStockProducts" 
+      :key="item.skuId"
+      class="d-flex align-items-center mb-3 p-3 border rounded shadow-sm bg-light">
+      <img :src="item.productImage" width="70" height="70" class="me-3 rounded border"/>
+      <div class="flex-grow-1">
+      <h6 class="mb-1">{{ item.productName }}</h6>
+      <small class="text-muted">SKU ID: {{ item.skuId }}</small>
+      <div class="mt-1 small text-secondary">
+        <span v-for="(value, key) in item.attributes" :key="key">
+        <strong>{{ key }}:</strong> {{ value }} &nbsp;
+        </span>
+      </div>
+      </div>
+      <div class="fw-bold text-danger ms-3">
+      Số lượng: {{ item.quantity }}
+      </div>
+    </li>
+   </ul>
+  </div>
+
+    <div class="top-selling-products mt-5">
+      <h5>Tất cả Sản phẩm bán chạy nhất</h5>
+      <ul class="list-unstyled">
+        <li v-for="item in topSellingProducts" :key="item.skuId"
+          class="d-flex align-items-center mb-3 p-3 border rounded shadow-sm bg-light">
+          <img :src="item.productImage" width="70" height="70" class="me-3 rounded border"/>
+          <div class="flex-grow-1">
+            <h6 class="mb-1">{{ item.productName }}</h6>
+            <div class="mt-1 small text-secondary">
+              <span v-for="(value, key) in item.attributes" :key="key">
+                <strong>{{ key }}:</strong> {{ value }} &nbsp;
+              </span>
+            </div>
+          </div>
+          <div class="fw-bold text-success ms-3">
+            Đã bán: {{ item.quantitySold }}
+          </div>
         </li>
       </ul>
-    </nav>
-
+    </div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios";
+import ReusableChart from '@/components/ReusableChart.vue'; 
 
+// --- STATE/BIẾN ---
 const totalRevenue = ref(0);
 const totalOrders = ref(0);
-const loading = ref(true);
-const currentPage = ref(0);
-const totalPages = ref(0);
 const totalInventory = ref(0);
+const totalSoldProducts = ref(0);
+const loading = ref(true);
 const lowStockProducts = ref([]);
 const threshold = ref(20);
-const totalSoldProducts = ref(0);
+const topSellingProducts = ref([]);
+const topLimit = ref(5); // Dùng cho biểu đồ Top Selling
+
+// Bộ lọc ngày tháng (Vẫn giữ các biến cũ)
 const startDate = ref("");
 const endDate = ref("");
-const timeFilter = ref("custom");
-const topSellingProducts = ref([]);
-const topLimit = ref(1); // lấy 5 sản phẩm bán chạy nhất
+const timeFilter = ref("month"); // Đặt mặc định là tháng này
+const trendGranularity = ref('MONTH'); // Mặc định biểu đồ theo MONTH
+
+// Dữ liệu thô từ API cho biểu đồ
+const rawTrendData = ref([]); 
+const rawStatusData = ref({});
+
+// --- HELPER ---
 function formatCurrency(value) {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value || 0);
 }
 
 // Helper: chuyển Date về yyyy-MM-dd theo giờ Việt Nam
 function getLocalDateString(date) {
-  const tzOffset = date.getTimezoneOffset() * 60000;
-  return new Date(date - tzOffset).toISOString().split("T")[0];
-}
-
-// Load danh sách đơn hàng
-async function loadOrders(page = 0) {
-  loading.value = true;
-
-  let formattedStartDate = null;
-  let formattedEndDate = null;
-
-if (timeFilter.value === "custom") {
-    // Custom date: convert sang ISO để lấy đúng từ 00:00 -> 23:59
-    formattedStartDate = startDate.value ? new Date(startDate.value).toISOString() : null;
-    formattedEndDate = endDate.value ? new Date(endDate.value + "T23:59:59").toISOString() : null;
-} else {
-    // Today / week / month / year: gửi chuỗi yyyy-MM-dd là đủ
-    formattedStartDate = startDate.value || null;
-    formattedEndDate = endDate.value || null;
+  // ⭐ CODE MỚI: Dùng các thành phần Local Date để tránh lỗi tính toán múi giờ ⭐
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 
+// --- DỮ LIỆU COMPUTED CHO BIỂU ĐỒ ---
+// 1. Dữ liệu cho Biểu đồ Xu hướng (Line Chart)
+const revenueChartData = computed(() => ({
+  labels: rawTrendData.value.map(item => item.timePeriod),
+  datasets: [
+    {
+      label: 'Doanh thu (VND)',
+      data: rawTrendData.value.map(item => item.totalRevenue),
+      borderColor: '#6a11cb',
+      fill: true,
+      tension: 0.3,
+      yAxisID: 'y'
+    },
+    {
+      label: 'Đơn hàng (SL)',
+      data: rawTrendData.value.map(item => item.totalOrders),
+      borderColor: '#28a745',
+      backgroundColor: '#28a745',
+      fill: false,
+      tension: 0.3,
+      yAxisID: 'y1'
+    }
+  ]
+}));
+
+// 2. Dữ liệu cho Biểu đồ Tỷ lệ Trạng thái (Doughnut Chart)
+const statusRatioData = computed(() => ({
+    labels: ['Hoàn thành', 'Đang giao/Xử lý', 'Đã hủy', 'Đã hoàn tiền'],
+    datasets: [{
+        data: [
+          rawStatusData.value['COMPLETED'] || 0,
+          (rawStatusData.value['PENDING'] || 0) + (rawStatusData.value['PROCESSING'] || 0) + (rawStatusData.value['SHIPPING'] || 0) + (rawStatusData.value['DELIVERED'] || 0),
+          rawStatusData.value['CANCELLED'] || 0,
+          rawStatusData.value['REFUNDED'] || 0
+        ],
+        backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8'],
+        hoverOffset: 4
+    }]
+}));
+
+// 3. Dữ liệu cho Top Sản phẩm Bán chạy (Bar Chart)
+const topSellingChartData = computed(() => ({
+    labels: topSellingProducts.value.slice(0, topLimit.value).map(item => item.productName), // Chỉ lấy topLimit (5) cho biểu đồ
+    datasets: [{
+      label: 'Số lượng đã bán',
+      data: topSellingProducts.value.slice(0, topLimit.value).map(item => item.quantitySold),
+      backgroundColor: ['#6a11cb', '#2575fc', '#28a745', '#17a2b8', '#ffc107'], // Thêm nhiều màu
+      borderRadius: 4
+    }]
+}));
+
+
+// --- HÀM TẢI DỮ LIỆU CHÍNH (Gộp tất cả logic API) ---
+
+// 1. Load Metrics (Doanh thu, Đơn hàng, Tồn kho, Sản phẩm đã bán)
+async function loadMetrics() {
+  // Sử dụng loading = true ở hàm loadAllData()
+let formattedStartDate = startDate.value ? new Date(startDate.value + "T00:00:00").toISOString() : null;
+  let formattedEndDate = endDate.value ? new Date(endDate.value + "T23:59:59").toISOString() : null;
+
+
+  
   try {
-    const url = `http://localhost:8080/api/statistics/revenue?page=${page}&size=10`;
-
+    // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
+    const url = `/api/statistics/revenue`;
     const response = await axios.get(url, {
       params: { startDate: formattedStartDate, endDate: formattedEndDate }
     });
@@ -201,40 +292,87 @@ if (timeFilter.value === "custom") {
     totalOrders.value = response.data.totalOrders || 0;
     totalInventory.value = response.data.totalInventory || 0;
     totalSoldProducts.value = response.data.totalSoldProducts || 0;
-    totalPages.value = response.data.totalPages || 1;
-    currentPage.value = response.data.currentPage || page;
   } catch (err) {
     console.error("Lỗi khi tải thống kê doanh thu:", err);
-  } finally {
-    loading.value = false;
   }
 }
 
-
-// Load sản phẩm tồn kho thấp
+// 2. Load Sản phẩm tồn kho thấp
 async function loadLowStockProducts() {
+  // Lấy dữ liệu không cần lọc theo ngày
   try {
-    const response = await axios.get("http://localhost:8080/api/statistics/low-stock", {
+    // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
+    const response = await axios.get("/api/statistics/low-stock", {
       params: { threshold: threshold.value }
     });
     lowStockProducts.value = response.data.lowStockProducts;
   } catch (err) {
-    console.error("Lỗi:", err);
+    console.error("Lỗi khi tải sản phẩm tồn kho thấp:", err);
   }
 }
 
-// Load sản phẩm bán chạy nhất (không cần truyền ngày)
+// 3. Load Top Sản phẩm Bán chạy (Tất cả sản phẩm)
 async function loadTopSellingProducts() {
+let formattedStartDate = startDate.value ? new Date(startDate.value + "T00:00:00").toISOString() : null;
+  let formattedEndDate = endDate.value ? new Date(endDate.value + "T23:59:59").toISOString() : null;
+  
   try {
-    const response = await axios.get("http://localhost:8080/api/statistics/top-selling", {
-      params: { limit: topLimit.value } // chỉ cần limit
+    // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
+    const response = await axios.get("/api/statistics/top-selling", {
+      params: { 
+        limit: 1000, 
+        startDate: formattedStartDate, 
+        endDate: formattedEndDate     
+      } 
     });
- console.log("Top Selling Raw Response:", response); // toàn bộ response
-console.log("Top Selling Data:", response.data);   
     topSellingProducts.value = response.data.topSellingProducts;
   } catch (err) {
     console.error("Lỗi khi tải sản phẩm bán chạy:", err);
   }
+}
+
+// 4. Load Dữ liệu Biểu đồ (Xu hướng & Trạng thái)
+async function loadChartData() {
+let formattedStartDate = startDate.value ? new Date(startDate.value + "T00:00:00").toISOString() : null;
+  let formattedEndDate = endDate.value ? new Date(endDate.value + "T23:59:59").toISOString() : null;
+  
+  try {
+    // 1. Xu hướng Doanh thu/Đơn hàng
+    // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
+    const trendResponse = await axios.get("/api/statistics/revenue-trend", {
+      params: { 
+        startDate: formattedStartDate, 
+        endDate: formattedEndDate, 
+        granularity: trendGranularity.value 
+      }
+    });
+    rawTrendData.value = trendResponse.data;
+
+    // 2. Phân phối Trạng thái
+    // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
+    const statusResponse = await axios.get("/api/statistics/status-distribution", {
+      params: { startDate: formattedStartDate, endDate: formattedEndDate }
+    });
+    rawStatusData.value = statusResponse.data;
+    
+  } catch (err) {
+    console.error("Lỗi khi tải dữ liệu biểu đồ:", err);
+  } finally {
+    loading.value = false; // Chỉ set loading = false sau khi tất cả dữ liệu biểu đồ đã tải xong
+  }
+}
+
+
+// ⭐ HÀM GỌI TỔNG THỂ KHI NGÀY THÁNG THAY ĐỔI ⭐
+async function loadAllData() {
+  loading.value = true; // Bắt đầu tải, đặt loading = true
+  // Sử dụng Promise.all để tải đồng thời tất cả các API, giúp giảm thời gian chờ
+  await Promise.all([
+    loadMetrics(),
+    loadTopSellingProducts(),
+    loadLowStockProducts(),
+    loadChartData() // loadChartData sẽ set loading.value = false ở cuối
+  ]);
 }
 
 
@@ -272,9 +410,8 @@ function applyTimeFilter() {
     startDate.value = getLocalDateString(firstDay);
     endDate.value = getLocalDateString(lastDay);
   }
-
-  loadOrders();
-  loadTopSellingProducts();
+  
+  loadAllData();
 }
 
 // Reset filter về custom
@@ -282,176 +419,11 @@ function resetFilter() {
   timeFilter.value = "custom";
   startDate.value = "";
   endDate.value = "";
-  loadOrders();
+  loadAllData();
 }
 
 onMounted(() => {
-loadLowStockProducts();
-loadOrders();
-loadTopSellingProducts();
-
+  // Bắt đầu bằng việc áp dụng filter mặc định (tháng này)
+  applyTimeFilter(); 
 });
 </script>
-
-<style scoped>
-/* 🔹 CARD THỐNG KÊ */
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* căn giữa theo chiều dọc */
-  align-items: center;
-  text-align: center;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-  transition: all 0.3s ease;
-  height: 100%; /* ép thẻ full chiều cao của col */
-  min-height: 180px; /* chiều cao tối thiểu để đều nhau */
-}
-
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-}
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: bold;
-  margin-top: 10px;
-}
-
-
-/* Gradient background theo loại */
-.bg-primary {
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-}
-.bg-success {
-  background: linear-gradient(135deg, #28a745, #85e085);
-}
-.bg-warning {
-  background: linear-gradient(135deg, #ffc107, #ffe680);
-}
-.bg-info {
-  background: linear-gradient(135deg, #17a2b8, #5ad4e1);
-}
-
-
-
-/* 🔹 LOW STOCK PRODUCTS */
-.low-stock-products h5 {
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: #333;
-  border-bottom: 2px solid #2575fc;
-  display: inline-block;
-  padding-bottom: 0.25rem;
-}
-
-.low-stock-products ul li {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  background: #f9f9f9;
-}
-
-.low-stock-products ul li:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  background: #f1f5f9;
-}
-
-/* Ảnh sản phẩm */
-.low-stock-products img {
-  border-radius: 0.5rem;
-  border: 1px solid #ddd;
-  transition: transform 0.3s ease;
-}
-
-.low-stock-products img:hover {
-  transform: scale(1.05);
-}
-
-/* 🔹 BUTTONS */
-.btn-primary, .btn-secondary {
-  border-radius: 0.5rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  border: none;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #2575fc, #6a11cb);
-  transform: scale(1.05);
-}
-
-.btn-secondary {
-  background: linear-gradient(135deg, #6c757d, #a0a0a0);
-  border: none;
-}
-
-.btn-secondary:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #a0a0a0, #6c757d);
-}
-
-/* 🔹 PAGINATION */
-.pagination .page-item .page-link {
-  border-radius: 0.5rem;
-  margin: 0 0.25rem;
-  transition: all 0.3s ease;
-  color: #2575fc;
-}
-
-.pagination .page-item.active .page-link {
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  color: #fff;
-  border: none;
-}
-
-.pagination .page-item.disabled .page-link {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* 🔹 RESPONSIVE */
-@media (max-width: 768px) {
-  .stat-card {
-    margin-bottom: 1rem;
-  }
-  .low-stock-products ul li {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .low-stock-products div.fw-bold {
-    margin-top: 0.5rem;
-  }
-}
-.top-selling-products h5 {
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: #333;
-  border-bottom: 2px solid #28a745;
-  display: inline-block;
-  padding-bottom: 0.25rem;
-}
-
-.top-selling-products ul li {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  background: #f9f9f9;
-}
-
-.top-selling-products ul li:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  background: #e6ffed;
-}
-
-</style>
