@@ -671,8 +671,8 @@ const fetchShippingFee = async () => {
   }
 };
 watch(selectedAddress, (newVal) => {
-  // if (newVal) fetchShippingFee();
-  shippingFee.value = 0; // set phí ship = 0 để test
+   if (newVal) fetchShippingFee() ;
+  //shippingFee.value = 0; // set phí ship = 0 để test
 });
 
 

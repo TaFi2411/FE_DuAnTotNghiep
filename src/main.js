@@ -14,3 +14,18 @@ app.use(router)
 app.component('VueGoodTable', VueGoodTable)
 app.mount('#app')
 
+if (window.CKEDITOR) {
+  CKEDITOR.on('instanceReady', function (evt) {
+    const editor = evt.editor;
+
+    try {
+      editor.removePlugin && editor.removePlugin('update');
+    } catch (e) {
+  
+    }
+
+    const style = document.createElement('style');
+    style.innerHTML = `.cke_notification_warning { display: none !important; }`;
+    document.head.appendChild(style);
+  });
+}

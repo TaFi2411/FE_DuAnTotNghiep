@@ -21,7 +21,7 @@
           <!-- Menu -->
           <ul class="navbar-nav mx-lg-auto mb-2 mb-lg-0 fw-semibold text-uppercase">
             <li v-for="item in menu" :key="item.to" class="nav-item px-2">
-              <router-link class="nav-link fancy-link text-white" :to="item.to" exact-active-class="active-link">
+              <router-link class="nav-link fancy-link text-white text-nowrap py-2" :to="item.to" exact-active-class="active-link">
                 {{ item.label }}
               </router-link>
             </li>
@@ -52,10 +52,10 @@
 
             <!-- Auth -->
             <template v-if="!isLoggedIn">
-              <router-link to="/auth/login" class="btn btn-outline-light px-3 fw-semibold rounded-pill btn-sm">
+              <router-link to="/auth/login" class="btn btn-outline-light px-3 fw-semibold rounded-pill btn-sm text-nowrap py-2">
                 <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
               </router-link>
-              <router-link to="/auth/register" class="btn btn-light text-dark px-3 fw-semibold rounded-pill btn-sm">
+              <router-link to="/auth/register" class="btn btn-light text-dark px-3 fw-semibold rounded-pill btn-sm text-nowrap py-2">
                 <i class="bi bi-person-plus me-1"></i> Đăng ký
               </router-link>
             </template>
@@ -65,24 +65,31 @@
               <div class="dropdown">
                 <a class="nav-link dropdown-toggle d-flex align-items-center text-white" href="#"
                   data-bs-toggle="dropdown">
-                  <i class="bi bi-person-circle fs-4 me-2"></i>
+                   <div class="avatar-wrapper" @click="openFilePicker">
+          <img
+            :src="previewAvatar || defaultAvatar"
+            class="avatar"
+            alt="Avatar"
+          />
+          <div class="overlay">Chọn ảnh</div>
+        </div>
                   <span class="fw-semibold">{{ accountName }}</span>
                 </a>
 
                 <ul class="dropdown-menu dropdown-menu-end user-dropdown shadow border-0 rounded-4 p-2">
                   <li>
-                    <router-link class="dropdown-item custom-item" to="/profile">
+                    <router-link class="dropdown-item custom-item" to="/orders">
                       <i class="bi bi-person-lines-fill me-2"></i>
                       Hồ sơ cá nhân
                     </router-link>
                   </li>
 
-                  <li>
-                    <router-link class="dropdown-item custom-item" to="/orders">
+                  <!-- <li>
+                    <router-link class="dropdown-item custom-item" >
                       <i class="bi bi-bag-check me-2"></i>
                       Đơn hàng của tôi
                     </router-link>
-                  </li>
+                  </li> -->
 
                   <li v-if="isAdmin">
                     <router-link class="dropdown-item custom-item" to="/admin">
@@ -134,6 +141,8 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from "@/composables/axios.js";
+import Swal from "sweetalert2";
+
 const router = useRouter();
 const isScrolled = ref(false);
 const isLoggedIn = ref(false);
@@ -143,6 +152,11 @@ const cartCount = ref(0);
 const searchQuery = ref('');
 const showSearch = ref(false);
 const accountId = ref(null);
+
+// Avatar
+const defaultAvatar = '/userDefault.jpg';
+const previewAvatar = ref(defaultAvatar);
+const profile = ref(null);
 
 const menu = [
   { label: 'Trang chủ', to: '/' },
@@ -155,34 +169,11 @@ function handleScroll() {
   isScrolled.value = window.scrollY > 10;
 }
 
-const updateCartCount = async () => {
-  if (!accountId.value) {
-    cartCount.value = 0;
-    return;
-  }
-  try {
-    const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
-    const data = res.data || [];
-    const totalQuantity = data.reduce((sum, item) => sum + (item.quantity || 0), 0);
-    cartCount.value = totalQuantity;
-  } catch (err) {
-    console.error('Lỗi khi lấy giỏ hàng:', err);
-    cartCount.value = 0;
-  }
-};
-
-
 function decodeJwtToken(token) {
   try {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
+    return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
   } catch {
     return null;
   }
@@ -201,15 +192,42 @@ function logoutHandler() {
   isLoggedIn.value = false;
   isAdmin.value = false;
   accountName.value = 'Khách';
+  previewAvatar.value = defaultAvatar;
   router.push('/auth/login');
 }
 
+const updateCartCount = async () => {
+  if (!accountId.value) {
+    cartCount.value = 0;
+    return;
+  }
+  try {
+    const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
+    cartCount.value = res.data?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+  } catch {
+    cartCount.value = 0;
+  }
+};
+
+const fetchProfile = async () => {
+  if (!accountId.value) return;
+  try {
+    const res = await axios.get(`/api/account/${accountId.value}`);
+    profile.value = res.data;
+    // Nếu backend trả về tên file, prepend /uploads/ hoặc URL đầy đủ
+    previewAvatar.value = res.data.avatar ? (res.data.avatar.startsWith('http') ? res.data.avatar : `/uploads/${res.data.avatar}`) : defaultAvatar;
+  } catch {
+    Swal.fire("Lỗi", "Không thể tải thông tin!", "error");
+  }
+};
+
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
-  window.addEventListener('cart-updated', updateCartCount);
-
+  window.addEventListener('cart-updated', updateCartCount,fetchProfile);
+window.addEventListener('avatar-updated', (e) => {
+    previewAvatar.value = e.detail ? (e.detail.startsWith('http') ? e.detail : `/uploads/${e.detail}`) : defaultAvatar;
+  });
   const token = localStorage.getItem('token');
-
   if (token) {
     const payload = decodeJwtToken(token);
     if (payload) {
@@ -218,10 +236,11 @@ onMounted(() => {
       accountName.value = payload.accountName || payload.username || 'Người dùng';
       isAdmin.value = Array.isArray(roles) ? roles.includes('ROLE_ADMIN') : false;
       accountId.value = payload.id || null;
-
     }
   }
-    updateCartCount();
+
+  updateCartCount();
+  fetchProfile();
 });
 
 onBeforeUnmount(() => {
@@ -230,8 +249,28 @@ onBeforeUnmount(() => {
 });
 </script>
 
+
 <style scoped>
-/* User dropdown new design */
+.avatar-wrapper {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  cursor: pointer;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #ffffff;
+  margin-right: 2px;
+}
+
+.avatar-wrapper img.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
 .user-dropdown {
   background: #ffffff !important;
   border-radius: 14px;

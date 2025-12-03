@@ -275,7 +275,7 @@ watch(descContent, (val) => {
   product.value.description = val;
 });
 
-// product.description -> CKEditor
+
 watch(
   () => product.value.description,
   (val) => {
@@ -348,7 +348,7 @@ async function handleAutoUploadSkuImages(event, index) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
 
-  // Khởi tạo mảng ảnh nếu chưa có
+
   if (!product.value.skus[index].skuImages) {
     product.value.skus[index].skuImages = [];
   }
@@ -356,7 +356,7 @@ async function handleAutoUploadSkuImages(event, index) {
   const currentCount = product.value.skus[index].skuImages.length;
   const maxImages = 6;
 
-  // Nếu vượt quá 6 ảnh
+
   if (currentCount + files.length > maxImages) {
     Swal.fire(
       "Quá số lượng ảnh",
@@ -556,7 +556,12 @@ const v$ = useVuelidate(rules, product);
 
 
 async function saveProduct() {
+
   await v$.value.$validate();
+  if (v$.value.$invalid) {
+    Swal.fire("Lỗi", "Vui lòng nhập đầy đủ thông tin sản phẩm", "error");
+    return;
+  }
 
   const seen = new Set();
   for (const sku of product.value.skus) {
@@ -564,16 +569,20 @@ async function saveProduct() {
       .map((a) => a.valueAttributeId)
       .sort((x, y) => x - y)
       .join("-");
+
     if (!key) {
-      Swal.fire("Lỗi", "Có biến thể chưa đặt thuộc tính hoàn chỉnh", "error");
+      Swal.fire("Lỗi", "Có SKU chưa chọn đầy đủ thuộc tính!", "error");
       return;
     }
+
     if (seen.has(key)) {
-      Swal.fire("Lỗi", "Có SKU trùng thuộc tính!", "error");
+      Swal.fire("Lỗi", "Có SKU bị trùng thuộc tính!", "error");
       return;
     }
+
     seen.add(key);
   }
+
 
   const payload = {
     ...product.value,
@@ -587,16 +596,53 @@ async function saveProduct() {
     })),
   };
 
+
+  const slugToCheck = product.value.slug;
+  if (slugToCheck) {
+    try {
+      const checkRes = await axios.get("/api/product/exists", {
+        params: { slug: slugToCheck },
+      });
+      if (checkRes?.data?.exists) {
+        Swal.fire("Lỗi", "Tên hoặc slug sản phẩm đã tồn tại!", "error");
+        return;
+      }
+    } catch (errCheck) {
+      console.warn("⚠ Không check trùng slug được:", errCheck);
+    }
+  }
+
+
   try {
     const res = await axios.post("/api/product", payload);
+
     Swal.fire("Thành công", "Thêm sản phẩm thành công!", "success");
     router.push("/admin/list-product");
     console.log("Response:", res.data);
+
   } catch (err) {
-    console.error("❌ Lỗi khi lưu sản phẩm:", err.response?.data || err);
-    Swal.fire("Lỗi", "Lưu sản phẩm thất bại", "error");
+    const status = err.response?.status;
+    const data = err.response?.data;
+
+    console.error("❌ Error:", data || err);
+
+   
+    if (status === 409) {
+      Swal.fire("Lỗi", data?.message || "Sản phẩm đã tồn tại!", "error");
+      return;
+    }
+
+   
+    if (data?.errors) {
+      const msg = data.errors[0]?.message || "Dữ liệu không hợp lệ";
+      Swal.fire("Lỗi", msg, "error");
+      return;
+    }
+
+    Swal.fire("Lỗi", "Không thể lưu sản phẩm", "error");
   }
 }
+
 
 const bulkPrice = ref(null);
 const bulkQuantity = ref(null);

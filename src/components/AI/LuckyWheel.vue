@@ -11,46 +11,49 @@
     <div class="wheel-modal">
       <button class="btn-close-wheel" @click="closeWheel">✕</button>
 
-      <div class="text-center mb-4">
-        <h3 class="fw-bolder text-gold ls-2">VÒNG QUAY MAY MẮN</h3>
-        <p class="text-white-50 small">Quay là trúng - Giảm giá ngay lập tức!</p>
+```
+  <div class="text-center mb-4">
+    <h3 class="fw-bolder text-gold ls-2">VÒNG QUAY MAY MẮN</h3>
+    <p class="text-white-50 small">Quay là trúng - Giảm giá ngay lập tức!</p>
+  </div>
+
+  <div class="wheel-container">
+    <div class="wheel-arrow"></div>
+    
+    <div class="the-wheel" :style="wheelStyle">
+      <div 
+        v-for="(prize, index) in displayPrizes" 
+        :key="index" 
+        class="wheel-text-item"
+        :style="getTextRotation(index)"
+      >
+        <span class="prize-label" :style="{ color: prize.text }">{{ prize.label }}</span>
       </div>
-
-      <div class="wheel-container">
-        <div class="wheel-arrow"></div>
-        
-        <div class="the-wheel" :style="wheelStyle">
-          <div 
-            v-for="(prize, index) in prizes" 
-            :key="index" 
-            class="wheel-text-item"
-            :style="getTextRotation(index)"
-          >
-            <span class="prize-label" :style="{ color: prize.text }">{{ prize.label }}</span>
-          </div>
-        </div>
-
-        <div class="wheel-center">
-          <button class="btn-spin" @click="spinWheel" :disabled="isSpinning">
-            {{ isSpinning ? '...' : 'QUAY' }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="wonPrize" class="result-box mt-4 text-center">
-        <template v-if="wonPrize.value > 0">
-          <h4 class="text-white fw-bold">Chúc mừng!</h4>
-          <p class="text-gold fs-5">Bạn nhận được: {{ wonPrize.label }}</p>
-          <button class="btn-use-now" @click="useVoucher">DÙNG NGAY</button>
-        </template>
-        <template v-else>
-          <h4 class="text-white fw-bold">Rất tiếc!</h4>
-          <p class="text-white-50 fs-5">{{ wonPrize.label }}</p>
-          <button class="btn-use-now" @click="closeWheel">ĐÓNG</button>
-        </template>
-      </div>
-
     </div>
+
+    <div class="wheel-center">
+      <button class="btn-spin" @click="spinWheel" :disabled="isSpinning">
+        {{ isSpinning ? '...' : 'QUAY' }}
+      </button>
+    </div>
+  </div>
+
+  <div v-if="wonPrize" class="result-box mt-4 text-center">
+    <template v-if="wonPrize.value > 0">
+      <h4 class="text-white fw-bold">Chúc mừng!</h4>
+      <p class="text-gold fs-5">Bạn nhận được: {{ wonPrize.label }}</p>
+      <button class="btn-use-now" @click="useVoucher">DÙNG NGAY</button>
+    </template>
+    <template v-else>
+      <h4 class="text-white fw-bold">Rất tiếc!</h4>
+      <p class="text-white-50 fs-5">{{ wonPrize.label }}</p>
+      <button class="btn-use-now" @click="closeWheel">ĐÓNG</button>
+    </template>
+  </div>
+
+</div>
+```
+
   </div>
 </template>
 
@@ -84,9 +87,11 @@ const segmentAngle = 360 / prizes.length; // Góc mỗi phần quà
 
 // 1. Tạo màu nền tự động (Conic Gradient)
 const wheelStyle = computed(() => {
-  const gradient = prizes.map((p, i) => {
-    const start = i * segmentAngle;
-    const end = (i + 1) * segmentAngle;
+  const activePrizes = displayPrizes.value;
+  const anglePer = 360 / activePrizes.length;
+  const gradient = activePrizes.map((p, i) => {
+    const start = i * anglePer;
+    const end = (i + 1) * anglePer;
     return `${p.color} ${start}deg ${end}deg`;
   }).join(', ');
 
@@ -97,13 +102,17 @@ const wheelStyle = computed(() => {
   };
 });
 
-// 2. Tính góc xoay cho chữ
+// 2. Nếu prizes rỗng, dùng default
+const defaultPrize = { label: "Chúc bạn may mắn!", value: 0, color: "#fff", text: "#000" };
+const displayPrizes = computed(() => (prizes.length ? prizes : [defaultPrize]));
+
+// 3. Tính góc xoay cho chữ
 const getTextRotation = (index) => {
-  const rotate = index * segmentAngle + (segmentAngle / 2);
+  const rotate = index * (360 / displayPrizes.value.length) + (360 / displayPrizes.value.length) / 2;
   return { transform: `rotate(${rotate}deg)` };
 };
 
-// 3. Các hàm xử lý
+// 4. Các hàm xử lý
 const openWheel = () => {
   emit('update:showWheel', true);
 };
@@ -119,26 +128,21 @@ const spinWheel = () => {
   isSpinning.value = true;
   wonPrize.value = null;
 
+  const activePrizes = displayPrizes.value;
   // Random quà
-  const index = Math.floor(Math.random() * prizes.length);
+  const index = Math.floor(Math.random() * activePrizes.length);
   
-  // LOGIC TOÁN HỌC:
-  // Mũi tên ở góc 0 độ (12 giờ).
-  // Tâm phần thưởng nằm tại: index * segmentAngle + segmentAngle/2
-  // Để tâm phần thưởng về đúng vị trí 0 độ, ta quay ngược chiều kim đồng hồ.
   const spinRounds = 5; // Quay 5 vòng
-  const prizeCenter = index * segmentAngle + (segmentAngle / 2);
+  const prizeCenter = index * (360 / activePrizes.length) + (360 / activePrizes.length)/2;
   
-  // Tính góc đích đến
   const targetRotation = 360 * spinRounds - prizeCenter;
 
-  // Cộng dồn vào góc hiện tại (để không bị reset vòng quay)
   const currentMod = currentRotation.value % 360;
   currentRotation.value += targetRotation - currentMod + 360 * spinRounds;
 
   setTimeout(() => {
     isSpinning.value = false;
-    wonPrize.value = prizes[index];
+    wonPrize.value = activePrizes[index];
   }, 4000); // 4 giây
 };
 
@@ -159,7 +163,7 @@ const useVoucher = () => {
   background: #C5A059; border: 2px solid #fff; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; 
-  z-index: 999999; /* Luôn nổi trên cùng */
+  z-index: 999999;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   animation: float 3s ease-in-out infinite;
 }

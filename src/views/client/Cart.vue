@@ -35,11 +35,11 @@
             <!-- 🔹 Hiển thị số lượng trong kho & Flash Sale -->
             <div class="mt-2">
               <p class="text-muted small mb-1">
-                🏢 <strong>Số lượng trong kho:</strong>
+                <strong>Số lượng trong kho:</strong>
                 {{ item.normalStock ?? 0 }}
               </p>
               <p v-if="item.flashSaleStock !== null" class="text-danger small mb-0">
-                ⚡ <strong>Số lượng Flash Sale còn:</strong>
+              <strong>Số lượng Flash Sale còn:</strong>
                 {{ item.flashSaleStock }}
               </p>
             </div>
