@@ -38,10 +38,12 @@
                 🏢 <strong>Số lượng trong kho:</strong>
                 {{ item.normalStock ?? 0 }}
               </p>
-              <p v-if="item.flashSaleStock !== null" class="text-danger small mb-0">
-                ⚡ <strong>Số lượng Flash Sale còn:</strong>
-                {{ item.flashSaleStock }}
-              </p>
+             <p v-if="item.type === 'sale' && item.flashSaleStock !== null" 
+   class="text-danger small mb-0">
+  ⚡ <strong>Số lượng Flash Sale còn:</strong>
+  {{ item.flashSaleStock }}
+</p>
+
             </div>
           </div>
         </div>
@@ -51,13 +53,13 @@
           <!-- Nếu sản phẩm có Flash Sale -->
           <div v-if="item.flashSaleStock !== null">
             <!-- Nếu số lượng vượt Flash Sale -->
-            <div v-if="item.normalCount > 0">
+            <div v-if="item.type === 'normal' || (item.type === 'sale' && item.normalCount > 0)">
               <!-- Giá gốc dòng trên -->
               <p class="mb-1 text-dark fw-bold" style="font-size: 15px">
                 {{ item.originalPrice.toLocaleString("vi-VN") }} ₫
               </p>
-              <!-- Giá Sale dòng dưới -->
-              <p class="mb-0 text-danger" style="font-size: 13px">
+              <!-- Giá Sale dòng dưới (chỉ hiển thị khi có) -->
+              <p v-if="item.flashSalePrice" class="mb-0 text-danger" style="font-size: 13px">
                 {{ (item.flashSalePrice ?? item.price).toLocaleString("vi-VN") }} ₫
                 <span class="text-muted">(Flash Sale)</span>
               </p>
@@ -206,9 +208,12 @@ const loadCart = async () => {
     const res = await axios.get(`/api/cart-details/account/${accountId.value}`);
     const data = res.data || [];
 
-    cartItems.value = data.map((item) => {
+    const items = [];
+
+    data.forEach((item) => {
       const skuId = item.skuId;
 
+      // Tìm Flash Sale SKU
       const flashSku = flashSaleSkus.value.find(
         (f) =>
           (f.sku_id === skuId || f.skuId === skuId) &&
@@ -220,31 +225,64 @@ const loadCart = async () => {
         : item.price;
 
       const normalStock = item.skuQuantity ?? 0;
+      // Nếu không có flash sale, để null (để v-if hiển thị chính xác)
       const flashSaleStock = flashSku ? flashSku.quantity ?? 0 : null;
 
-      // --- Tính sẵn saleCount & normalCount khi load ---
       const quantity = item.quantity;
-      const saleCount = Math.min(quantity, flashSaleStock ?? 0);
+
+      // Tách số lượng sale & normal
+      const saleCount = flashSaleStock !== null ? Math.min(quantity, flashSaleStock) : 0;
       const normalCount = Math.max(0, quantity - saleCount);
 
-      return {
-        id: item.id,
-        productName: item.skuName || "Sản phẩm",
-        price: discountedPrice,
-        flashSalePrice: discountedPrice,
-        originalPrice: item.price,
-        quantity,
-        normalStock,
-        flashSaleStock,
-        image: item.skuImage || defaultImage,
-        skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
-        selected: false,
-        skuId,
-        flashSaleSkuId: flashSku?.id ?? null,
-        saleCount,
-        normalCount,
-      };
+      // --- Tạo dòng Flash Sale ---
+      if (saleCount > 0) {
+        items.push({
+          id: item.id + "-sale",
+          parentId: item.id, // id gốc trên server
+          productName: item.skuName || "Sản phẩm",
+          price: discountedPrice,
+          flashSalePrice: discountedPrice,
+          originalPrice: item.price,
+          quantity: saleCount,
+          type: "sale",
+          image: item.skuImage || defaultImage,
+          skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
+          selected: false,
+          skuId,
+          flashSaleSkuId: flashSku?.id ?? null,
+          saleCount,
+          normalCount: 0,
+          normalStock,
+          flashSaleStock,
+        });
+      }
+
+      // --- Tạo dòng giá gốc ---
+      if (normalCount > 0) {
+        // Nếu không có flashSale, thì dòng này là toàn bộ (type normal)
+        items.push({
+          id: item.id + "-normal",
+          parentId: item.id,
+          productName: item.skuName || "Sản phẩm",
+          price: item.price,
+          flashSalePrice: null,
+          originalPrice: item.price,
+          quantity: normalCount,
+          type: "normal",
+          image: item.skuImage || defaultImage,
+          skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
+          selected: false,
+          skuId,
+          flashSaleSkuId: null,
+          saleCount: 0,
+          normalCount,
+          normalStock,
+          flashSaleStock,
+        });
+      }
     });
+
+    cartItems.value = items;
   } catch (err) {
     console.error(err);
     Swal.fire("Lỗi", "Không thể tải giỏ hàng từ server", "error");
@@ -252,8 +290,10 @@ const loadCart = async () => {
 };
 
 // --- Cập nhật số lượng ---
-const updateQuantity = async (item, newQty) => {
-  if (newQty < 1) {
+// Khi user bấm +/- ở 1 dòng: ta phải tính total mới cho parent (cộng cả dòng sibling nếu có)
+const updateQuantity = async (item, newQtyForThisLine) => {
+  // Nếu giảm xuống <1 => hỏi xác nhận xóa dòng (và xử lý xóa tương ứng)
+  if (newQtyForThisLine < 1) {
     const result = await Swal.fire({
       title: "Xác nhận xoá sản phẩm?",
       text: "Bạn có chắc muốn xoá sản phẩm này khỏi giỏ hàng?",
@@ -267,38 +307,31 @@ const updateQuantity = async (item, newQty) => {
     return;
   }
 
-  // Nếu vượt quá Flash Sale
-  if (item.flashSaleStock) {
-    if (newQty > item.flashSaleStock && !item.flashSaleAlerted) {
-      Swal.fire({
-        icon: "info",
-        title: "Vượt số lượng khuyến mãi",
-        text: `Chỉ ${item.flashSaleStock} sản phẩm được áp dụng giá Flash Sale. Hết số lượng sale sẽ tính giá gốc.`,
-        confirmButtonText: "Đã hiểu",
-      });
-      item.flashSaleAlerted = true; // đánh dấu đã thông báo
-    } else if (newQty <= item.flashSaleStock) {
-      item.flashSaleAlerted = false; // reset nếu giảm số lượng về <= flashSaleStock
-    }
-  }
+  // Tìm tổng số lượng của các dòng cùng parent (trừ dòng hiện tại)
+  const siblings = cartItems.value.filter((i) => i.parentId === item.parentId && i.id !== item.id);
+  const siblingTotal = siblings.reduce((s, i) => s + (i.quantity || 0), 0);
 
-  // Giới hạn theo kho
-  if (newQty > item.normalStock) {
+  // Tổng mới gửi lên server = siblingTotal + newQtyForThisLine
+  let newTotalForParent = siblingTotal + newQtyForThisLine;
+
+  // Lấy thông tin kho (dùng normalStock của item - note: normalStock là tổng kho của SKU)
+  const maxStock = item.normalStock ?? 0;
+  if (newTotalForParent > maxStock) {
     Swal.fire("Thông báo", "Số lượng đã vượt quá số lượng trong kho", "info");
-    newQty = item.normalStock;
+    newTotalForParent = maxStock;
+    // nếu maxStock < siblingTotal => phải giảm sibling? (hiếm) -> trong trường hợp này ta set newTotalForParent = maxStock
   }
-
-  // Cập nhật
-  item.quantity = newQty;
-  item.saleCount = Math.min(newQty, item.flashSaleStock ?? 0);
-  item.normalCount = Math.max(0, newQty - item.saleCount);
 
   try {
-    await axios.put(`/api/cart-details/${item.id}/quantity`, {
+    // Gọi API update quantity cho parentId (id gốc)
+    await axios.put(`/api/cart-details/${item.parentId}/quantity`, {
       accountId: accountId.value,
       skuId: item.skuId,
-      quantity: newQty,
+      quantity: newTotalForParent,
     });
+
+    // Reload cart để tự tách lại và cập nhật số lượng hiển thị
+    await loadCart();
   } catch (err) {
     console.error(err);
     Swal.fire("Lỗi", "Không thể cập nhật số lượng sản phẩm", "error");
@@ -306,6 +339,8 @@ const updateQuantity = async (item, newQty) => {
 };
 
 // --- Xoá sản phẩm ---
+// Nếu xóa 1 dòng (sale/normal) mà còn phần còn lại -> gọi PUT giảm số lượng
+// Nếu xóa mà không còn phần nào -> gọi DELETE
 const removeItem = async (item) => {
   const confirm = await Swal.fire({
     title: "Xóa sản phẩm?",
@@ -318,8 +353,28 @@ const removeItem = async (item) => {
   if (!confirm.isConfirmed) return;
 
   try {
-    await axios.delete(`/api/cart-details/${item.id}`);
-    cartItems.value = cartItems.value.filter((i) => i.id !== item.id);
+    // Tính tổng hiện tại của parent
+    const siblings = cartItems.value.filter((i) => i.parentId === item.parentId);
+    const totalCurrent = siblings.reduce((s, i) => s + (i.quantity || 0), 0);
+
+    const remaining = totalCurrent - (item.quantity || 0);
+
+    if (remaining > 0) {
+      // Còn phần khác => update parent quantity xuống remaining
+      await axios.put(`/api/cart-details/${item.parentId}/quantity`, {
+        accountId: accountId.value,
+        skuId: item.skuId,
+        quantity: remaining,
+      });
+      // reload
+      await loadCart();
+    } else {
+      // Không còn phần nào => xóa parent hoàn toàn
+      await axios.delete(`/api/cart-details/${item.parentId}`);
+      // remove local lines
+      cartItems.value = cartItems.value.filter((i) => i.parentId !== item.parentId);
+    }
+
     Swal.fire("Đã xóa", "Sản phẩm đã được xóa khỏi giỏ hàng", "success");
   } catch (err) {
     console.error(err);
@@ -332,7 +387,7 @@ const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
 const selectedTotal = computed(() =>
   selectedItems.value.reduce(
     (sum, i) =>
-      sum + i.saleCount * (i.flashSalePrice ?? i.price) + i.normalCount * i.originalPrice,
+      sum + (i.saleCount || 0) * (i.flashSalePrice ?? i.price) + (i.normalCount || 0) * i.originalPrice,
     0
   )
 );

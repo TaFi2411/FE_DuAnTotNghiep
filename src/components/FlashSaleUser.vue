@@ -114,7 +114,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import axios from "axios";
+import axios from "@/composables/axios.js";
+
 import Swal from "sweetalert2";
 import { useRouter } from "vue-router";
 
@@ -183,8 +184,8 @@ async function fetchAll() {
   loading.value = true;
   try {
     const [fsRes, fssRes] = await Promise.all([
-      axios.get("http://localhost:8080/api/flash-sale").catch(() => ({ data: [] })),
-      axios.get("http://localhost:8080/api/flash-sale-sku").catch(() => ({ data: [] })),
+      axios.get("/api/flash-sale").catch(() => ({ data: [] })),
+      axios.get("/api/flash-sale-sku").catch(() => ({ data: [] })),
     ]);
     const fsData = fsRes?.data?.data ?? fsRes?.data ?? [];
     const fssData = fssRes?.data?.data ?? fssRes?.data ?? [];

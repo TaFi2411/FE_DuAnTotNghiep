@@ -169,22 +169,7 @@ const skuForm = reactive({
   quantity: "",
 });
 
-// --- VUELIDATE SETUP ---
-const checkDiscountAgainstFlashSale = helpers.withMessage(
-  "Giảm giá SKU không được vượt quá Flash Sale",
-  (value) => {
-    const d = Number(value);
-    const flashSaleId = Number(skuForm.flashSaleId);
-    if (!flashSaleId || isNaN(d) || value === "") return true;
-
-    const flashSale = flashSales.value.find((f) => f.id === flashSaleId);
-    if (flashSale) {
-      return d <= Number(flashSale.discount);
-    }
-    return true;
-  }
-);
-
+// --- VUELIDATE SETUP (Bỏ check discount Flash Sale) ---
 const checkQuantityAgainstStock = helpers.withMessage(
   "Số lượng SKU không được vượt quá tồn kho",
   (value) => {
@@ -207,7 +192,6 @@ const rules = {
     required: helpers.withMessage("Vui lòng nhập giảm giá", required),
     numeric: helpers.withMessage("Phải là số", numeric),
     between: helpers.withMessage("Giảm giá phải từ 0 - 100", between(0, 100)),
-    checkDiscountAgainstFlashSale,
   },
   quantity: {
     required: helpers.withMessage("Vui lòng nhập số lượng", required),
@@ -229,7 +213,6 @@ const columns = ref([
   { label: "Hành động", field: "actions", width: "130px" },
 ]);
 
-// 📄 Phân trang
 const paginationOptions = ref({
   enabled: true,
   perPage: 10,
@@ -260,38 +243,34 @@ async function fetchFlashSaleSku() {
       flashSaleName: getFlashSaleName(sku.flashSaleId),
       skuName: getSkuName(sku.skuId),
     }));
-  } catch (err) {
+  } catch {
     Swal.fire("Lỗi", "Không thể tải danh sách SKU!", "error");
   } finally {
     loading.value = false;
   }
 }
 
-// 🧱 CRUD (Đã cập nhật Vuelidate)
+// 🧱 CRUD
 async function createSku() {
   const isValid = await v$.value.$validate();
   if (!isValid) return;
 
   try {
-    // 🔥 Load dữ liệu mới nhất từ server (không dùng table)
-    const res = await axios.get("/api/flash-sale-sku");
-    const list = res.data.data || res.data.content || res.data || [];
-
     const flashId = Number(skuForm.flashSaleId);
     const skuId = Number(skuForm.skuId);
     const newQuantityInput = Number(skuForm.quantity);
     const newDiscountInput = Number(skuForm.discount);
 
-    // 🔥 Kiểm tra xem đã có bản ghi trùng hay chưa
-    const existing = list.find(
+    // 🔄 Kiểm tra SKU đã tồn tại chưa
+    const existing = skuList.value.find(
       (item) => item.flashSaleId === flashId && item.skuId === skuId
     );
 
     if (existing) {
-      // 👉 Lấy số lượng cũ + mới
+      // Cộng dồn số lượng
       const totalQuantity = existing.quantity + newQuantityInput;
 
-      // 👉 Check tồn kho
+      // Check tồn kho
       const skuStock = skus.value.find((x) => x.id === skuId)?.quantity || 0;
       if (totalQuantity > skuStock) {
         Swal.fire(
@@ -302,33 +281,27 @@ async function createSku() {
         return;
       }
 
-      // 👉 Lấy giảm giá lớn hơn
-      const finalDiscount = Math.max(existing.discount, newDiscountInput);
-
-      // 👉 UPDATE thay vì thêm mới
+      // Lấy discount mới của SKU
       await axios.put(`/api/flash-sale-sku/${existing.id}`, {
         flashSaleId: flashId,
         skuId: skuId,
-        discount: finalDiscount,
+        discount: newDiscountInput,
         quantity: totalQuantity,
       });
 
       Swal.fire("Đã cập nhật", "Đã cộng dồn số lượng cho SKU!", "success");
     } else {
-      // 👉 Nếu chưa tồn tại → thêm mới
       await axios.post("/api/flash-sale-sku", {
         flashSaleId: flashId,
         skuId: skuId,
         discount: newDiscountInput,
         quantity: newQuantityInput,
       });
-
       Swal.fire("Thành công", "Thêm SKU mới thành công!", "success");
     }
 
     await fetchFlashSaleSku();
     cancelEditSku();
-
   } catch (err) {
     Swal.fire(
       "Lỗi",
@@ -337,7 +310,6 @@ async function createSku() {
     );
   }
 }
-
 
 async function updateSku() {
   const isValid = await v$.value.$validate();
@@ -353,8 +325,8 @@ async function updateSku() {
     Swal.fire("Thành công", "Cập nhật SKU thành công!", "success");
     await fetchFlashSaleSku();
     cancelEditSku();
-  } catch (err) {
-    Swal.fire("Lỗi", err.response?.data?.message || "Không thể cập nhật SKU!", "error");
+  } catch {
+    Swal.fire("Lỗi", "Không thể cập nhật SKU!", "error");
   }
 }
 
@@ -416,6 +388,7 @@ onMounted(async () => {
   await fetchFlashSaleSku();
 });
 </script>
+
 
 <style scoped>
 .p-3 {
