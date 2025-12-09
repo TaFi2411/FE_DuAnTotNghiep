@@ -1035,7 +1035,7 @@ if (selectedPaymentMethod.value === 3) { // MOMO
 
     // Xử lý COD
     if (selectedPaymentMethod.value === 2) {
-      const orderRes = await axios.post("/api/order", orderPayload);
+      const orderRes = await axios.post("/api/order-cod", orderPayload);
       console.log(localStorage.getItem('token'));
 
       sessionStorage.removeItem("cart");
