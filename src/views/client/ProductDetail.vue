@@ -3,52 +3,26 @@
     <div class="row align-items-start g-5">
       <!-- 🔹 Ảnh sản phẩm -->
       <div class="col-lg-6 col-md-12 text-center">
-        <div
-          class="main-image-wrapper position-relative bg-white rounded-4 shadow-lg p-4"
-        >
-          <img
-            :src="currentImage || '/images/default-product.png'"
-            alt="Ảnh sản phẩm"
-            class="img-fluid rounded-3 main-image"
-          />
+        <div class="main-image-wrapper position-relative bg-white rounded-4 shadow-lg p-4">
+          <img :src="currentImage || '/images/default-product.png'" alt="Ảnh sản phẩm"
+            class="img-fluid rounded-3 main-image" />
         </div>
 
         <!-- 🔸 Thumbnail -->
         <!-- Nếu có hơn 6 ảnh thì hiển thị bằng Swiper -->
         <div v-if="getAllImages().length > 6" class="thumbs mt-4">
-          <Swiper
-            :modules="[Navigation]"
-            :slides-per-view="6"
-            :space-between="10"
-            navigation
-            class="thumb-swiper"
-          >
+          <Swiper :modules="[Navigation]" :slides-per-view="6" :space-between="10" navigation class="thumb-swiper">
             <SwiperSlide v-for="(img, idx) in getAllImages()" :key="idx">
-              <img
-                :src="img"
-                class="thumb"
-                :class="{ active: img === currentImage }"
-                @click="currentImage = img"
-                alt="thumb"
-              />
+              <img :src="img" class="thumb" :class="{ active: img === currentImage }" @click="currentImage = img"
+                alt="thumb" />
             </SwiperSlide>
           </Swiper>
         </div>
 
         <!-- Nếu có 6 ảnh trở xuống thì hiển thị dạng lưới -->
-        <div
-          v-else
-          class="thumbs d-flex justify-content-center gap-3 mt-4 flex-wrap"
-        >
-          <img
-            v-for="(img, idx) in getAllImages()"
-            :key="idx"
-            :src="img"
-            class="thumb"
-            :class="{ active: img === currentImage }"
-            @click="currentImage = img"
-            alt="thumb"
-          />
+        <div v-else class="thumbs d-flex justify-content-center gap-3 mt-4 flex-wrap">
+          <img v-for="(img, idx) in getAllImages()" :key="idx" :src="img" class="thumb"
+            :class="{ active: img === currentImage }" @click="currentImage = img" alt="thumb" />
         </div>
       </div>
 
@@ -62,26 +36,16 @@
           </p>
 
           <!-- Thuộc tính -->
-          <div
-            v-for="(attrGroup, index) in attributes"
-            :key="index"
-            class="attribute-group mb-3"
-          >
+          <div v-for="(attrGroup, index) in attributes" :key="index" class="attribute-group mb-3">
             <h6 class="fw-semibold mb-2 text-black">{{ attrGroup.name }}</h6>
             <div class="options">
-              <span
-                v-for="option in getVisibleOptions(attrGroup)"
-                :key="option.name"
-                class="option"
-                :class="{
-                  active: selectedAttributes[attrGroup.name] === option.name,
-                  disabled: option.disabled,
-                }"
-                @click="
+              <span v-for="option in getVisibleOptions(attrGroup)" :key="option.name" class="option" :class="{
+                active: selectedAttributes[attrGroup.name] === option.name,
+                disabled: option.disabled,
+              }" @click="
                   !option.disabled &&
-                    selectAttribute(attrGroup.name, option.name)
-                "
-              >
+                  selectAttribute(attrGroup.name, option.name)
+                  ">
                 {{ option.name }}
               </span>
             </div>
@@ -91,24 +55,11 @@
           <div class="quantity-selector mt-4" v-if="selectedSku">
             <label class="quantity-label text-black">Số lượng:</label>
             <div class="quantity-controls">
-              <button
-                class="btn-qty"
-                @click="decreaseQuantity"
-                :disabled="quantity <= 1"
-              >
+              <button class="btn-qty" @click="decreaseQuantity" :disabled="quantity <= 1">
                 <i class="bi bi-dash"></i>
               </button>
-              <input
-                type="number"
-                class="quantity-input"
-                v-model="quantity"
-                readonly
-              />
-              <button
-                class="btn-qty"
-                @click="increaseQuantity"
-                :disabled="quantity >= selectedSku.quantity"
-              >
+              <input type="number" class="quantity-input" v-model="quantity" readonly />
+              <button class="btn-qty" @click="increaseQuantity" :disabled="quantity >= selectedSku.quantity">
                 <i class="bi bi-plus"></i>
               </button>
             </div>
@@ -116,11 +67,7 @@
 
           <!-- Nút thao tác -->
           <div class="button-group mt-4">
-            <button
-              class="btn add-cart"
-              :disabled="!hasStock"
-              @click="addToCart"
-            >
+            <button class="btn add-cart" :disabled="!hasStock" @click="addToCart">
               <i class="bi bi-cart"></i> Thêm vào giỏ
             </button>
             <button class="btn buy-now" :disabled="!hasStock" @click="buyNow">
@@ -148,58 +95,16 @@
       </div>
     </div>
 
-    <div class="policy-premium-row mt-4">
-      <div class="policy-premium-item">
-        <i class="bi bi-shield-lock"></i>
-        <span>Bảo hành chính hãng</span>
-      </div>
+    <PolicySection/>
 
-      <div class="policy-premium-item">
-        <i class="bi bi-award"></i>
-        <span>Hàng mới 100%</span>
-      </div>
-
-      <div class="policy-premium-item">
-        <i class="bi bi-truck"></i>
-        <span>Giao nhanh toàn quốc</span>
-      </div>
-
-      <div class="policy-premium-item">
-        <i class="bi bi-box"></i>
-        <span>Đóng gói chống sốc</span>
-      </div>
-
-      <div class="policy-premium-item">
-        <i class="bi bi-credit-card"></i>
-        <span>Hỗ trợ trả góp</span>
-      </div>
-
-      <div class="policy-premium-item">
-        <i class="bi bi-arrow-repeat"></i>
-        <span>Đổi trả 7 ngày</span>
-      </div>
-
-      <div class="policy-premium-item">
-        <i class="bi bi-chat-dots"></i>
-        <span>Tư vấn 24/7</span>
-      </div>
-    </div>
-
-    <div
-      class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper"
-    >
+    <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper">
       <h4 class="fw-bold mb-3 text-black text-center">Mô tả sản phẩm</h4>
 
       <div class="description-text text-secondary lh-lg mx-auto">
-        <div
-          v-html="showFullDescription ? product.description : shortDescription"
-        ></div>
+        <div v-html="showFullDescription ? product.description : shortDescription"></div>
 
-        <button
-          v-if="product.description && product.description.length > 300"
-          class="btn btn-link p-0 mt-3 description-toggle"
-          @click="showFullDescription = !showFullDescription"
-        >
+        <button v-if="product.description && product.description.length > 300"
+          class="btn btn-link p-0 mt-3 description-toggle" @click="showFullDescription = !showFullDescription">
           {{ showFullDescription ? "Thu gọn ▲" : "Xem thêm ▼" }}
         </button>
       </div>
@@ -211,6 +116,7 @@
 import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "@/composables/axios.js";
+import PolicySection from "@/components/PolicySection.vue";
 import Swal from "sweetalert2";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation } from "swiper/modules";
@@ -235,7 +141,6 @@ const shortDescription = computed(() => {
   if (!product.value.description) return "<i>Mô tả sản phẩm chưa có.</i>";
   const text = product.value.description;
 
-  // Rút gọn còn 300 ký tự (tuỳ chỉnh)
   return text.length > 0 ? text.substring(0, 0) : text;
 });
 
@@ -478,8 +383,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-
 .policy-premium-row {
   width: 100%;
   padding: 22px 0;

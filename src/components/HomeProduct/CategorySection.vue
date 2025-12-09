@@ -1,7 +1,7 @@
 <template>
   <div class="container py-5 category-section">
     <div class="text-center mb-5">
-      <h4 class="fw-bold text-uppercase text-dark mb-2">Danh mục sản phẩm</h4>
+      <h4 class="fw-bold text-uppercase text-dark mb-2">Các loại sản phẩm</h4>
       <p class="text-muted mb-0">Khám phá các dòng sản phẩm nổi bật của chúng tôi</p>
     </div>
 
@@ -22,7 +22,7 @@
 
 <script setup>
 const categories = [
-  { name: "iPhone", img: "/images/crs-ip17-air.png" },
+  { name: "iPhone", img: "/images/iphone-17-pro-max-cam-7.jpg" },
   { name: "MacBook", img: "/images/ctg-macbook.png" },
   { name: "AirPods", img: "/images/ctg-ipod.png" },
   { name: "iPad", img: "/images/ctg-ipad.png" },

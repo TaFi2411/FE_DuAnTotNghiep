@@ -57,9 +57,7 @@
               <div class="mb-2">
                 <span class="text-warning fs-6">★★★★★</span>
               </div>
-              <p class="text-muted small mb-3">
-                Đã bán {{ product.sold || 0 }}
-              </p>
+
 
               <!-- Nút hành động -->
               <div class="d-flex justify-content-center gap-2 mt-2">
@@ -114,12 +112,12 @@ const categories = ref([
     products: [],
   },
   {
-    key: "airpods",
+    key: "tai-nghe",
     name: "AirPods",
     subtitle: "Âm thanh sống động",
     banner: "/images/banner-home-ipod.png",
     description: "Thiết kế tiện lợi. Chất lượng âm thanh tuyệt hảo.",
-    link: "/category/airpods",
+    link: "/category/tai-nghe",
     products: [],
   },
   {
@@ -193,34 +191,7 @@ const fetchProducts = async () => {
   }
 };
 
-const addToCart = async (product) => {
-  try {
-    const accountId = sessionStorage.getItem("accountId");
-    if (!accountId) {
-      return Swal.fire(
-        "Thông báo",
-        "Vui lòng đăng nhập để thêm vào giỏ hàng",
-        "info"
-      );
-    }
 
-    await axios.post(`/api/cart/add`, {
-      accountId,
-      productId: product.id,
-      quantity: 1,
-    });
-
-    Swal.fire({
-      icon: "success",
-      title: "Đã thêm vào giỏ hàng!",
-      showConfirmButton: false,
-      timer: 1500,
-    });
-  } catch (error) {
-    console.error("❌ Lỗi thêm vào giỏ hàng:", error);
-    Swal.fire("Lỗi", "Không thể thêm vào giỏ hàng!", "error");
-  }
-};
 
 onMounted(fetchProducts);
 </script>

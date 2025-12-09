@@ -135,11 +135,9 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios.js";
 import { useRouter } from "vue-router";
-// import AiChatBox from './AiChatBox.vue'; 
 
 const router = useRouter();
 
-/* ================= STATE ================= */
 const categories = ref([]);
 const products = ref([]);
 const loading = ref(false);
@@ -152,7 +150,6 @@ const currentPage = ref(0);
 const pageSize = ref(9);
 const totalPages = ref(0);
 
-/* ================= UTILS ================= */
 const formatPrice = (price) => price ? price.toLocaleString("vi-VN") + " ₫" : "Liên hệ";
 
 const getMinPrice = (product) => {
@@ -175,7 +172,7 @@ const getSortLabel = () => {
     return "Sắp xếp";
 }
 
-/* ================= LOGIC SẮP XẾP (Client Side) ================= */
+
 const handleLocalSort = () => {
     if (sortBy.value === 'price_asc') {
         products.value.sort((a, b) => getMinPrice(a) - getMinPrice(b));
@@ -187,7 +184,7 @@ const handleLocalSort = () => {
     }
 };
 
-/* ================= API CALLS ================= */
+
 const fetchCategories = async () => {
   try {
     const res = await axios.get("/api/category");
@@ -237,7 +234,7 @@ const fetchProducts = async () => {
   }
 };
 
-/* ================= EVENTS ================= */
+
 const setCategory = (id) => { 
     filter.value.categoryId = id; 
     currentPage.value = 0; 
@@ -296,8 +293,6 @@ onMounted(async () => {
 
 .tdt-store-page { font-family: 'Manrope', sans-serif; background-color: #f8f9fa; color: #111; min-height: 100vh; }
 .header-spacer { height: 40px; }
-
-/* ================= CSS PHẦN SIDEBAR & HEADER (ĐÃ CẢI TIẾN) ================= */
 .sidebar-wrapper { 
     background: #fff; 
     padding: 25px; 

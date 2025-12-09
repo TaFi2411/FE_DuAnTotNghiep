@@ -44,10 +44,7 @@
       <main class="col-lg-9">
         <div class="main-card p-4 rounded shadow-sm bg-white">
           <div v-if="currentMenu === 'Thông tin cá nhân'">
-            <h5>Thông tin cá nhân</h5>
-            <p><strong>Họ và tên:</strong> {{ userName }}</p>
-            <p><strong>Email:</strong> {{ userEmail }}</p>
-            <p><strong>Số điện thoại:</strong> {{ userPhone }}</p>
+           <Profile/>
           </div>
 
           <div v-else-if="currentMenu === 'Đơn hàng của tôi'">
@@ -493,6 +490,7 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
+import Profile from "./Profile.vue";
 
 const orders = ref([]);
 const loading = ref(true);
@@ -527,7 +525,7 @@ const reviewForm = ref({
 });
 const isUploading = ref(false);
 const fileInput = ref(null);
-const currentMenu = ref("Đơn hàng của tôi");
+const currentMenu = ref("Thông tin cá nhân");
 
 const userName = ref("");
 const userEmail = ref("");

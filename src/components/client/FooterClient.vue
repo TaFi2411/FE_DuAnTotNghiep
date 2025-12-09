@@ -1,153 +1,117 @@
 <template>
-    <!--------------------------------------- Chứng nhận--------------------------------------->
+  <footer class="footer-section">
+    <div class="footer-content container">
+      <div class="row">
+        <!-- Liên hệ -->
+        <div class="col-lg-3 mb-4 footer-box">
+          <p class="footer-title">Liên hệ với chúng tôi</p>
+          <div class="social-links mt-3 mb-3">
+            <a href="#"><img src="/images/logo-face.png" alt="Facebook" /></a>
+            <a href="#"><img src="/images/logo-zalo.png" alt="Zalo" /></a>
+            <a href="#"><img src="/images/logo-intergam.png" alt="Instagram" /></a>
+          </div>
+          <p><i class="bi bi-telephone-forward"></i> Mua hàng: 0346650459</p>
+          <p><i class="bi bi-telephone-forward"></i> Khiếu nại: 0777118500</p>
+        </div>
 
-      <hr>
-       <!--------------------------------------- Footer --------------------------------------->
-    
-       <footer>
-    <div class="form">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-3">
-            <p class="title">Liên hệ với chúng tôi</p>
-            <br />
-            <a href="facebook"><img src="/images/logo-face.png" alt="Facebook" /></a>
-            <a href="Zalo"><img src="/images/logo-zalo.png" alt="Zalo" /></a>
-            <a href="Instagram"><img src="/images/logo-intergam.png" alt="Instagram" /></a>
-            <br /><br />
-            <p><i class="bi bi-telephone-forward"></i> Mua hàng: 0346650459</p>
-            <p><i class="bi bi-telephone-forward"></i> Khiếu nại: 0777118500</p>
-          </div>
-          
-          <div class="col-lg-3">
-            <p class="title">Hệ thống của chúng tôi</p>
-            <br />
-            <p>
-              Hệ thống của chúng tôi trải dài khắp các tỉnh từ miền Nam ra tới miền Bắc,
-              lên đến 82 cửa hàng để luôn có thể phục vụ khách hàng mọi nơi và mọi lúc.
-            </p>
-          </div>
-          
-          <div class="col-lg-3">
-            <p class="title">Dịch vụ khách hàng</p>
-            <br />
-            <p>
-              Chúng tôi luôn đặt uy tín và chất lượng lên hàng đầu, luôn không bao giờ để khách hàng phải thiệt thòi.
-              Đặc biệt, cửa hàng chúng tôi luôn vui lòng khách đến và vừa lòng khách đi.
-            </p>
-          </div>
-          
-          <div class="col-lg-3">
-            <p class="title">Thanh toán online</p>
-            <br />
-            <p>Khách hàng có thể thanh toán qua các kênh thanh toán này của chúng tôi:</p>
-            <div class="row">
-              <div class="col-6"><a href=""><img src="/images/logo-visa.png" alt="Visa" /></a></div>
-              <div class="col-6"><a href=""><img src="/images/logo-vnpay.png" alt="VNPay" /></a></div>
-            </div>
-            <div class="row mt-3">
-              <div class="col-6"><a href=""><img src="/images/logo-master.png" alt="MasterCard" /></a></div>
-              <div class="col-6"><a href=""><img src="/images/logo-zalo (1).png" alt="Zalo Pay" /></a></div>
-            </div>
+        <!-- Hệ thống -->
+        <div class="col-lg-3 mb-4 footer-box">
+          <p class="footer-title">Hệ thống của chúng tôi</p>
+          <p class="mt-3 text-justify">
+            Hệ thống trải dài từ miền Nam ra miền Bắc với hơn 82 cửa hàng,
+            luôn sẵn sàng phục vụ khách hàng mọi lúc, mọi nơi.
+          </p>
+        </div>
+
+        <!-- Dịch vụ -->
+        <div class="col-lg-3 mb-4 footer-box">
+          <p class="footer-title">Dịch vụ khách hàng</p>
+          <p class="mt-3 text-justify">
+            Luôn đặt uy tín – chất lượng lên hàng đầu và cam kết mang lại trải nghiệm tốt nhất
+            cho khách hàng. Chúng tôi luôn “vui lòng khách đến, vừa lòng khách đi”.
+          </p>
+        </div>
+
+        <!-- Thanh toán -->
+        <div class="col-lg-3 mb-4 footer-box">
+          <p class="footer-title">Thanh toán online</p>
+          <p class="mt-3">Hỗ trợ nhiều cổng thanh toán phổ biến:</p>
+
+          <div class="payment-grid">
+            <img src="/images/logo-visa.png" alt="Visa" />
+            <img src="/images/logo-vnpay.png" alt="VNPay" />
+            <img src="/images/logo-master.png" alt="MasterCard" />
+            <img src="/images/payment_momo.png" alt="Momo" />
           </div>
         </div>
       </div>
     </div>
+
+    <div class="footer-copy">
+      Copyright <i class="bi bi-c-circle"></i> TDT Store
+    </div>
   </footer>
-
-  <hr />
-
-  <div class="copyright">
-    <p>Copyright <i class="bi bi-c-circle"></i> TDT Store</p>
-  </div>
-      <!--------------------------------------- ----- --------------------------------------->
 </template>
+
 <script setup>
 
 </script>
 <style scoped>
+.footer-section {
+  background: #000;
+  color: white;
+  padding-top: 50px;
+  margin-top: 30px;
+}
 
-footer .title{
-  font-size: 20px;
+.footer-title {
+  font-size: 22px;
   font-weight: bold;
-}
-.chungnhan{
-    display: flex;
-    justify-content: center;
+  letter-spacing: 0.5px;
 }
 
-.chungnhan>.item{
-    display: flex;
-    color: black;
-    margin: 40px;
-    margin-bottom: 0px;
-
+.footer-box {
+  padding-right: 25px;
 }
 
-.chungnhan>.item>i{
-    font-size: 60px;
+.text-justify {
+  text-align: justify;
 }
 
-.chungnhan>.item>p{
-    margin: 10px;
-    margin-left: 10px;
-    font-size: 20px;
-    font-family: Arial, Helvetica, sans-serif;
-}
-    /* ------------------Footer--------------- */
-
-footer{
-    
-    background-color: black;
-    margin-top: 20px;
-    height: 350px;
-}
-footer>.form{
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 50px;
-    height: 300px;
+.social-links a img {
+  width: 35px;
+  margin-right: 10px;
+  transition: 0.3s ease;
 }
 
-footer>.logo{
-    color: white;
-    font-weight: bolder;
-    color: white;
-    display: flex;
-    padding-top: 20px;
-    padding-left: 20px;
-    
+.social-links a img:hover {
+  transform: scale(1.1);
 }
 
-footer>.logo>p{
-    margin: 0px;
-    font-size: 20px;
-    margin-top: 10px;
-}
-footer>.logo>.bi.bi-apple{
-   font-size: 40px;
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 70px);
+  gap: 15px;
+  margin-top: 10px;
 }
 
-footer>.form>.container>.row>.col-lg-3{
-    padding-right: 46px;
-    color: white;
-    text-align: justify;
-    
+.payment-grid img {
+  width: 70px;
+  background: white;
+  border-radius: 8px;
+  padding: 4px;
+  transition: 0.3s ease;
 }
 
-
-.copyright{
-    width: 100%;
-    height: 40px;
-    margin-top: 20px;
-    background-color: black;
-    color: white;
-    text-align: center;
+.payment-grid img:hover {
+  transform: translateY(-3px);
 }
 
-.copyright>p{
-    padding-top: 10px;
+.footer-copy {
+  text-align: center;
+  padding: 15px 0;
+  background: #111;
+  margin-top: 30px;
+  font-size: 15px;
 }
-
 </style>

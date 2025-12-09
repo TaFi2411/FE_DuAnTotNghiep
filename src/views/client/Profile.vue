@@ -83,7 +83,6 @@
 import { ref, onMounted, watch, computed } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
-
 const profile = ref(null);
 const defaultAvatar = "/userDefault.jpg";
 
@@ -170,7 +169,7 @@ const updateProfile = async () => {
     profile.value = res.data;
     previewAvatar.value = res.data.avatar || defaultAvatar;
     window.dispatchEvent(new CustomEvent('avatar-updated', { detail: res.data.avatar }));
-
+    window.dispatchEvent(new CustomEvent("name-updated", { detail: res.data.fullname   }));
   } catch (err) {
     Swal.fire("Lỗi", "Cập nhật thất bại!", "error");
   }
