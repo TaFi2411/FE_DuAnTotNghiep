@@ -31,9 +31,32 @@
         <div class="product-info bg-white rounded-4 shadow-sm p-4">
           <h1 class="product-name text-black">{{ product.name }}</h1>
 
-          <p class="product-price mb-4 text-dark">
-            {{ displayPrice.toLocaleString("vi-VN") }} VNĐ
-          </p>
+         <p class="product-price mb-4">
+
+  <!-- Nếu SKU đang trong FlashSale -->
+  <template v-if="isFlashSale">
+    <span class="text-danger fw-bold" style="font-size: 1.7rem;">
+      {{ flashPrice.toLocaleString("vi-VN") }} VNĐ
+    </span>
+
+    <span class="badge bg-danger ms-2">FlashSale</span> 
+
+    <br />
+
+    <span class="text-muted text-decoration-line-through" style="font-size: 1rem;">
+      {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
+    </span>
+  </template>
+
+  <!-- Nếu SKU không sale -->
+  <template v-else>
+    <span class="text-black fw-bold" style="font-size: 1.6rem;">
+      {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
+    </span>
+  </template>
+
+</p>
+
 
           <!-- Thuộc tính -->
           <div v-for="(attrGroup, index) in attributes" :key="index" class="attribute-group mb-3">
@@ -111,7 +134,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -133,10 +155,15 @@ const selectedSku = ref(null);
 const currentImage = ref("");
 const quantity = ref(1);
 const accountId = ref(null);
-const relatedProducts = ref([]);
+
+// 🔥 LẤY PARAM TỪ FLASHSALE
+const flashSku = route.query.flashSku;          // ID của SKU đang sale
+const flashDiscount = Number(route.query.flashDiscount || 0);
+const flashPrice = Number(route.query.flashPrice || 0);
 
 const showFullDescription = ref(false);
 
+// Rút gọn mô tả
 const shortDescription = computed(() => {
   if (!product.value.description) return "<i>Mô tả sản phẩm chưa có.</i>";
   const text = product.value.description;
@@ -144,6 +171,7 @@ const shortDescription = computed(() => {
   return text.length > 0 ? text.substring(0, 0) : text;
 });
 
+// Giải mã token
 function decodeJwtToken(token) {
   try {
     const base64Url = token.split(".")[1];
@@ -160,15 +188,16 @@ function decodeJwtToken(token) {
   }
 }
 
+// ======================================================
+// 🔥 LOAD PRODUCT + SKU
+// ======================================================
 const loadProductDetail = async () => {
   try {
-    const res = await axios.get(
-      `/api/product/${route.params.id}`
-    );
+    const res = await axios.get(`/api/product/${route.params.id}`);
     product.value = res.data;
     currentImage.value = product.value.image;
 
-    // Nhóm thuộc tính (giữ nguyên)
+    // Nhóm thuộc tính
     const attrMap = {};
     product.value.skus?.forEach((sku) => {
       sku.skuAttributes?.forEach((attr) => {
@@ -183,6 +212,7 @@ const loadProductDetail = async () => {
       values: Array.from(values),
     }));
 
+    // Auto chọn SKU đầu tiên
     if (product.value.skus?.length > 0) {
       const firstSku = product.value.skus[0];
       selectedAttributes.value = {};
@@ -192,25 +222,14 @@ const loadProductDetail = async () => {
       });
       updateSelectedSku();
     }
-
   } catch (err) {
     console.error("Lỗi khi tải sản phẩm:", err);
   }
 };
 
-const selectedSectionIndex = ref(0);
-
-const currentSectionContent = computed(() => {
-  if (
-    !product.value.descriptionSections ||
-    !product.value.descriptionSections.length
-  ) {
-    return "<i>Mô tả sản phẩm chưa có.</i>";
-  }
-  return product.value.descriptionSections[selectedSectionIndex.value].content;
-});
-
-// 🟢 Khi chọn thuộc tính (giữ nguyên)
+// ======================================================
+// 🔥 HANDLE CHỌN THUỘC TÍNH
+// ======================================================
 const selectAttribute = async (name, value) => {
   if (selectedAttributes.value[name] === value)
     delete selectedAttributes.value[name];
@@ -219,7 +238,7 @@ const selectAttribute = async (name, value) => {
   updateSelectedSku();
 };
 
-// 🟢 Xác định SKU được chọn (giữ nguyên)
+// Cập nhật SKU đang chọn
 const updateSelectedSku = () => {
   const keys = Object.keys(selectedAttributes.value);
   selectedSku.value =
@@ -242,28 +261,46 @@ const updateSelectedSku = () => {
   }
 };
 
-// 🟢 Ảnh hiển thị (giữ nguyên)
+// ======================================================
+// 🔥 ẢNH
+// ======================================================
 const getAllImages = () => {
   const images = new Set();
-  if (selectedSku.value && selectedSku.value.skuImages?.length > 0) {
-    selectedSku.value.skuImages.forEach((img) => images.add(img.path));
+  if (selectedSku.value?.skuImages?.length) {
+    selectedSku.value.skuImages.forEach((i) => images.add(i.path));
     return Array.from(images);
   }
   if (product.value.image) images.add(product.value.image);
   return Array.from(images);
 };
 
-// 🟢 Giá hiển thị (giữ nguyên)
-const displayPrice = computed(() => {
-  if (selectedSku.value?.price) return selectedSku.value.price;
-  if (product.value.price) return product.value.price;
-  return product.value.skus?.[0]?.price || 0;
+// ======================================================
+// 🔥 GIÁ – LOGIC FLASHSALE
+// ======================================================
+
+// SKU này đang FlashSale hay không
+const isFlashSale = computed(() => {
+  return flashSku && selectedSku.value?.id == flashSku && flashPrice > 0;
 });
 
-// 🟢 Còn hàng (giữ nguyên)
+// Giá gốc
+const originalPrice = computed(() => {
+  return selectedSku.value?.price || product.value.price || 0;
+});
+
+// Giá hiển thị cuối cùng
+const displayPrice = computed(() => {
+  return isFlashSale.value ? flashPrice : originalPrice.value;
+});
+
+// ======================================================
+// 🔥 KIỂM TRA TỒN KHO
+// ======================================================
 const hasStock = computed(() => selectedSku.value?.quantity > 0);
 
-// 🟢 Số lượng (giữ nguyên)
+// ======================================================
+// 🔥 SỐ LƯỢNG
+// ======================================================
 const increaseQuantity = () => {
   if (selectedSku.value && quantity.value < selectedSku.value.quantity)
     quantity.value++;
@@ -272,7 +309,9 @@ const decreaseQuantity = () => {
   if (quantity.value > 1) quantity.value--;
 };
 
-// 🟢 Hiển thị option khả dụng (giữ nguyên)
+// ======================================================
+// 🔥 LỌC OPTION
+// ======================================================
 const getVisibleOptions = (attrGroup) => {
   const selected = { ...selectedAttributes.value };
   delete selected[attrGroup.name];
@@ -299,28 +338,21 @@ const getVisibleOptions = (attrGroup) => {
   }));
 };
 
+// ======================================================
+// 🔥 THÊM GIỎ HÀNG
+// ======================================================
 const addToCart = async () => {
   if (!selectedSku.value) {
-    Swal.fire(
-      "Chọn biến thể!",
-      "Vui lòng chọn đủ thuộc tính sản phẩm",
-      "warning"
-    );
-    return;
+    return Swal.fire("Chọn biến thể!", "Vui lòng chọn thuộc tính.", "warning");
   }
 
   if (!accountId.value) {
-    Swal.fire(
-      "Chưa đăng nhập",
-      "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng",
-      "info"
-    );
-    router.push("/auth/login");
-    return;
+    Swal.fire("Chưa đăng nhập", "Vui lòng đăng nhập.", "info");
+    return router.push("/auth/login");
   }
 
   try {
-    const res = await axios.post("/api/cart-details", {
+    await axios.post("/api/cart-details", {
       accountId: accountId.value,
       skuId: selectedSku.value.id,
       quantity: quantity.value,
@@ -328,33 +360,30 @@ const addToCart = async () => {
 
     Swal.fire({
       icon: "success",
-      title: "Đã thêm vào giỏ hàng!",
-      text: "Sản phẩm đã được thêm thành công.",
-      showConfirmButton: false,
+      title: "Đã thêm vào giỏ!",
       timer: 1500,
+      showConfirmButton: false,
     });
 
-    // Cập nhật lại event giỏ hàng
     window.dispatchEvent(new Event("cart-updated"));
-  } catch (err) {
-    console.error("Lỗi khi thêm vào giỏ hàng:", err);
+  } catch {
     Swal.fire(
       "Lỗi!",
-      "Số lượng sản phẩm đã đạt tối đa bạn không thể thêm sản phẩm vào giỏ hàng nữa.",
+      "Bạn đã thêm tối đa số lượng có thể mua!",
       "error"
     );
   }
 };
 
+// ======================================================
+// 🔥 MUA NGAY
+// ======================================================
 const buyNow = () => {
   if (!selectedSku.value) {
-    Swal.fire(
-      "Chọn biến thể!",
-      "Vui lòng chọn đủ thuộc tính sản phẩm",
-      "warning"
-    );
+    Swal.fire("Chọn biến thể!", "Vui lòng chọn thuộc tính.", "warning");
     return;
   }
+
   const order = [
     {
       skuId: selectedSku.value.id,
@@ -365,19 +394,21 @@ const buyNow = () => {
       attributes: selectedAttributes.value,
     },
   ];
+
   sessionStorage.setItem("checkoutItems", JSON.stringify(order));
   router.push("/checkout");
 };
 
-// 🟢 Khởi tạo (giữ nguyên)
+// ======================================================
+// 🔥 KHỞI ĐỘNG
+// ======================================================
 onMounted(() => {
-  // Lấy ID người dùng từ JWT token
   const token = localStorage.getItem("token");
   if (token) {
     const payload = decodeJwtToken(token);
     accountId.value = payload?.id || null;
-    console.log("🧩 Account ID:", accountId.value);
   }
+
   loadProductDetail();
 });
 </script>
