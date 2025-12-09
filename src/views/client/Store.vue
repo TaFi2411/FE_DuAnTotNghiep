@@ -164,11 +164,9 @@
 import { ref, onMounted, computed, watch } from "vue";
 import axios from "@/composables/axios.js";
 import { useRouter } from "vue-router";
-// import AiChatBox from './AiChatBox.vue'; 
 
 const router = useRouter();
 
-/* ================= STATE ================= */
 const categories = ref([]);
 const products = ref([]); 
 const loading = ref(false);

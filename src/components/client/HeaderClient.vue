@@ -139,9 +139,8 @@ const cartCount = ref(0);
 const searchQuery = ref('');
 const showSearch = ref(false);
 const accountId = ref(null);
-const isListening = ref(false); // Trạng thái đang nghe
+const isListening = ref(false); 
 
-// Avatar
 const defaultAvatar = '/userDefault.jpg';
 const previewAvatar = ref(defaultAvatar);
 const profile = ref(null);
@@ -157,9 +156,7 @@ function handleScroll() {
   isScrolled.value = window.scrollY > 10;
 }
 
-// === XỬ LÝ TÌM KIẾM & VOICE ===
 
-// Hàm cắt chuỗi và làm sạch (Tokenize/Trim)
 function cleanSearchString(str) {
     if (!str) return '';
     // 1. Trim 2 đầu
@@ -170,7 +167,7 @@ function cleanSearchString(str) {
 function handleSearch() {
   const cleanedQuery = cleanSearchString(searchQuery.value);
   
-  // Cập nhật lại giá trị hiển thị cho đẹp
+
   searchQuery.value = cleanedQuery; 
 
   if (cleanedQuery !== '') {
@@ -179,7 +176,7 @@ function handleSearch() {
   }
 }
 
-// Hàm Voice Search API
+
 function startVoiceSearch() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -189,8 +186,8 @@ function startVoiceSearch() {
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'vi-VN'; // Thiết lập tiếng Việt
-    recognition.interimResults = false; // Chỉ lấy kết quả cuối cùng
+    recognition.lang = 'vi-VN'; 
+    recognition.interimResults = false; 
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -256,6 +253,7 @@ const fetchProfile = async () => {
   try {
     const res = await axios.get(`/api/account/${accountId.value}`);
     profile.value = res.data;
+    accountName.value = res.data.fullname;
     previewAvatar.value = res.data.avatar ? (res.data.avatar.startsWith('http') ? res.data.avatar : `/uploads/${res.data.avatar}`) : defaultAvatar;
   } catch {
     Swal.fire("Lỗi", "Không thể tải thông tin!", "error");
@@ -272,6 +270,7 @@ onMounted(() => {
   window.addEventListener('avatar-updated', (e) => {
     previewAvatar.value = e.detail ? (e.detail.startsWith('http') ? e.detail : `/uploads/${e.detail}`) : defaultAvatar;
   });
+    window.addEventListener('name-updated', (e) => {accountName.value = e.detail || 'Người dùng'; });
   
   const token = localStorage.getItem('token');
   if (token) {
@@ -292,6 +291,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll);
   window.removeEventListener('cart-updated', updateCartCount);
+
 });
 </script>
 
@@ -505,7 +505,6 @@ onBeforeUnmount(() => {
   width: 100%;
   left: 0;
 }
-/* Dropdown (User menu) */
 .dropdown-menu {
   background: #fff !important;
   color: #000 !important;
@@ -533,4 +532,5 @@ onBeforeUnmount(() => {
 .dropdown-divider {
   background-color: rgba(0, 0, 0, 0.1) !important;
 }
+
 </style>

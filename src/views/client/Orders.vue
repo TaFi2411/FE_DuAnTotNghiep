@@ -524,7 +524,7 @@ const reviewForm = ref({
 });
 const isUploading = ref(false);
 const fileInput = ref(null);
-const currentMenu = ref("Đơn hàng của tôi");
+const currentMenu = ref("Thông tin cá nhân");
 
 const userName = ref("");
 const userEmail = ref("");
