@@ -299,9 +299,7 @@ const statusList = [
     { key: "delivered", label: "Đã giao" },
     { key: "completed", label: "Hoàn thành" },
     { key: "cancelled", label: "Đã hủy" },
-    { key: "refund_requested", label: "Yêu cầu Hoàn trả" }, 
-    { key: "refund_rejected", label: "Từ chối Hoàn tiền" }, 
-    { key: "refunded", label: "Đã Hoàn tiền" },             
+            
 ];
 
 
@@ -312,10 +310,7 @@ const statusIdMap = {
     delivered: 6,   
     completed: 4,
     cancelled: 5,
-    // ID MỚI (Cần đảm bảo khớp với Backend)
-    refund_requested: 7, 
-    refund_rejected: 8,  
-    refunded: 9,         
+         
 };
 
 
@@ -337,10 +332,7 @@ function getStatusClass(status) {
         case "DELIVERED": return "bg-secondary text-white";
         case "COMPLETED": return "bg-success";
         case "CANCELLED": return "bg-danger";
-        // ⭐ TRẠNG THÁI HOÀN TIỀN
-        case "REFUND_REQUESTED": return "bg-danger text-white"; 
-        case "REFUND_REJECTED": return "bg-warning text-dark";
-        case "REFUNDED": return "bg-success";
+     
         default: return "bg-secondary";
     }
 }
@@ -354,10 +346,7 @@ function getStatusText(status) {
         case "DELIVERED": return "Đã giao";
         case "COMPLETED": return "Hoàn thành";
         case "CANCELLED": return "Đã hủy";
-        // ⭐ TRẠNG THÁI HOÀN TIỀN
-        case "REFUND_REQUESTED": return "YÊU CẦU HOÀN TRẢ";
-        case "REFUND_REJECTED": return "Từ chối Hoàn tiền";
-        case "REFUNDED": return "ĐÃ HOÀN TIỀN";
+  
         default: return status;
     }
 }
@@ -375,62 +364,7 @@ const getTotalProductPrice = (order) => {
     return order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 };
 
-// Hàm mới: Xử lý Phê duyệt/Từ chối Hoàn tiền
-async function handleRefundAction(orderId, actionType) {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Lỗi xác thực: Không tìm thấy Token. Vui lòng đăng nhập lại.");
-        return;
-    }
 
-    let adminNote = prompt(`Nhập ghi chú Admin cho việc ${actionType === 'approve' ? 'PHÊ DUYỆT HOÀN TIỀN' : 'TỪ CHỐI HOÀN TIỀN'}:`);
-    if (adminNote === null || adminNote.trim() === '') {
-        alert("Phải nhập ghi chú Admin để tiếp tục.");
-        return;
-    }
-
-    let targetStatusId;
-    let endpoint = `http://localhost:8080/api/order/admin/${orderId}/refund-action`;
-
-    // ⭐ SỬ DỤNG ID TRẠNG THÁI MỚI CỦA BẠN ⭐
-    if (actionType === 'approve') {
-        // ID 8: REFUND_PROCESSING (Backend sẽ tự chuyển sang 9 hoặc 10 sau khi xử lý)
-        targetStatusId = 8; 
-        if (!confirm(`Xác nhận PHÊ DUYỆT yêu cầu hoàn tiền cho đơn ${orderId}? Đơn sẽ chuyển sang trạng thái Đang xử lý hoàn trả.`)) return;
-    } else if (actionType === 'reject') {
-        // ID 10: REFUND_REJECTED (Từ chối hoàn trả)
-        targetStatusId = 10; 
-        if (!confirm(`Xác nhận TỪ CHỐI hoàn tiền cho đơn ${orderId}?`)) return;
-    } else {
-        return;
-    }
-
-    try {
-        await axios.put(
-            endpoint,
-            { 
-                statusId: targetStatusId, 
-                adminNote: adminNote 
-            }, 
-            { 
-                headers: { 
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json' 
-                } 
-            }
-        );
-
-        alert(`Đơn hàng ${orderId} đã được xử lý thành công!`);
-        loadOrders(currentPage.value); 
-        loadOrderCounts(); 
-        expandedOrder.value = null;
-
-    } catch (err) {
-        console.error("Lỗi khi xử lý hoàn tiền:", err);
-        const errorMsg = err.response?.data?.message || "Lỗi hệ thống khi xử lý hoàn tiền.";
-        alert(`Thất bại: ${errorMsg}`);
-    }
-}
 
 async function cancelOrderByAdmin(orderId) {
     if (!confirm("Xác nhận HỦY đơn hàng này? Thao tác này không thể hoàn tác.")) return;

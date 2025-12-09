@@ -44,10 +44,7 @@
       <main class="col-lg-9">
         <div class="main-card p-4 rounded shadow-sm bg-white">
           <div v-if="currentMenu === 'Thông tin cá nhân'">
-            <h5>Thông tin cá nhân</h5>
-            <p><strong>Họ và tên:</strong> {{ userName }}</p>
-            <p><strong>Email:</strong> {{ userEmail }}</p>
-            <p><strong>Số điện thoại:</strong> {{ userPhone }}</p>
+            <Profile />
           </div>
 
           <div v-else-if="currentMenu === 'Đơn hàng của tôi'">
@@ -493,7 +490,7 @@
 import { ref, onMounted, computed } from "vue";
 import axios from "@/composables/axios.js";
 import Swal from "sweetalert2";
-
+import Profile from "./Profile.vue";
 const orders = ref([]);
 const loading = ref(true);
 const expandedOrder = ref(null);
@@ -556,10 +553,7 @@ const filters = [
     { label: "Đang giao", value: "SHIPPING" },
     { label: "Đã giao", value: "DELIVERED" }, 
     { label: "Hoàn thành", value: "COMPLETED" },
-    { label: "Đang hoàn trả", value: "REFUND_REQUESTED" }, // <-- Thêm trạng thái mới
-    { label: "Đang xử lý hoàn", value: "REFUND_PROCESSING" }, // ID 8
- { label: "Đã hoàn trả", value: "REFUNDED" },  // ID 9 (Trạng thái bạn cần)
- { label: "Từ chối hoàn trả", value: "REFUND_REJECTED" }, // ID 10
+  
     { label: "Đã hủy", value: "CANCELLED" },
 ];
 
@@ -603,13 +597,7 @@ function getStatusText(status) {
         case "CANCELLED":
             return "Đã hủy";
             case "REFUND_REQUESTED":
-      return "Đang hoàn trả"; // <-- Thêm case cho trạng thái mới
-case "REFUND_PROCESSING":
-      return "Đang xử lý hoàn tiền"; // ID 8
-    case "REFUNDED":
-      return "Đã hoàn tiền thành công"; // ID 9 (Trạng thái bạn cần)
-    case "REFUND_REJECTED":
-      return "Yêu cầu hoàn bị từ chối"; // ID 10
+  
         default:
             return status;
     }
@@ -688,91 +676,10 @@ function addDays(date, days) {
     return result;
 }
 
-// Hàm kiểm tra điều kiện hoàn trả (SỬ DỤNG MỐC completed_date CHÍNH XÁC)
-function isReturnable(order) {
-    const RETURN_DAYS_LIMIT = 7; // Giới hạn hoàn trả là 7 ngày
-
-    // 1. CHỈ CHO PHÉP HOÀN TRẢ KHI ĐƠN HÀNG ĐÃ HOÀN THÀNH
-    // Tránh trường hợp đơn hàng còn ở trạng thái Đang giao hoặc Đang xử lý
-    if (order.statusName !== 'COMPLETED') {
-        return false;
-    }
-
-    // 2. LẤY NGÀY BẮT ĐẦU TÍNH HẠN: Sử dụng completed_date
-   const startDateStr = order.completedDate; // Đã sửa từ completed_date
-    
-    // Đảm bảo dữ liệu ngày hoàn thành tồn tại (nếu đã COMPLETED thì phải có ngày này)
-    if (!startDateStr) {
-        console.warn(`Đơn hàng ${order.id} ở trạng thái COMPLETED nhưng thiếu completed_date.`);
-        return false;
-    }
-    
-    const startDate = new Date(startDateStr);
-
-    // 3. Tính ngày cuối cùng có thể hoàn trả (7 ngày sau ngày hoàn thành)
-    const returnDeadline = addDays(startDate, RETURN_DAYS_LIMIT);
-    const currentDate = new Date();
-
-    // 4. So sánh ngày hiện tại với ngày hết hạn hoàn trả
-    // Trả về TRUE nếu ngày hiện tại <= ngày hết hạn
-    return currentDate <= returnDeadline;
-}
 
 
 // Hàm để hoàn trả đơn hàng
-async function requestReturn(orderId) {
-    try {
-        const order = orders.value.find(o => o.id === orderId);
-        if (!order) {
-            Swal.fire('Lỗi', 'Không tìm thấy đơn hàng.', 'error');
-            return;
-        }
 
-        // 1. KIỂM TRA ĐIỀU KIỆN HOÀN TRẢ
-        if (!isReturnable(order)) {
-            Swal.fire('Lỗi', 'Đơn hàng không đủ điều kiện hoàn trả (đã quá 7 ngày hoặc chưa hoàn thành).', 'warning');
-            return;
-        }
-
-        // 2. YÊU CẦU LÝ DO HOÀN TRẢ TỪ NGƯỜI DÙNG
-        const { value: reason } = await Swal.fire({
-            title: 'Yêu cầu Hoàn trả',
-            text: `Nhập lý do bạn muốn hoàn trả đơn hàng ${orderId}:`,
-            input: 'textarea', // Sử dụng textarea để nhập lý do
-            inputLabel: 'Lý do hoàn trả (tối đa 500 ký tự)',
-            inputPlaceholder: 'Sản phẩm lỗi, không đúng mô tả, ...',
-            showCancelButton: true,
-            confirmButtonText: 'Gửi yêu cầu',
-            cancelButtonText: 'Hủy bỏ',
-            inputValidator: (value) => {
-                if (!value) {
-                    return 'Vui lòng nhập lý do hoàn trả!';
-                }
-                if (value.length > 500) {
-                    return 'Lý do không được vượt quá 500 ký tự.';
-                }
-            }
-        });
-
-        if (reason) {
-            // 3. GỌI API VỚI BODY { reason: reason }
-            // API: PUT /api/order/{id}/request-refund
-            const payload = { reason: reason };
-            
-            await axios.put(`/api/order/${orderId}/request-refund`, payload);
-            
-            // 4. Cập nhật trạng thái trong local
-            order.statusName = 'RETURNING';
-            
-            Swal.fire('Thành công', `Yêu cầu hoàn trả đơn hàng ${orderId} đã được gửi và đang chờ xử lý.`, 'success');
-        }
-    } catch (error) {
-        console.error("Lỗi hoàn trả đơn hàng:", error);
-        // Lấy thông báo lỗi từ Backend nếu có
-        const errorMessage = error.response?.data || 'Có lỗi xảy ra khi yêu cầu hoàn trả.';
-        Swal.fire('Lỗi', errorMessage, 'error');
-    }
-}
 
 
 
@@ -989,14 +896,15 @@ async function completeOrder(orderId) {
     if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
     try {
         await axios.put(`/api/order/${orderId}/complete`);
-        const order = orders.value.find((o) => o.id === orderId);
-        if (order) order.statusName = "COMPLETED";
+        // Gọi loadOrders() để load lại danh sách và cập nhật UI
+        await loadOrders();
         alert("Đơn hàng đã hoàn tất.");
     } catch (err) {
         console.error(err);
         alert("Không thể cập nhật trạng thái!");
     }
 }
+
 
 function openReviewModal(orderDetailId) {
     reviewForm.value = { star: 0, description: "", orderDetailId, images: [] };

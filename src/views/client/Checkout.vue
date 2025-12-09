@@ -136,10 +136,7 @@
             VNĐ</strong
           >
         </div>
-        <div class="d-flex justify-content-between mb-2">
-          <span>Khối lượng</span>
-          <strong>{{ (Number(totalWeight) / 1000 || 0).toLocaleString("vi-VN") }} kg</strong>
-        </div>
+     
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <span class="fw-semibold">Mã giảm giá</span>
