@@ -30,33 +30,34 @@
               </small>
             </div>
 
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Ngày bắt đầu</label>
-              <input
-                v-model.lazy="form.started_date"
-                type="datetime-local"
-                class="form-control"
-                :class="{ 'is-invalid': v$.started_date.$error }"
-                @blur="v$.started_date.$touch()"
-              />
-              <small class="text-danger" v-if="v$.started_date.$error">
-                {{ v$.started_date.$errors[0].$message }}
-              </small>
-            </div>
+<div class="col-md-3 mb-3">
+  <label class="form-label">Ngày bắt đầu</label>
+  <input
+    v-model="form.started_date"
+    type="datetime-local"
+    class="form-control"
+    :class="{ 'is-invalid': v$.started_date.$error }"
+    @blur="v$.started_date.$touch()"
+  />
+  <small class="text-danger" v-if="v$.started_date.$error">
+    {{ v$.started_date.$errors[0].$message }}
+  </small>
+</div>
 
-            <div class="col-md-3 mb-3">
-              <label class="form-label">Ngày kết thúc</label>
-              <input
-                v-model.lazy="form.ended_date"
-                type="datetime-local"
-                class="form-control"
-                :class="{ 'is-invalid': v$.ended_date.$error }"
-                @blur="v$.ended_date.$touch()"
-              />
-              <small class="text-danger" v-if="v$.ended_date.$error">
-                {{ v$.ended_date.$errors[0].$message }}
-              </small>
-            </div>
+<div class="col-md-3 mb-3">
+  <label class="form-label">Ngày kết thúc</label>
+  <input
+    v-model="form.ended_date"
+    type="datetime-local"
+    class="form-control"
+    :class="{ 'is-invalid': v$.ended_date.$error }"
+    @blur="v$.ended_date.$touch()"
+  />
+  <small class="text-danger" v-if="v$.ended_date.$error">
+    {{ v$.ended_date.$errors[0].$message }}
+  </small>
+</div>
+
           </div>
 
           <div class="form-check mb-3">
@@ -307,4 +308,5 @@ onMounted(fetchFlashSales);
 .text-danger{ font-size:0.875rem; margin-top:4px; display:block; }
 :deep(.vgt-table-wrapper){ &::-webkit-scrollbar{ width:6px; height:6px; } &::-webkit-scrollbar-track{ background:#f1f1f1; border-radius:10px; } &::-webkit-scrollbar-thumb{ background:#c1c1c1; border-radius:10px; } &::-webkit-scrollbar-thumb:hover{ background:#a1a1a1; } }
 :deep(.vgt-table thead th){ position:sticky !important; top:0 !important; background:white !important; z-index:10 !important; }
+
 </style>

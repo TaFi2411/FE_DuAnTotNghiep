@@ -124,7 +124,7 @@
 
     <!-- Empty -->
     <div v-if="!loading && filteredSkus.length === 0" class="text-center py-4">
-      <p>⚠️ Không có SKU nào trong khung giờ này.</p>
+      <p>⚠️ Không có sản phẩm nào trong khung giờ này.</p>
     </div>
   </div>
 
@@ -521,15 +521,18 @@ onUnmounted(() => clearInterval(countdownTimer));
 .product-img {
   width: 100%;
   height: 180px;
-  overflow: hidden;
-  border-radius: 10px;
-  position: relative;
+  background: #fff; /* nền sáng cho ảnh nổi */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .product-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* 👈 quan trọng */
 }
+
 .discount-badge {
   position: absolute;
   top: 8px;
