@@ -94,7 +94,8 @@ const fetchAccounts = async () => {
 
     const sorted = list.sort((a, b) => b.id - a.id);
 
-    accounts.value = sorted.filter(acc => !acc.role); // role = true là admin
+    accounts.value = sorted.filter(acc => !acc.role); 
+    console.log("List:", list);
   } catch (err) {
     console.error("❌ Lỗi tải tài khoản:", err);
     Swal.fire("Lỗi", "Không thể tải danh sách tài khoản!", "error");
@@ -102,6 +103,8 @@ const fetchAccounts = async () => {
     loading.value = false;
   }
 };
+
+
 
 
 const toggleActive = async (account) => {
@@ -125,7 +128,9 @@ const toggleActive = async (account) => {
 };
 
 
-onMounted(fetchAccounts);
+onMounted(async () => {
+  await fetchAccounts();
+});
 </script>
 
 <style scoped>

@@ -143,7 +143,11 @@ const login = async () => {
       timer: 1500
     });
 
-    window.location.href = "/";
+    if (role === "ROLE_ADMIN") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/";
+      }
 
   } catch (err) {
     const errMsg = err.response?.data || err.message || "Đăng nhập thất bại";
@@ -163,7 +167,6 @@ const login = async () => {
   }
 };
 
-// Social login
 const loginWithGoogle = () => {
   window.location.href = "http://localhost:8080/oauth2/authorization/google";
 };

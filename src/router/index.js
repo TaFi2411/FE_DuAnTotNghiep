@@ -377,7 +377,6 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  // Nếu có token thì kiểm tra hạn
   if (token && isTokenExpired(token)) {
     console.warn("⚠️ Token hết hạn — đăng xuất tự động");
     localStorage.removeItem("token");
@@ -385,20 +384,19 @@ router.beforeEach((to, from, next) => {
     return next({ name: "Login" });
   }
 
-  // Nếu route yêu cầu đăng nhập
   if (to.meta.requiresAuth) {
     if (!token) {
       console.warn("⚠️ Chưa đăng nhập — chuyển về Login");
       return next({ name: "Login" });
     }
 
-    // Kiểm tra quyền
     if (to.meta.role && to.meta.role !== role) {
       console.warn(
         `⛔ Truy cập bị chặn | Yêu cầu: ${to.meta.role} | Hiện tại: ${role}`
       );
       return next({ name: "Violate" });
     }
+    
   }
 
   next();
