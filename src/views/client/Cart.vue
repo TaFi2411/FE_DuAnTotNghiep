@@ -239,7 +239,8 @@ const loadCart = async () => {
         items.push({
           id: item.id + "-sale",
           parentId: item.id, // id gốc trên server
-          productName: item.skuName || "Sản phẩm",
+          productName: "[⚡ Flash Sale] " + (item.skuName || "Sản phẩm"),
+          flashSaleSkuId: flashSku?.id ?? null, // 🌟 Đây là ID FlashSaleSku cần truyền 🌟
           price: discountedPrice,
           flashSalePrice: discountedPrice,
           originalPrice: item.price,
@@ -383,7 +384,30 @@ const removeItem = async (item) => {
 };
 
 // --- Computed ---
-const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
+// const selectedItems = computed(() => cartItems.value.filter((i) => i.selected));
+const selectedItems = computed(() =>
+  cartItems.value
+    .filter((i) => i.selected)
+    .map((i) => ({
+      // Truyền tất cả các trường cần thiết cho Checkout và Backend
+      id: i.id, // ID dùng để nhận dạng dòng
+      parentId: i.parentId,
+      productName: i.productName,
+      image: i.image,
+      quantity: i.quantity,
+      price: i.price,
+      originalPrice: i.originalPrice,
+      skuAttributes: i.skuAttributes,
+      skuId: i.skuId,
+      
+      // 🌟 TRƯỜNG CẦN THIẾT CHO FLASH SALE/BACKEND 🌟
+      type: i.type, // 'sale' hoặc 'normal'
+      flashSaleSkuId: i.flashSaleSkuId, // ⬅️ ĐÂY LÀ TRƯỜNG BẠN CẦN
+      flashSalePrice: i.flashSalePrice,
+      saleCount: i.saleCount,
+      normalCount: i.normalCount,
+    }))
+);
 const selectedTotal = computed(() =>
   selectedItems.value.reduce(
     (sum, i) =>

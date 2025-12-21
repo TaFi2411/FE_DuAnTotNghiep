@@ -91,15 +91,20 @@
               }}
             </small>
           </div>
-
-          <button
+                <button
             class="btn-detail"
             @click="buyNow(sku)"
-            :disabled="!isOngoing"
+            :disabled="!isOngoing || (sku.quantity - (sku.purchased || 0)) <= 0"
             :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
           >
             <i class="bi bi-bag me-1"></i>
-            {{ isUpcoming ? "Chưa mở bán" : "Mua ngay" }}
+            {{
+              isUpcoming
+                ? "Chưa mở bán"
+                : (sku.quantity - (sku.purchased || 0)) <= 0
+                  ? "Hết hàng"
+                  : "Mua ngay"
+            }}
           </button>
         </div>
       </div>

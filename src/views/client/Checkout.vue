@@ -102,6 +102,7 @@
                   <strong>{{ attr.optionAttributeName }}:</strong>
                   {{ attr.valueAttributeName }}
                 </div>
+              
               </div>
 
               <div class="order-price-details mt-1">
@@ -483,11 +484,11 @@ const showSelectAddressModal = ref(false);
 
 const paymentMethods = ref([]);
 const selectedPaymentMethod = ref(null);
-const shippingName = ref(""); // Tên người nhận
-const shippingPhone = ref(""); // Số điện thoại người nhận
-const editing = ref(false); // trạng thái chỉnh sửa
-   const errorName = ref(false);  // Khai báo errorName là ref
-    const errorPhone = ref(false); // Khai báo errorPhone là ref
+const shippingName = ref(""); 
+const shippingPhone = ref(""); 
+const editing = ref(false); 
+   const errorName = ref(false);  
+    const errorPhone = ref(false); 
 // --- Helpers ---
 const fetchAccountId = () => {
   const token = localStorage.getItem("token");
@@ -537,20 +538,30 @@ const fetchPaymentMethods = async () => {
 };
 
 const fetchCartFromSessionStorage = () => {
-  const stored = JSON.parse(sessionStorage.getItem("checkoutItems") || "[]");
-  const DEFAULT_ITEM_WEIGHT = 500;
-  cartItems.value = stored.map((item) => ({
-    id: item.id,
-    skuId: item.skuId,
-    productName: item.productName || "Sản phẩm",
-    price: Number(item.price) || 0,
-    quantity: Number(item.quantity) || 1,
-    image: item.image || "/images/default-product.png",
-    skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
-    stock: item.stock || 0,
-    weight: Number(item.weight) || DEFAULT_ITEM_WEIGHT,
-  }));
-  console.log("Cart Items:", cartItems.value);  // Kiểm tra cartItems
+  const stored = JSON.parse(sessionStorage.getItem("checkoutItems") || "[]");
+  const DEFAULT_ITEM_WEIGHT = 500;
+  cartItems.value = stored.map((item) => ({
+    id: item.id,
+    skuId: item.skuId,
+    productName: item.productName || "Sản phẩm",
+    
+    // Thêm các thuộc tính Flash Sale
+    flashSaleSkuId: item.flashSaleSkuId ?? null,     
+    flashSalePrice: Number(item.flashSalePrice) || null, 
+    originalPrice: Number(item.originalPrice) || Number(item.price) || 0,
+    saleCount: Number(item.saleCount) || 0,        
+    normalCount: Number(item.normalCount) || 0,      
+    type: item.type,                              
+
+    // Các thuộc tính gốc
+    price: Number(item.price) || 0, // Giá hiển thị (có thể là giá FS hoặc giá gốc)
+    quantity: Number(item.quantity) || 1,
+    image: item.image || "/images/default-product.png",
+    skuAttributes: Array.isArray(item.skuAttributes) ? item.skuAttributes : [],
+    stock: item.stock || 0,
+    weight: Number(item.weight) || DEFAULT_ITEM_WEIGHT,
+  }));
+  console.log("Cart Items:", cartItems.value);  // Kiểm tra cartItems
 
 };
 
@@ -605,17 +616,11 @@ const applyVoucher = (v) => {
     } else if (v.type === false || v.type === 0) {
         shippingVoucher.value = v;
     } else {
-        // Xử lý trường hợp type không rõ ràng
         console.error("Voucher type không hợp lệ");
     }
-    
-    // 4. Tính toán giảm giá ngay sau khi chọn
     calculateDiscounts(); 
-
-    // 5. Đóng modal
     showVoucherModal.value = false;
 };
-// Hàm tính toán và cập nhật các ref giảm giá
 // Hàm tính toán và cập nhật các ref giảm giá
 const calculateDiscounts = () => {
     // 1. TÍNH GIẢM GIÁ SẢN PHẨM
@@ -972,6 +977,7 @@ const handlePayment = async () => {
     skuId: i.skuId,
     quantity: i.quantity,
     price: i.price,
+    flashSaleSkuId: i.flashSaleSkuId ?? null,
   })),
 };
 
@@ -1033,11 +1039,20 @@ if (selectedPaymentMethod.value === 3) { // MOMO
 
 
 
-    // Xử lý COD
-    if (selectedPaymentMethod.value === 2) {
+   if (selectedPaymentMethod.value === 2) {
       const orderRes = await axios.post("/api/order-cod", orderPayload);
       console.log(localStorage.getItem('token'));
 
+      // ✅ THÊM THÔNG BÁO THÀNH CÔNG TẠI ĐÂY
+      await Swal.fire({
+          icon: "success",
+          title: "Đặt hàng thành công!",
+          text: "Đơn hàng COD của bạn đã được tạo. Bạn sẽ được chuyển hướng đến trang Đơn hàng của tôi.",
+          showConfirmButton: false,
+          timer: 2500 // Tự động đóng sau 2.5 giây
+      });
+
+      // ✅ SAU ĐÓ MỚI XÓA DỮ LIỆU VÀ CHUYỂN HƯỚNG
       sessionStorage.removeItem("cart");
       sessionStorage.removeItem("checkoutItems");
       cartItems.value = [];
@@ -1045,17 +1060,26 @@ if (selectedPaymentMethod.value === 3) { // MOMO
       return;
     }
 
+    // ... (logic xử lý các phương thức thanh toán khác hoặc lỗi) ...
+
     Swal.fire({
       icon: "error",
       title: "Không thể khởi tạo thanh toán",
       text: "Vui lòng thử lại sau.",
     });
   } catch (err) {
-    console.error("handlePayment error", err);
+    console.error("handlePayment error", err, err.response); // Nên log cả err.response
+    let errorMessage = "Vui lòng thử lại sau.";
+    
+    // Xử lý thông báo lỗi từ Backend nếu có (ví dụ: lỗi hết hàng)
+    if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+    }
+
     Swal.fire({
       icon: "error",
       title: "Có lỗi khi thanh toán!",
-      text: "Vui lòng thử lại sau.",
+      text: errorMessage,
     });
   }
 };

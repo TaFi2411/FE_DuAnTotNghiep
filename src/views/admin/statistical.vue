@@ -246,13 +246,13 @@ const revenueChartData = computed(() => ({
 
 // 2. Dữ liệu cho Biểu đồ Tỷ lệ Trạng thái (Doughnut Chart)
 const statusRatioData = computed(() => ({
-    labels: ['Hoàn thành', 'Đang giao/Xử lý', 'Đã hủy', 'Đã hoàn tiền'],
+    labels: ['Hoàn thành', 'Đang giao/Xử lý', 'Đã hủy'],
     datasets: [{
         data: [
           rawStatusData.value['COMPLETED'] || 0,
           (rawStatusData.value['PENDING'] || 0) + (rawStatusData.value['PROCESSING'] || 0) + (rawStatusData.value['SHIPPING'] || 0) + (rawStatusData.value['DELIVERED'] || 0),
-          rawStatusData.value['CANCELLED'] || 0,
-          rawStatusData.value['REFUNDED'] || 0
+          rawStatusData.value['CANCELLED'] || 0
+       
         ],
         backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8'],
         hoverOffset: 4
@@ -288,12 +288,21 @@ let formattedStartDate = startDate.value ? new Date(startDate.value + "T00:00:00
       params: { startDate: formattedStartDate, endDate: formattedEndDate }
     });
 
-    totalRevenue.value = response.data.totalRevenue || 0;
-    totalOrders.value = response.data.totalOrders || 0;
-    totalInventory.value = response.data.totalInventory || 0;
-    totalSoldProducts.value = response.data.totalSoldProducts || 0;
+  // ⭐ CẬP NHẬT: Xử lý an toàn dữ liệu trả về ⭐
+    // Đảm bảo response.data là một đối tượng, nếu không thì dùng đối tượng rỗng {}
+    const data = response.data || {};
+
+    totalRevenue.value = data.totalRevenue || 0;
+    totalOrders.value = data.totalOrders || 0;
+    totalInventory.value = data.totalInventory || 0;
+    totalSoldProducts.value = data.totalSoldProducts || 0;
   } catch (err) {
     console.error("Lỗi khi tải thống kê doanh thu:", err);
+    // ⭐ CẬP NHẬT: Nếu tải thất bại, đặt tất cả các chỉ số về 0 để tránh hiển thị dữ liệu cũ/sai ⭐
+    totalRevenue.value = 0;
+    totalOrders.value = 0;
+    totalInventory.value = 0;
+    totalSoldProducts.value = 0;
   }
 }
 
