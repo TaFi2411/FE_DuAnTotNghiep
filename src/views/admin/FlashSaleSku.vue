@@ -33,17 +33,19 @@
             </div>
 
             <div class="col-md-3 mb-3">
-              <label class="form-label">SKU</label>
+              <label class="form-label">Biến thể sản phẩm</label>
               <select
                 v-model="skuForm.skuId"
                 class="form-select"
                 :class="{ 'is-invalid': v$.skuId.$error }"
                 @blur="v$.skuId.$touch()"
               >
-                <option value="">-- Chọn SKU --</option>
-                <option v-for="s in skus" :key="s.id" :value="s.id">
-                  {{ s.id }} - {{ s.productName }}
-                </option>
+                <option value="">-- Chọn sản phẩm --</option>
+     <option v-for="s in skus" :key="s.id" :value="s.id">
+  {{ formatSkuLabel(s) }}
+</option>
+
+
               </select>
               <small class="text-danger" v-if="v$.skuId.$error">
                 {{ v$.skuId.$errors[0].$message }}
@@ -168,10 +170,22 @@ const skuForm = reactive({
   discount: "",
   quantity: "",
 });
+function formatSkuLabel(sku) {
+  if (!sku) return "";
+
+  let attrs = "";
+  if (Array.isArray(sku.skuAttributes) && sku.skuAttributes.length) {
+    attrs = sku.skuAttributes
+      .map(a => `${a.optionAttributeName}: ${a.valueAttributeName}`)
+      .join(" | ");
+  }
+
+  return `${sku.id} - ${sku.productName}${attrs ? " | " + attrs : ""}`;
+}
 
 // --- VUELIDATE SETUP (Bỏ check discount Flash Sale) ---
 const checkQuantityAgainstStock = helpers.withMessage(
-  "Số lượng SKU không được vượt quá tồn kho",
+  "Số lượng sản phẩm flashsale không được vượt quá tồn kho",
   (value) => {
     const q = Number(value);
     const skuId = Number(skuForm.skuId);
@@ -187,11 +201,11 @@ const checkQuantityAgainstStock = helpers.withMessage(
 
 const rules = {
   flashSaleId: { required: helpers.withMessage("Vui lòng chọn Flash Sale", required) },
-  skuId: { required: helpers.withMessage("Vui lòng chọn SKU", required) },
+  skuId: { required: helpers.withMessage("Vui lòng chọn biến thể sản phẩm ", required) },
   discount: {
     required: helpers.withMessage("Vui lòng nhập giảm giá", required),
     numeric: helpers.withMessage("Phải là số", numeric),
-    between: helpers.withMessage("Giảm giá phải từ 0 - 100", between(0, 100)),
+    between: helpers.withMessage("Giảm giá phải từ 0% - 100%", between(0, 100)),
   },
   quantity: {
     required: helpers.withMessage("Vui lòng nhập số lượng", required),
@@ -207,7 +221,7 @@ const v$ = useVuelidate(rules, skuForm);
 const columns = ref([
   { label: "ID", field: "id", width: "80px" },
   { label: "Flash Sale", field: "flashSaleName" },
-  { label: "SKU", field: "skuName" },
+  { label: "Biến thể sản phẩm", field: "skuName" },
   { label: "Giảm giá (%)", field: "discount" },
   { label: "Số lượng", field: "quantity" },
   { label: "Hành động", field: "actions", width: "130px" },
@@ -244,7 +258,7 @@ async function fetchFlashSaleSku() {
       skuName: getSkuName(sku.skuId),
     }));
   } catch {
-    Swal.fire("Lỗi", "Không thể tải danh sách SKU!", "error");
+    Swal.fire("Lỗi", "Không thể tải danh sách !", "error");
   } finally {
     loading.value = false;
   }
@@ -289,7 +303,7 @@ async function createSku() {
         quantity: totalQuantity,
       });
 
-      Swal.fire("Đã cập nhật", "Đã cộng dồn số lượng cho SKU!", "success");
+      Swal.fire("Đã cập nhật", "Đã cộng dồn số lượng cho sản phẩm!", "success");
     } else {
       await axios.post("/api/flash-sale-sku", {
         flashSaleId: flashId,
@@ -297,7 +311,7 @@ async function createSku() {
         discount: newDiscountInput,
         quantity: newQuantityInput,
       });
-      Swal.fire("Thành công", "Thêm SKU mới thành công!", "success");
+      Swal.fire("Thành công", "Thêm mới thành công!", "success");
     }
 
     await fetchFlashSaleSku();
@@ -322,18 +336,18 @@ async function updateSku() {
       discount: Number(skuForm.discount),
       quantity: Number(skuForm.quantity),
     });
-    Swal.fire("Thành công", "Cập nhật SKU thành công!", "success");
+    Swal.fire("Thành công", "Cập nhật thành công!", "success");
     await fetchFlashSaleSku();
     cancelEditSku();
   } catch {
-    Swal.fire("Lỗi", "Không thể cập nhật SKU!", "error");
+    Swal.fire("Lỗi", "Không thể cập nhật!", "error");
   }
 }
 
 async function deleteSku(id) {
   const confirm = await Swal.fire({
-    title: "Xóa SKU?",
-    text: "Bạn có chắc muốn xóa SKU này?",
+    title: "Xóa biến thể sản phẩm?",
+    text: "Bạn có chắc muốn xóa biến thể sản phẩm này khỏi flashsale?",
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Xóa",
@@ -343,10 +357,10 @@ async function deleteSku(id) {
 
   try {
     await axios.delete(`/api/flash-sale-sku/${id}`);
-    Swal.fire("Đã xóa!", "SKU đã được xóa thành công.", "success");
+    Swal.fire("Đã xóa!", "Biến thể sản phẩm đã được xóa thành công.", "success");
     await fetchFlashSaleSku();
   } catch {
-    Swal.fire("Lỗi", "Không thể xóa SKU!", "error");
+    Swal.fire("Lỗi", "Không thể xóa biến thể sản phẩm!", "error");
   }
 }
 

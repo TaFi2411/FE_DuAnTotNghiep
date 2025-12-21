@@ -39,19 +39,36 @@
 
     <!-- SKU List -->
     <div v-else class="product-slider">
-      <div v-for="sku in filteredSkus" :key="sku._uid" class="product-card">
+      <div v-for="sku in filteredSkus" :key="sku._uid" class="product-card" @click="goToDetail(sku)">
         <div class="product-img">
           <img
-            :src="getImageUrl(sku.images?.[0]?.path || sku.image)"
-            @error="setDefaultImage"
-            alt="SKU image"
-          />
+  :src="getImageUrl(
+    typeof sku.images?.[0] === 'string'
+      ? sku.images[0]
+      : sku.images?.[0]?.path || sku.image
+  )"
+  @error="setDefaultImage"
+  alt="SKU image"
+/>
+
           <div class="discount-badge" v-if="sku.discount > 0">-{{ sku.discount }}%</div>
         </div>
 
         <div class="product-info">
           <h6 class="product-name">{{ sku.skuName || sku.name || sku.skuName }}</h6>
-          
+          <!-- Thuộc tính SKU -->
+<div
+  v-if="Array.isArray(sku.skuAttributes) && sku.skuAttributes.length"
+  class="sku-attributes"
+>
+  <span v-for="attr in sku.skuAttributes" :key="attr.id" class="sku-attr-item">
+    <strong>{{ attr.optionAttributeName }}:</strong> {{ attr.valueAttributeName }}
+  </span>
+</div>
+
+
+
+
           <div class="product-prices">
             <span class="new-price">
               {{
@@ -65,56 +82,51 @@
             }}</span>
           </div>
 
-          <!-- Stock bar: hiển thị Còn X/Y -->
-          <div class="stock-bar mt-1">
-            <div class="progress">
-              <div
-                class="progress-bar bg-warning"
-                role="progressbar"
-                :style="{
-                  width:
-                    sku.quantity && sku.quantity > 0
-                      ? Math.max(
-                          0,
-                          Math.min(
-                            100,
-                            ((sku.quantity - (sku.purchased || 0)) / sku.quantity) * 100
-                          )
-                        ) + '%'
-                      : '0%',
-                }"
-              ></div>
-            </div>
-            <small class="text-white">
-              Còn {{ Math.max(0, sku.quantity - (sku.purchased || 0)) }}/{{
-                sku.quantity ?? 0
-              }}
-            </small>
-          </div>
-                <button
-            class="btn-detail"
-            @click="buyNow(sku)"
-            :disabled="!isOngoing || (sku.quantity - (sku.purchased || 0)) <= 0"
-            :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
-          >
-            <i class="bi bi-bag me-1"></i>
-            {{
-              isUpcoming
-                ? "Chưa mở bán"
-                : (sku.quantity - (sku.purchased || 0)) <= 0
-                  ? "Hết hàng"
-                  : "Mua ngay"
-            }}
-          </button>
+        <!-- Stock bar: CHỈ HIỆN KHI ĐANG DIỄN RA -->
+<div v-if="isOngoing" class="stock-bar mt-1">
+  <div class="progress">
+    <div
+      class="progress-bar bg-warning"
+      role="progressbar"
+      :style="{
+        width:
+          sku.quantity && sku.quantity > 0
+            ? Math.max(
+                0,
+                Math.min(
+                  100,
+                  ((sku.quantity - (sku.purchased || 0)) / sku.quantity) * 100
+                )
+              ) + '%'
+            : '0%',
+      }"
+    ></div>
+  </div>
+  <small class="text-white">
+    Còn {{ Math.max(0, sku.quantity - (sku.purchased || 0)) }}/{{ sku.quantity ?? 0 }}
+  </small>
+</div>
+
+<button
+  class="btn-detail"
+  @click.stop="buyNow(sku)"
+  :disabled="!isOngoing"
+  :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
+>
+  <i class="bi bi-bag me-1"></i>
+  {{ isUpcoming ? "Chưa mở bán" : "Thêm vào giỏ" }}
+</button>
+
         </div>
       </div>
     </div>
 
     <!-- Empty -->
     <div v-if="!loading && filteredSkus.length === 0" class="text-center py-4">
-      <p>⚠️ Không có SKU nào trong khung giờ này.</p>
+      <p>⚠️ Không có sản phẩm nào trong khung giờ này.</p>
     </div>
   </div>
+
 </template>
 
 <script setup>
@@ -192,6 +204,10 @@ async function fetchAll() {
       axios.get("/api/flash-sale").catch(() => ({ data: [] })),
       axios.get("/api/flash-sale-sku").catch(() => ({ data: [] })),
     ]);
+
+    console.log("FLASH SALE JSON:", fsRes?.data);
+    console.log("FLASH SALE SKU JSON:", fssRes?.data);
+
     const fsData = fsRes?.data?.data ?? fsRes?.data ?? [];
     const fssData = fssRes?.data?.data ?? fssRes?.data ?? [];
 
@@ -204,17 +220,27 @@ async function fetchAll() {
       }));
 
     flashSaleSkus.value = (Array.isArray(fssData) ? fssData : []).map((s) => ({
-      ...s,
-      flashSaleId: s.flashSaleId ?? s.flash_sale_id ?? s.flashSale?.id ?? s.flash_sale,
-      skuId: s.skuId ?? s.sku_id ?? s.sku?.id ?? s.skuId,
-      skuName: s.skuName ?? s.sku_name ?? s.sku?.name ?? s.skuName,
-      images: s.images ?? s.imageList ?? s.sku?.images ?? s.images ?? [],
-      price: s.price ?? s.sku?.price ?? 0,
-      discount: s.discount ?? s.flashSale?.discount ?? s.discount ?? 0,
-      quantity: s.quantity ?? s.qty ?? s.stock ?? 0,
-      purchased: s.purchased ?? s.sold ?? 0,
-      _uid: `${s.id || s.skuId || Math.random()}`,
-    }));
+  flashSaleId: s.flashSaleId,
+  flashSaleSkuId: s.id,
+  skuId: s.skuId,
+    productId: s.productId || s.sku?.product?.id, 
+  skuName: s.skuName,
+
+  // 🔥CÁCH ƯU TIÊN GIỮ DẠNG OBJECT, KHÔNG map(img => img.path)
+  images: s.images ?? s.imageList ?? s.sku?.images ?? [],
+
+  price: s.price,
+  discount: s.discount,
+  quantity: s.quantity,
+  purchased: s.purchased ?? 0,
+
+  // thuộc tính
+  skuAttributes: s.skuAttributes ?? s.attributes ?? s.sku?.skuAttributes ?? [],
+
+  _uid: `${s.id || s.skuId}`,
+}));
+
+
 
     buildTimeSlots();
 
@@ -298,9 +324,11 @@ const filteredSkus = computed(() => {
       quantity: s.quantity ?? 0,
       purchased: s.purchased ?? 0,
       discount: s.discount ?? currentSale.value.discount ?? 0,
+      skuAttributes: s.skuAttributes || s.attributes || s.sku?.skuAttributes || [], // 👈 thêm dòng này
       _uid: s._uid ?? `${s.id || s.skuId || Math.random()}`,
     }));
 });
+
 
 function startCountdown() {
   clearInterval(countdownTimer);
@@ -371,6 +399,22 @@ const buyNow = async (sku) => {
     Swal.fire("Lỗi", "Không thể thêm vào giỏ hàng", "error");
   }
 };
+const goToDetail = (sku) => {
+  console.log("PRODUCT ID", sku.productId);
+  router.push({
+    name: "ProductDetail",
+    params: { id: sku.productId },
+    query: {
+      flashSku: sku.skuId,
+      flashDiscount: sku.discount,
+      flashPrice: (
+        sku.price * (1 - sku.discount / 100)
+      ).toFixed(0)
+    }
+  });
+};
+
+
 
 onMounted(() => fetchAll());
 onUnmounted(() => clearInterval(countdownTimer));
@@ -476,15 +520,18 @@ onUnmounted(() => clearInterval(countdownTimer));
 .product-img {
   width: 100%;
   height: 180px;
-  overflow: hidden;
-  border-radius: 10px;
-  position: relative;
+  background: #fff; /* nền sáng cho ảnh nổi */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .product-img img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* 👈 quan trọng */
 }
+
 .discount-badge {
   position: absolute;
   top: 8px;
@@ -510,6 +557,27 @@ onUnmounted(() => clearInterval(countdownTimer));
   color: #fff;
   margin-bottom: 2px;
 }
+
+.sku-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.sku-attr-item {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #f1f1f1;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: 0.2s;
+}
+
+
+
 .product-prices {
   display: flex;
   justify-content: center;
