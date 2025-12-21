@@ -4,9 +4,7 @@
       <aside class="col-lg-3 mb-4">
         <div class="profile-card p-4 rounded shadow-sm bg-white">
           <div class="d-flex align-items-center gap-3">
-
             <span class="fs-4"> <img :src="previewAvatar || defaultAvatar" class="avatar" /></span>
-
             <div>
               <div class="fw-bold">{{ userName }}</div>
               <div class="text-muted small">{{ userEmail }}</div>
@@ -33,8 +31,12 @@
 
       <main class="col-lg-9">
         <div class="main-card p-4 rounded shadow-sm bg-white">
+
           <div v-if="currentMenu === 'Thông tin cá nhân'">
             <Profile />
+          </div>
+          <div v-else-if="currentMenu === 'Địa chỉ của tôi'">
+            <MyAddress />
           </div>
 
           <div v-else-if="currentMenu === 'Đơn hàng của tôi'">
@@ -63,6 +65,7 @@
 
             <div v-else class="order-list">
               <div v-for="order in filteredOrders" :key="order.id" class="order-card mb-4 rounded">
+                
                 <div class="order-top d-flex align-items-center justify-content-between p-3"
                   @click="toggleOrder(order.id)">
                   <div class="d-flex align-items-center gap-3">
@@ -89,197 +92,194 @@
                 </div>
 
                 <transition name="slide-fade">
-                  <div v-if="expandedOrder === order.id" class="order-body p-3 border-top">
-                    <div class="row">
-                      <div class="col-md-8">
-                        <div v-for="item in order.items" :key="item.id || item.productName" class="d-flex mb-3">
+                  <div v-if="expandedOrder === order.id" class="order-body p-4 border-top">
+                    <div class="row g-4">
 
-                          
-                          <img v-if="item.productImage" :src="item.productImage" class="product-img me-3" />
-                          
-                          <div class="flex-grow-1">
-                            <div class="fw-bold">{{ item.productName }}</div>
+                      <div class="col-lg-5 border-end">
+                        <h5 class="fw-bold mb-3 text-secondary">Thông tin giao nhận</h5>
 
-                            <div v-if="item.skuAttributes && item.skuAttributes.length" class="small text-muted">
-                              <div v-for="attr in item.skuAttributes" :key="attr.id">
-                                <strong>{{ attr.optionAttributeName }}:</strong>
-                                {{ attr.valueAttributeName }}
-                              </div>
-                            </div>
-
-                            <div class="small text-dark">
-                              Số lượng: {{ item.quantity }}
-                            </div>
-                            <div v-if="item.attributes">
-                              <div v-for="(value, key) in item.attributes" :key="key" class="item-attribute">
-                                <strong>{{ key }}:</strong> {{ value }}
-                              </div>
-                            </div>
-
+                        <div class="mb-4 p-3 bg-light rounded">
+                          <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-person-circle fs-5 me-2 text-primary"></i>
+                            <p class="mb-0 fw-semibold">{{ order.shippingName }}</p>
                           </div>
-
+                          <div class="d-flex align-items-start mb-2">
+                            <i class="bi bi-geo-alt-fill fs-5 me-2 text-primary"></i>
+                            <p class="mb-0">{{ order.shipping_address }}</p>
+                          </div>
+                          <div class="d-flex align-items-center">
+                            <i class="bi bi-phone-fill fs-5 me-2 text-primary"></i>
+                            <p class="mb-0">{{ order.shippingPhone }}</p>
+                          </div>
                         </div>
 
-                        <div class="mt-3 p-3 border rounded-3 bg-light">
+                        <h5 class="fw-bold mb-3 text-secondary mt-4">Thông tin thanh toán</h5>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span class="text-muted">Phương thức:</span>
+                          <span class="fw-medium">{{ order.paymentMethodName }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                          <span class="text-muted">Trạng thái:</span>
+                          <span
+                            :class="['badge', 'fw-medium', order.paymentStatus ? 'bg-success' : 'bg-secondary']">
+                            {{ order.paymentStatus ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                          </span>
+                        </div>
+                      </div>
 
-                          <h6 class="fw-bold mb-3 d-flex align-items-center">
-                            <i class="bi bi-geo-alt-fill text-primary me-2"></i> Thông tin giao hàng
-                          </h6>
+                      <div class="col-lg-7">
 
-                          <div class="row g-3">
-
-                            <div class="col-6">
-                              <div class="small text-muted">Địa chỉ</div>
-                              <div class="fw-semibold">{{ order.shipping_address }}</div>
+                        <h5 class="fw-bold mb-3 text-secondary">Sản phẩm đã đặt</h5>
+                        <div class="table-responsive">
+                          <table class="table table-striped table-sm align-middle mb-4">
+    <thead class="table-light">
+        <tr>
+            <th style="width: 50%">Sản phẩm</th>
+            <th class="text-end">Số lượng</th>
+            <th class="text-end">Thành tiền</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr v-for="item in order.items" :key="item.productName">
+            <td>
+                <div class="d-flex align-items-start product-details-wrapper">
+                    <img v-if="item.productImage" :src="item.productImage" alt="Ảnh sản phẩm"
+                        class="me-3 rounded" style="width: 60px; height: 60px; object-fit: cover" />
+                    <div class="d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="fw-medium">{{ item.productName }}</div>
+                            <div v-if="item.flashSaleSkuId === null" class=" fw-semibold">
+                                Giá gốc: {{ formatCurrency(item.price) }}
                             </div>
-
-                            <div class="col-3">
-                              <div class="small text-muted">SĐT</div>
-                              <div>{{ order.shippingPhone }}</div>
+                            <div v-if="item.flashSaleSkuId != null" class="text-danger fw-semibold">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> Sản phẩm Flash Sale
+                                <div class="fw-bold"> Giá Sale: {{ formatCurrency(item.price) }}</div>
                             </div>
-
-                            <div class="col-3">
-                              <div class="small text-muted">Người nhận</div>
-                              <div>{{ order.shippingName }}</div>
-                            </div>
-
-                            <div class="col-6">
-                              <div class="small text-muted">Phương thức thanh toán</div>
-                              <div class="fw-semibold">{{ order.paymentMethodName }}</div>
-                            </div>
-
-                            <div class="col-6">
-                              <div class="small text-muted">Trạng thái thanh toán</div>
-                              <div>
-                                <span
-                                  :class="order.payment_status ? 'text-success fw-semibold' : 'text-danger fw-semibold'">
-                                  {{ order.payment_status ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                            <div class="text-muted small mt-1">
+                                <span v-for="(value, key) in item.attributes" :key="key" class="me-2">
+                                    {{ key }}: {{ value }}<br></br>
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td class="text-end fw-medium">{{ item.quantity }}</td>
+            <td class="text-end">{{ formatCurrency(item.price * item.quantity) }}</td>
+        </tr>
+    </tbody>
+</table>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                          <div class="col-12 p-0">
+                            <div class="pt-2">
+
+                              <div class="d-flex justify-content-between mb-1 small text-muted border-top pt-2">
+                                <span>Tổng tiền sản phẩm:</span>
+                                <span class="fw-normal">{{ formatCurrency(getTotalProductPrice(order)) }}</span>
                               </div>
+
+                              <div class="d-flex justify-content-between mb-1 small text-muted">
+                                <span>Phí vận chuyển:</span>
+                                <span class="fw-normal">{{ formatCurrency(order.feeship) }}</span>
+                              </div>
+
+                              <div v-if="order.discountProduct > 0"
+                                class="d-flex justify-content-between mb-1 small text-success">
+                                <span>Giảm giá Sản phẩm:</span>
+                                <span class="fw-semibold">- {{ formatCurrency(order.discountProduct) }}</span>
+                              </div>
+
+                              <div v-if="order.discountShipping > 0"
+                                class="d-flex justify-content-between mb-1 small text-success">
+                                <span>Giảm giá Vận chuyển:</span>
+                                <span class="fw-semibold">- {{ formatCurrency(order.discountShipping) }}</span>
+                              </div>
+
+
+                              <div class="voucher-details small bg-light p-2 rounded text-start mt-3"
+                                v-if="order.productVoucherTitle || order.shippingVoucherTitle">
+                                <div class="fw-bold mb-1 text-dark"><i class="bi bi-tag-fill me-1"></i> Voucher đã áp
+                                  dụng:</div>
+                                <ul class="list-unstyled mb-0 ms-2">
+                                  <li v-if="order.productVoucherTitle">
+                                    <span class="text-success">•</span> Sản phẩm: {{ order.productVoucherTitle }}
+                                  </li>
+                                  <li v-if="order.shippingVoucherTitle">
+                                    <span class="text-success">•</span> Vận chuyển: {{ order.shippingVoucherTitle }}
+                                  </li>
+                                </ul>
+                              </div>
+
+
+                              <hr class="my-2 border-2">
+
+                              <div class="d-flex justify-content-between align-items-center pt-1">
+                                <span class="fw-bold fs-5">Tổng Thanh Toán:</span>
+                                <span class="text-danger fw-bolder fs-3">{{ formatCurrency(order.total) }}</span>
+                              </div>
+
                             </div>
-
                           </div>
-
-                          <!-- Trạng thái hủy đơn -->
-                          <div v-if="order.statusName === 'CANCELLED' && order.note"
-                            class="alert alert-danger p-2 mt-3 small">
-                            <i class="bi bi-x-circle-fill me-2"></i>
-                            <strong>Lý do hủy:</strong> {{ order.note }}
-                          </div>
-
-                          <!-- Yêu cầu hoàn trả -->
-                          <div v-if="order.statusName === 'REFUND_REQUESTED' && order.refundReason"
-                            class="alert alert-warning p-2 mt-3 small">
-                            <i class="bi bi-arrow-return-left me-2"></i>
-                            <strong>Lý do yêu cầu hoàn trả:</strong> {{ order.refundReason }}
-                          </div>
-
-                          <!-- Ghi chú admin -->
-                          <div
-                            v-if="(order.statusName === 'REFUND_PROCESSING' || order.statusName === 'REFUNDED' || order.statusName === 'REFUND_REJECTED') && order.adminRefundNote"
-                            class="alert p-2 mt-3 small"
-                            :class="order.statusName === 'REFUND_REJECTED' ? 'alert-danger' : 'alert-info'">
-                            <i class="bi bi-file-earmark-text me-2"></i>
-                            <strong>Ghi chú của Admin:</strong> {{ order.adminRefundNote }}
-                          </div>
-
                         </div>
-
-
                       </div>
-                      <div class="col-md-4 d-flex flex-column justify-content-between">
+                    </div>
+                    
+                    <div v-if="order.statusName === 'CANCELLED' && order.note"
+                      class="alert alert-danger p-2 mt-3 small">
+                      <i class="bi bi-x-circle-fill me-2"></i>
+                      <strong>Lý do hủy:</strong> {{ order.note }}
+                    </div>
 
-                        <div class="summary-box">
-                          <table class="table table-borderless table-sm text-end mb-3 small">
-                            <tbody>
-                              <tr class="fw-normal">
-                                <td class="text-start text-muted">Tổng tiền sản phẩm:</td>
-                                <td class="text-end">{{ formatCurrency(getTotalProductPrice(order)) }}</td>
-                              </tr>
-                              <tr class="fw-normal">
-                                <td class="text-start text-muted">Phí vận chuyển :</td>
-                                <td class="text-end">{{ formatCurrency(order.feeship) }}</td>
-                              </tr>
+                    <div v-if="order.statusName === 'REFUND_REQUESTED' && order.refundReason"
+                      class="alert alert-warning p-2 mt-3 small">
+                      <i class="bi bi-arrow-return-left me-2"></i>
+                      <strong>Lý do yêu cầu hoàn trả:</strong> {{ order.refundReason }}
+                    </div>
+                    
+                    <div
+                      v-if="(order.statusName === 'REFUND_PROCESSING' || order.statusName === 'REFUNDED' || order.statusName === 'REFUND_REJECTED') && order.adminRefundNote"
+                      class="alert p-2 mt-3 small"
+                      :class="order.statusName === 'REFUND_REJECTED' ? 'alert-danger' : 'alert-info'">
+                      <i class="bi bi-file-earmark-text me-2"></i>
+                      <strong>Ghi chú của Admin:</strong> {{ order.adminRefundNote }}
+                    </div>
 
-                              <tr v-if="order.discountProduct > 0" class="text-success fw-semibold ">
-                                <td class="text-start">Giảm giá Sản phẩm:</td>
-                                <td class="text-end">- {{ formatCurrency(order.discountProduct) }}</td>
-                              </tr>
+                    <div class="text-end mt-4 pt-3 border-top">
 
-                              <tr v-if="order.discountShipping > 0" class="text-success fw-semibold">
-                                <td class="text-start">Giảm giá Vận chuyển:</td>
-                                <td class="text-end">- {{ formatCurrency(order.discountShipping) }}</td>
-                              </tr>
+                      <div class="d-flex justify-content-end gap-2">
+                        <button v-if="order.statusName === 'PENDING'" class="btn btn-outline-secondary text-nowrap"
+                          @click.stop="openEditShippingModal(order)">
+                          Đổi thông tin nhận hàng
+                        </button>
 
-                              <tr class="fw-bold  ">
-                                <td class="text-start fs-5 text-nowrap">Tổng Thanh Toán:</td>
-                                <td class="text-danger fs-5 text-nowrap">{{ formatCurrency(order.total) }}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          <div class="voucher-details small bg-light p-2 rounded text-start mt-3"
-                            v-if="order.productVoucherTitle || order.shippingVoucherTitle">
-                            <div class="fw-bold mb-1 text-dark"><i class="bi bi-tag-fill me-1"></i> Voucher đã áp dụng:
-                            </div>
-                            <ul class="list-unstyled mb-0 ms-2">
-                              <li>
-                                <span class="text-success">•</span> Sản phẩm: {{ order.productVoucherTitle || 'Không' }}
-                              </li>
-                              <li>
-                                <span class="text-success">•</span> Vận chuyển: {{ order.shippingVoucherTitle || 'Không'
-                                }}
-                              </li>
-                            </ul>
-                          </div>
-
-                        </div>
-
-                        <div class="text-end mt-3">
-
-                          <div class="d-flex gap-2">
-                            <button v-if="order.statusName === 'PENDING'" class="btn btn-outline-secondary text-nowrap"
-                              @click.stop="openEditShippingModal(order)">
-                              Đổi thông tin nhận hàng
-                            </button>
-
-                            <button v-if="order.statusName === 'PENDING'" class="btn btn-cancel text-nowrap"
-                              @click.stop="cancelOrder(order.id)">
-                              × Hủy đơn
-                            </button>
-                          </div>
-
-
-
-
-                          <button v-if="order.statusName === 'DELIVERED'" class="btn btn-success me-2"
-                            @click.stop="completeOrder(order.id)">
-                            Đã nhận hàng
-                          </button>
-
-                          <button v-if="order.statusName === 'COMPLETED'" class="btn btn-dark"
-                            @click.stop="openReviewModal(order.items[0].id)">
-                            Đánh giá
-                          </button>
-                          <button v-if="order.statusName === 'COMPLETED' && order.statusName !== 'CANCELLED'"
-                            class="btn btn-outline-danger" @click.stop="requestReturn(order.id)">
-                            Yêu cầu Hoàn trả
-                          </button>
-                        </div>
-                        
+                        <button v-if="order.statusName === 'PENDING'" class="btn btn-cancel text-nowrap"
+                          @click.stop="cancelOrder(order.id)">
+                          × Hủy đơn
+                        </button>
                       </div>
+
+                      <button v-if="order.statusName === 'DELIVERED'" class="btn btn-success me-2 mt-2"
+                        @click.stop="completeOrder(order.id)">
+                        Đã nhận hàng
+                      </button>
+
+                      <button v-if="order.statusName === 'COMPLETED'" class="btn btn-dark mt-2 me-2"
+                        @click.stop="openReviewModal(order.items[0].id)">
+                        Đánh giá
+                      </button>
+
+
+              
+
                     </div>
                   </div>
                 </transition>
               </div>
             </div>
           </div>
-
-          <div v-else-if="currentMenu === 'Địa chỉ của tôi'">
-            <MyAddress />
           </div>
-
-        </div>
       </main>
     </div>
 
@@ -486,7 +486,6 @@ const filters = [
   { label: "Đang giao", value: "SHIPPING" },
   { label: "Đã giao", value: "DELIVERED" },
   { label: "Hoàn thành", value: "COMPLETED" },
-
   { label: "Đã hủy", value: "CANCELLED" },
 ];
 
@@ -529,6 +528,7 @@ function getStatusText(status) {
       return "Hoàn thành";
     case "CANCELLED":
       return "Đã hủy";
+   
     case "REFUND_REQUESTED":
 
     default:
@@ -746,6 +746,10 @@ function decodeJwtToken(token) {
   }
 }
 
+
+
+
+
 async function loadUserProfile() {
   try {
     const token = localStorage.getItem("token");
@@ -764,6 +768,30 @@ async function loadUserProfile() {
     console.error("Không thể tải thông tin người dùng:", err);
   }
 }
+
+const pendingCancelItem = computed(() => {
+    // 1. Tìm đơn hàng hiện tại đang được mở (nếu bạn đang hiển thị danh sách)
+    const currentOrder = orders.value.find(o => o.id === expandedOrder.value); 
+    
+    if (currentOrder && currentOrder.pendingCancelOrderDetailId) {
+        const pendingId = currentOrder.pendingCancelOrderDetailId;
+    
+        const item = currentOrder.items.find(item => item.id === pendingId);
+        
+        // 3. Xử lý trường hợp không tìm thấy (đề phòng dữ liệu không đồng bộ)
+        if (!item) {
+             console.warn(`Không tìm thấy chi tiết đơn hàng ID ${pendingId} trong order #${currentOrder.id}.`);
+             return null;
+        }
+        
+        return {
+            ...item,
+            // Thêm trường productName để tiện sử dụng trong template
+            productName: item.productName || 'Sản phẩm không rõ tên' 
+        };
+    }
+    return null;
+});
 
 async function loadOrders() {
   loading.value = true;
@@ -793,29 +821,80 @@ async function loadOrders() {
   console.log("Danh sách đơn hàng đã tải:", orders.value);
 }
 
-async function cancelOrder(orderId) {
-  if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) return;
-  try {
-    await axios.put(`/api/order/${orderId}/cancel`, { status: "CANCELLED" });
-    const order = orders.value.find((o) => o.id === orderId);
-    if (order) order.statusName = "CANCELLED";
-    alert("Đơn hàng đã được hủy thành công!");
-  } catch (err) {
-    console.error(err);
-    alert("Không thể hủy đơn hàng!");
+
+// --- 1. ĐỊNH NGHĨA TOAST (SỬA LỖI ReferenceError: Toast is not defined) ---
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
   }
+});
+async function cancelOrder(orderId) {
+    const result = await Swal.fire({
+        title: 'Bạn muốn hủy đơn hàng?',
+        text: "Lưu ý: Hành động này không thể hoàn tác!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33', 
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xác nhận hủy',
+        cancelButtonText: 'Quay lại',
+        reverseButtons: true 
+    });
+    
+    if (!result.isConfirmed) return;
+
+    try {
+        await axios.put(`/api/order/${orderId}/cancel`, { 
+            status: "CANCELLED" 
+        });
+        const order = orders.value.find((o) => o.id === orderId);
+        if (order) order.statusName = "CANCELLED";
+        Toast.fire({
+            icon: 'success',
+            title: 'Đã hủy đơn hàng thành công!'
+        });
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: err.response?.data?.message || 'Không thể hủy đơn hàng vào lúc này.',
+            confirmButtonColor: '#0d6efd'
+        });
+    }
 }
 
 async function completeOrder(orderId) {
-  if (!confirm("Xác nhận bạn đã nhận được hàng?")) return;
+  const result = await Swal.fire({
+    title: 'Đã nhận được hàng?',
+    text: "Xác nhận bạn đã nhận đủ hàng và hài lòng với sản phẩm!",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#198754',
+    confirmButtonText: 'Đã nhận hàng',
+    cancelButtonText: 'Đóng',
+  });
+
+  if (!result.isConfirmed) return;
+
   try {
     await axios.put(`/api/order/${orderId}/complete`);
-    // Gọi loadOrders() để load lại danh sách và cập nhật UI
-    await loadOrders();
-    alert("Đơn hàng đã hoàn tất.");
+    await loadOrders(); // Load lại danh sách
+    
+    Toast.fire({
+        icon: 'success',
+        title: 'Đơn hàng đã hoàn tất. Cảm ơn bạn!'
+    });
   } catch (err) {
     console.error(err);
-    alert("Không thể cập nhật trạng thái!");
+    Swal.fire("Lỗi", "Không thể cập nhật trạng thái đơn hàng!", "error");
   }
 }
 
@@ -898,7 +977,7 @@ li.active a {
 }
 
 .item-attribute {
-  margin-bottom: 4px;
+
   font-size: 0.9rem;
   color: #333;
 }
