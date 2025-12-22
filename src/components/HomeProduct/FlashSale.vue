@@ -39,17 +39,25 @@
 
     <!-- SKU List -->
     <div v-else class="product-slider">
-      <div v-for="sku in filteredSkus" :key="sku._uid" class="product-card" @click="goToDetail(sku)">
+      <div
+        v-for="sku in filteredSkus"
+        :key="sku._uid"
+        class="product-card"
+        :class="{ disabled: isUpcoming }"
+        @click="!isUpcoming && goToDetail(sku)"
+      >
         <div class="product-img">
           <img
-  :src="getImageUrl(
-    typeof sku.images?.[0] === 'string'
-      ? sku.images[0]
-      : sku.images?.[0]?.path || sku.image
-  )"
-  @error="setDefaultImage"
-  alt="SKU image"
-/>
+            :src="
+              getImageUrl(
+                typeof sku.images?.[0] === 'string'
+                  ? sku.images[0]
+                  : sku.images?.[0]?.path || sku.image
+              )
+            "
+            @error="setDefaultImage"
+            alt="SKU image"
+          />
 
           <div class="discount-badge" v-if="sku.discount > 0">-{{ sku.discount }}%</div>
         </div>
@@ -57,17 +65,15 @@
         <div class="product-info">
           <h6 class="product-name">{{ sku.skuName || sku.name || sku.skuName }}</h6>
           <!-- Thuộc tính SKU -->
-<div
-  v-if="Array.isArray(sku.skuAttributes) && sku.skuAttributes.length"
-  class="sku-attributes"
->
-  <span v-for="attr in sku.skuAttributes" :key="attr.id" class="sku-attr-item">
-    <strong>{{ attr.optionAttributeName }}:</strong> {{ attr.valueAttributeName }}
-  </span>
-</div>
-
-
-
+          <div
+            v-if="Array.isArray(sku.skuAttributes) && sku.skuAttributes.length"
+            class="sku-attributes"
+          >
+            <span v-for="attr in sku.skuAttributes" :key="attr.id" class="sku-attr-item">
+              <strong>{{ attr.optionAttributeName }}:</strong>
+              {{ attr.valueAttributeName }}
+            </span>
+          </div>
 
           <div class="product-prices">
             <span class="new-price">
@@ -82,41 +88,42 @@
             }}</span>
           </div>
 
-        <!-- Stock bar: CHỈ HIỆN KHI ĐANG DIỄN RA -->
-<div v-if="isOngoing" class="stock-bar mt-1">
-  <div class="progress">
-    <div
-      class="progress-bar bg-warning"
-      role="progressbar"
-      :style="{
-        width:
-          sku.quantity && sku.quantity > 0
-            ? Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((sku.quantity - (sku.purchased || 0)) / sku.quantity) * 100
-                )
-              ) + '%'
-            : '0%',
-      }"
-    ></div>
-  </div>
-  <small class="text-white">
-    Còn {{ Math.max(0, sku.quantity - (sku.purchased || 0)) }}/{{ sku.quantity ?? 0 }}
-  </small>
-</div>
+          <!-- Stock bar: CHỈ HIỆN KHI ĐANG DIỄN RA -->
+          <div v-if="isOngoing" class="stock-bar mt-1">
+            <div class="progress">
+              <div
+                class="progress-bar bg-warning"
+                role="progressbar"
+                :style="{
+                  width:
+                    sku.quantity && sku.quantity > 0
+                      ? Math.max(
+                          0,
+                          Math.min(
+                            100,
+                            ((sku.quantity - (sku.purchased || 0)) / sku.quantity) * 100
+                          )
+                        ) + '%'
+                      : '0%',
+                }"
+              ></div>
+            </div>
+            <small class="text-white">
+              Còn {{ Math.max(0, sku.quantity - (sku.purchased || 0)) }}/{{
+                sku.quantity ?? 0
+              }}
+            </small>
+          </div>
 
-<button
-  class="btn-detail"
-  @click.stop="buyNow(sku)"
-  :disabled="!isOngoing"
-  :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
->
-  <i class="bi bi-bag me-1"></i>
-  {{ isUpcoming ? "Chưa mở bán" : "Thêm vào giỏ" }}
-</button>
-
+          <button
+            class="btn-detail"
+            @click.stop="buyNow(sku)"
+            :disabled="!isOngoing"
+            :class="{ upcoming: isUpcoming, ongoing: isOngoing }"
+          >
+            <i class="bi bi-bag me-1"></i>
+            {{ isUpcoming ? "Chưa mở bán" : "Thêm vào giỏ" }}
+          </button>
         </div>
       </div>
     </div>
@@ -126,7 +133,6 @@
       <p>⚠️ Không có sản phẩm nào trong khung giờ này.</p>
     </div>
   </div>
-
 </template>
 
 <script setup>
@@ -220,27 +226,25 @@ async function fetchAll() {
       }));
 
     flashSaleSkus.value = (Array.isArray(fssData) ? fssData : []).map((s) => ({
-  flashSaleId: s.flashSaleId,
-  flashSaleSkuId: s.id,
-  skuId: s.skuId,
-    productId: s.productId || s.sku?.product?.id, 
-  skuName: s.skuName,
+      flashSaleId: s.flashSaleId,
+      flashSaleSkuId: s.id,
+      skuId: s.skuId,
+      productId: s.productId || s.sku?.product?.id,
+      skuName: s.skuName,
 
-  // 🔥CÁCH ƯU TIÊN GIỮ DẠNG OBJECT, KHÔNG map(img => img.path)
-  images: s.images ?? s.imageList ?? s.sku?.images ?? [],
+      // 🔥CÁCH ƯU TIÊN GIỮ DẠNG OBJECT, KHÔNG map(img => img.path)
+      images: s.images ?? s.imageList ?? s.sku?.images ?? [],
 
-  price: s.price,
-  discount: s.discount,
-  quantity: s.quantity,
-  purchased: s.purchased ?? 0,
+      price: s.price,
+      discount: s.discount,
+      quantity: s.quantity,
+      purchased: s.purchased ?? 0,
 
-  // thuộc tính
-  skuAttributes: s.skuAttributes ?? s.attributes ?? s.sku?.skuAttributes ?? [],
+      // thuộc tính
+      skuAttributes: s.skuAttributes ?? s.attributes ?? s.sku?.skuAttributes ?? [],
 
-  _uid: `${s.id || s.skuId}`,
-}));
-
-
+      _uid: `${s.id || s.skuId}`,
+    }));
 
     buildTimeSlots();
 
@@ -329,7 +333,6 @@ const filteredSkus = computed(() => {
     }));
 });
 
-
 function startCountdown() {
   clearInterval(countdownTimer);
   if (!currentSale.value) return;
@@ -407,14 +410,10 @@ const goToDetail = (sku) => {
     query: {
       flashSku: sku.skuId,
       flashDiscount: sku.discount,
-      flashPrice: (
-        sku.price * (1 - sku.discount / 100)
-      ).toFixed(0)
-    }
+      flashPrice: (sku.price * (1 - sku.discount / 100)).toFixed(0),
+    },
   });
 };
-
-
 
 onMounted(() => fetchAll());
 onUnmounted(() => clearInterval(countdownTimer));
@@ -572,11 +571,9 @@ onUnmounted(() => clearInterval(countdownTimer));
   border-radius: 8px;
   font-size: 12px;
   color: #f1f1f1;
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   transition: 0.2s;
 }
-
-
 
 .product-prices {
   display: flex;
