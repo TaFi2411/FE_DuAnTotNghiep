@@ -30,7 +30,7 @@ import PaymentResult from "@/views/client/PaymentResult.vue";
 import Profile from "@/views/client/Profile.vue";
 
 // Admin
-import Dashboard from '@/views/admin/Dashboard.vue';
+import Dashboard from '@/views/admin/statistical.vue';
 import AccountManagement from "@/views/admin/AccountManagement.vue";
 
 import paymentMethod from '@/views/admin/PaymentMethod.vue';

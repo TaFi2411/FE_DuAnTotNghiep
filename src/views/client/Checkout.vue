@@ -872,10 +872,7 @@ const fetchShippingFee = async () => {
  }
 
  try {
-  // 1. TẠO TRỌNG LƯỢNG GỬI ĐI
- // Dựa trên logic bạn mong muốn (Backend đã cố định 500g để tính phí),
- // chúng ta vẫn gửi totalWeight.value. Nếu Backend của bạn đã fix, nó sẽ 
- // tự động override bằng 500g.
+
  const weightToSend = totalWeight.value; 
 
  console.log("Tổng khối lượng GỬI ĐI:", weightToSend); 
@@ -885,18 +882,15 @@ const fetchShippingFee = async () => {
  fromDistrictId: storeDistrictId,
   toDistrictId: Number(selectedAddress.value.district_id),
   toWardCode: String(selectedAddress.value.ward_code),
-   weight: weightToSend, // Sử dụng tổng khối lượng đã tính
+   weight: weightToSend, 
 },
  });
 
  console.log('GHN Fee Response:', res.data);
 
  // 2. CẬP NHẬT PHÍ SHIP
- shippingFee.value = res.data?.total || res.data?.data?.total || 0;
-
- // 🛑 LOẠI BỎ TOÀN BỘ LOGIC GHI ĐÈ SAI DƯỚI ĐÂY:
- // const weightFromBackend = res.data?.weight || 0; 
- // cartItems.value.forEach(item => { item.weight = weightFromBackend; }); 
+//  shippingFee.value = res.data?.total || res.data?.data?.total || 0;
+shippingFee.value = 0; // Luôn là 0 bất kể GHN trả về gì
 
  } catch (err) {
  shippingFee.value = 0;
@@ -987,11 +981,14 @@ console.log("Order Payload:", orderPayload);
       const res = await axios.post("/api/vnpay/create", {
         amount: orderPayload.total,
           // orderId: uniqueOrderId,   // gửi orderId từ FE
-
+productVoucherId: orderPayload.productVoucherId,
+        shippingVoucherId: orderPayload.shippingVoucherId,
+        accountId: orderPayload.accountId,
         orderInfo: orderPayload.orderId,
       });     
 
       if (res.data?.paymentUrl) {
+        sessionStorage.setItem("pendingTxnRef", res.data.orderId);
         sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
         window.location.href = res.data.paymentUrl;
         return;
@@ -1012,11 +1009,14 @@ if (selectedPaymentMethod.value === 3) { // MOMO
 
     console.log("MOMO create response:", res.data);
 
-    // Lấy link thanh toán
+   // Lấy link thanh toán
     const paymentUrl = res?.data?.payUrl || res?.data?.data?.payUrl;
+    const momoOrderId = res?.data?.orderId; // Lấy orderId từ backend trả về
 
-    if (paymentUrl) {
-      // redirect sang MoMo
+    if (paymentUrl && momoOrderId) {
+      // ✅ QUAN TRỌNG: Lưu mã đơn hàng vào session trước khi đi
+      sessionStorage.setItem("pendingMomoOrderId", momoOrderId);
+      sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
       window.location.href = paymentUrl;
       return;
     } else {
@@ -1037,10 +1037,51 @@ if (selectedPaymentMethod.value === 3) { // MOMO
   }
 }
 
+// Tìm đến cuối hàm handlePayment và thêm logic PayOS
+if (selectedPaymentMethod.value === 4) { // Giả sử ID 4 là PayOS
+    try {
+        // 1. Gửi request tạo thanh toán
+        const res = await axios.post("/api/payos/create-payment?origin=web", {
+            amount: orderPayload.total,
+            description: `Thanh toan don hang ${uniqueOrderId}`,
+            buyerName: orderPayload.shippingName,
+            buyerPhone: orderPayload.shippingPhone,
+            buyerAddress: orderPayload.shippingAddress,
+          // QUAN TRỌNG: Phải có danh sách sản phẩm ở đây
+            orderDetails: orderPayload.orderDetails, 
+            totalDiscount: orderPayload.discount, // Hoặc tên trường khớp với DTO của bạn
+            // Các thông tin bổ sung để Backend xử lý Voucher
+              totalWeight: orderPayload.totalWeight,
+
+            productVoucherId: orderPayload.productVoucherId,
+            shippingVoucherId: orderPayload.shippingVoucherId,
+            feeship: orderPayload.feeship,
+            discountProduct: orderPayload.discountProduct,
+            discountShipping: orderPayload.discountShipping
+        });
+
+        if (res.data?.checkoutUrl) {
+            // 2. Lưu thông tin đơn hàng tạm thời vào session để tạo sau khi thanh toán xong
+            sessionStorage.setItem("pendingOrder", JSON.stringify(orderPayload));
+            sessionStorage.setItem("pendingPayosOrderCode", res.data.orderCode);
+            
+            // 3. Chuyển hướng sang trang thanh toán của PayOS
+            window.location.href = res.data.checkoutUrl;
+            return;
+        }
+    } catch (err) {
+        console.error("PayOS Error:", err);
+        Swal.fire("Lỗi", "Không thể khởi tạo thanh toán PayOS", "error");
+        return;
+    }
+}
 
 
    if (selectedPaymentMethod.value === 2) {
       const orderRes = await axios.post("/api/order-cod", orderPayload);
+      // ✅ GỌI XÓA DATABASE TRƯỚC KHI CHUYỂN TRANG
+    const purchasedIds = orderPayload.orderDetails.map(d => d.skuId);
+    await clearPurchasedItemsFromDb(purchasedIds);
       console.log(localStorage.getItem('token'));
 
       // ✅ THÊM THÔNG BÁO THÀNH CÔNG TẠI ĐÂY
@@ -1085,16 +1126,28 @@ if (selectedPaymentMethod.value === 3) { // MOMO
 };
 
 // Handle callback from payment gateways
-
+const clearPurchasedItemsFromDb = async (skuIds) => {
+    if (!skuIds || skuIds.length === 0 || !accountId.value) return;
+    try {
+        await axios.post("/api/cart-details/remove-after-order", {
+            accountId: accountId.value,
+            skuIds: skuIds // Gửi mảng ID sản phẩm đã mua
+        });
+        console.log("Database cart cleared for:", skuIds);
+    } catch (err) {
+        console.error("Lỗi xóa giỏ hàng Database:", err);
+    }
+};
 
 const handlePaymentCallback = async () => {
   console.log("🔥 handlePaymentCallback chạy rồi");
-
   try {
     const urlParams = new URLSearchParams(window.location.search);
     const vnp_ResponseCode = urlParams.get("vnp_ResponseCode");
     const momoResultCode = urlParams.get("resultCode");
-
+    const payosStatus = urlParams.get("status"); 
+    console.log("Trạng thái PayOS nhận được:", payosStatus);
+    const payosOrderCode = urlParams.get("orderCode");
     const pendingOrderStr = sessionStorage.getItem("pendingOrder");
     const token = localStorage.getItem("token"); // JWT lưu trong localStorage
     console.log("JWT token:", token);
@@ -1108,19 +1161,46 @@ const handlePaymentCallback = async () => {
       window.location.href = "/login";
       return;
     }
+if (payosStatus === "PAID" && payosOrderCode) {
+      try {
+          const res = await axios.post(`http://localhost:8080/api/payos/payos-success/${payosOrderCode}`, 
+              {}, 
+              { headers: { Authorization: `Bearer ${token}` } }
+          );
 
-    // ----- Xử lý MOMO -----
-    if (momoResultCode === "0") {
-      // MOMO đã thanh toán thành công trước đó, chỉ thông báo
-      sessionStorage.removeItem("pendingOrder");
-      await Swal.fire({
+          sessionStorage.removeItem("pendingOrder");
+          sessionStorage.removeItem("pendingPayosOrderCode");
+          sessionStorage.removeItem("cart");
+          sessionStorage.removeItem("checkoutItems");
+
+          await Swal.fire("Thành công", "Thanh toán PayOS thành công!", "success");
+          window.location.href = "/orders";
+          return;
+      } catch (err) {
+          console.error("Lỗi tạo đơn sau PayOS:", err);
+          Swal.fire("Lỗi", "Thanh toán thành công nhưng lỗi tạo đơn hàng", "error");
+          return;
+      }
+  }
+// Trong hàm handlePaymentCallback, phần xử lý MOMO thành công:
+if (momoResultCode === "0") {
+    const pendingOrder = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
+    if (pendingOrder.orderDetails) {
+        await clearPurchasedItemsFromDb(pendingOrder.orderDetails.map(d => d.skuId));
+    }
+    
+    // ✅ Dọn dẹp session MoMo
+    sessionStorage.removeItem("pendingOrder");
+    sessionStorage.removeItem("pendingMomoOrderId"); 
+
+    await Swal.fire({
         icon: "success",
         title: "Thanh toán MOMO thành công!",
         text: "Đơn hàng của bạn đã được ghi nhận.",
-      });
-      window.location.href = "/orders";
-      return;
-    }
+    });
+    window.location.href = "/orders";
+    return;
+}
 
     // ----- Xử lý VNPAY -----
     if (vnp_ResponseCode === "00") {
@@ -1143,7 +1223,9 @@ const handlePaymentCallback = async () => {
           orderPayload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
+// ✅ GỌI XÓA DATABASE SAU KHI TẠO ĐƠN THÀNH CÔNG
+        const purchasedIds = orderPayload.orderDetails.map(d => d.skuId);
+        await clearPurchasedItemsFromDb(purchasedIds);
         const orderId = createdOrderRes.data?.id || createdOrderRes.data;
 
         // Gọi backend thông báo VNPAY success
@@ -1210,15 +1292,67 @@ const handlePaymentCallback = async () => {
 
 
 onMounted(async () => {
+  // 1. Lấy dữ liệu cơ bản
   fetchCartFromSessionStorage();
   fetchAccountId();
-  await fetchProvinces();
-  await fetchAddresses();
-  await fetchPaymentMethods();
-  await fetchVouchers();
-const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get("vnp_ResponseCode") || urlParams.get("resultCode")) {
+  await Promise.all([fetchProvinces(), fetchAddresses(), fetchPaymentMethods(), fetchVouchers()]);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  // Kiểm tra callback từ các cổng thanh toán
+  const hasPaymentCallback = 
+    urlParams.get("vnp_ResponseCode") || 
+    urlParams.get("resultCode") || 
+    urlParams.get("status");
+
+  // 2. Nếu ĐANG xử lý kết quả thanh toán trả về (Callback)
+  if (hasPaymentCallback) {
     await handlePaymentCallback();
+    
+    // Xóa sạch tất cả các mã lưu tạm sau khi đã xử lý xong kết quả
+    sessionStorage.removeItem("pendingTxnRef");           // VNPAY
+    sessionStorage.removeItem("pendingPayosOrderCode");    // PayOS
+    sessionStorage.removeItem("pendingMomoOrderId");      // MoMo
+  } 
+  
+  // 3. Nếu KHÔNG phải là callback (Khách tự ý quay lại trang checkout hoặc nhấn Back)
+  else {
+    // --- Xử lý hoàn Voucher cho VNPAY ---
+    const pendingTxnRef = sessionStorage.getItem("pendingTxnRef");
+    if (pendingTxnRef) {
+      try {
+        await axios.post(`/api/vnpay/release/${pendingTxnRef}`);
+        sessionStorage.removeItem("pendingTxnRef");
+        console.log("VNPAY: Đã hoàn lại voucher.");
+      } catch (err) {
+        console.error("Lỗi hoàn voucher VNPAY:", err);
+      }
+    }
+
+    // --- Xử lý hoàn Voucher cho PAYOS ---
+    const pendingPayosCode = sessionStorage.getItem("pendingPayosOrderCode");
+    if (pendingPayosCode) {
+      try {
+        await axios.post(`/api/payos/release/${pendingPayosCode}`);
+        sessionStorage.removeItem("pendingPayosOrderCode");
+        console.log("PayOS: Đã hoàn lại voucher.");
+      } catch (err) {
+        console.error("Lỗi hoàn voucher PayOS:", err);
+      }
+    }
+
+    // --- BỔ SUNG: Xử lý hoàn Voucher cho MOMO ---
+    const pendingMomoId = sessionStorage.getItem("pendingMomoOrderId");
+    if (pendingMomoId) {
+      try {
+        // Gọi đến API release MoMo mà mình vừa viết ở Backend
+        await axios.post(`/api/momo/release/${pendingMomoId}`);
+        sessionStorage.removeItem("pendingMomoOrderId");
+        console.log("MoMo: Khách đã quay lại, voucher đã được hoàn kho.");
+      } catch (err) {
+        console.error("Lỗi hoàn voucher MoMo:", err);
+      }
+    }
   }
 });
 </script>

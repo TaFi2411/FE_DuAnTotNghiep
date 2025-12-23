@@ -79,7 +79,7 @@
                     </router-link>
                   </li>
                   <li v-if="isAdmin">
-                    <router-link class="dropdown-item custom-item" to="/admin">
+                    <router-link class="dropdown-item custom-item" to="/admin/statistical">
                       <i class="bi bi-speedometer2 me-2"></i> Quản lý hệ thống
                     </router-link>
                   </li>

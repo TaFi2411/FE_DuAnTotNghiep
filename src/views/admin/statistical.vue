@@ -75,16 +75,31 @@
           <div v-else>
             <ReusableChart 
               chartId="revenueTrendChart"
-              chartType="line"
+              chartType="bar"
               :chartData="revenueChartData"
-              :chartOptions="{
-                responsive: true, 
-                interaction: { mode: 'index', intersect: false },
-                scales: { 
-                  y: { type: 'linear', display: true, position: 'left', title: {display: true, text: 'Doanh thu (VND)'} },
-                  y1: { type: 'linear', display: true, position: 'right', title: {display: true, text: 'Đơn hàng (SL)'}, grid: { drawOnChartArea: false } }
-                } 
-              }"
+           :chartOptions="{
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: true, position: 'top' }
+  },
+  // Khống chế độ rộng của cột
+  barPercentage: 0.5, 
+  categoryPercentage: 0.5,
+  scales: {
+    y: { 
+      beginAtZero: true, 
+      position: 'left',
+      title: { display: true, text: 'Doanh thu (VND)' } 
+    },
+    y1: { 
+      beginAtZero: true, 
+      position: 'right',
+      title: { display: true, text: 'Đơn hàng (SL)' },
+      grid: { drawOnChartArea: false } 
+    }
+  }
+}"
             />
           </div>
         </div>
@@ -219,8 +234,6 @@ function getLocalDateString(date) {
 }
 
 
-// --- DỮ LIỆU COMPUTED CHO BIỂU ĐỒ ---
-// 1. Dữ liệu cho Biểu đồ Xu hướng (Line Chart)
 const revenueChartData = computed(() => ({
   labels: rawTrendData.value.map(item => item.timePeriod),
   datasets: [
@@ -228,9 +241,13 @@ const revenueChartData = computed(() => ({
       label: 'Doanh thu (VND)',
       data: rawTrendData.value.map(item => item.totalRevenue),
       borderColor: '#6a11cb',
+      backgroundColor: 'rgba(106, 17, 203, 0.2)', // Thêm màu đổ nền cực kỳ quan trọng
       fill: true,
       tension: 0.3,
-      yAxisID: 'y'
+      yAxisID: 'y',
+      pointRadius: 6,           // Làm điểm nút to hơn để dễ thấy khi có 1 điểm
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#6a11cb'
     },
     {
       label: 'Đơn hàng (SL)',
@@ -239,11 +256,13 @@ const revenueChartData = computed(() => ({
       backgroundColor: '#28a745',
       fill: false,
       tension: 0.3,
-      yAxisID: 'y1'
+      yAxisID: 'y1',
+      pointRadius: 6,           // Làm điểm nút to hơn
+      pointHoverRadius: 8,
+      pointBackgroundColor: '#28a745'
     }
   ]
 }));
-
 // 2. Dữ liệu cho Biểu đồ Tỷ lệ Trạng thái (Doughnut Chart)
 const statusRatioData = computed(() => ({
     labels: ['Hoàn thành', 'Đang giao/Xử lý', 'Đã hủy'],
@@ -329,7 +348,7 @@ let formattedStartDate = startDate.value ? new Date(startDate.value + "T00:00:00
     // ⭐ ĐÃ SỬA: Dùng đường dẫn tương đối ⭐
     const response = await axios.get("/api/statistics/top-selling", {
       params: { 
-        limit: 1000, 
+        limit: 2, 
         startDate: formattedStartDate, 
         endDate: formattedEndDate     
       } 

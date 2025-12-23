@@ -265,14 +265,7 @@
                         Đã nhận hàng
                       </button>
 
-                      <button v-if="order.statusName === 'COMPLETED'" class="btn btn-dark mt-2 me-2"
-                        @click.stop="openReviewModal(order.items[0].id)">
-                        Đánh giá
-                      </button>
-
-
-              
-
+                   
                     </div>
                   </div>
                 </transition>
