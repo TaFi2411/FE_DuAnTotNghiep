@@ -31,31 +31,31 @@
         <div class="product-info bg-white rounded-4 shadow-sm p-4">
           <h1 class="product-name text-black">{{ product.name }}</h1>
 
-         <p class="product-price mb-4">
+          <p class="product-price mb-4">
 
-  <!-- Nếu SKU đang trong FlashSale -->
-  <template v-if="isFlashSale">
-    <span class="text-danger fw-bold" style="font-size: 1.7rem;">
-      {{ flashPrice.toLocaleString("vi-VN") }} VNĐ
-    </span>
+            <!-- Nếu SKU đang trong FlashSale -->
+            <template v-if="isFlashSale">
+              <span class="text-danger fw-bold" style="font-size: 1.7rem;">
+                {{ flashPrice.toLocaleString("vi-VN") }} VNĐ
+              </span>
 
-    <span class="badge bg-danger ms-2">FlashSale</span> 
+              <span class="badge bg-danger ms-2">FlashSale</span>
 
-    <br />
+              <br />
 
-    <span class="text-muted text-decoration-line-through" style="font-size: 1rem;">
-      {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
-    </span>
-  </template>
+              <span class="text-muted text-decoration-line-through" style="font-size: 1rem;">
+                {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
+              </span>
+            </template>
 
-  <!-- Nếu SKU không sale -->
-  <template v-else>
-    <span class="text-black fw-bold" style="font-size: 1.6rem;">
-      {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
-    </span>
-  </template>
+            <!-- Nếu SKU không sale -->
+            <template v-else>
+              <span class="text-black fw-bold" style="font-size: 1.6rem;">
+                {{ originalPrice.toLocaleString("vi-VN") }} VNĐ
+              </span>
+            </template>
 
-</p>
+          </p>
 
 
           <!-- Thuộc tính -->
@@ -66,9 +66,9 @@
                 active: selectedAttributes[attrGroup.name] === option.name,
                 disabled: option.disabled,
               }" @click="
-                  !option.disabled &&
-                  selectAttribute(attrGroup.name, option.name)
-                  ">
+                !option.disabled &&
+                selectAttribute(attrGroup.name, option.name)
+                ">
                 {{ option.name }}
               </span>
             </div>
@@ -103,22 +103,12 @@
             Số lượng còn lại: <strong>{{ selectedSku.quantity }}</strong>
           </p>
 
-          <!-- ⭐ Đánh giá + Đã bán -->
-          <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="text-warning fs-5">
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-fill"></i>
-              <i class="bi bi-star-half"></i>
-            </div>
-            <span class="text-muted small">(4.8/5 - 126 đánh giá)</span>
-          </div>
+          
         </div>
       </div>
     </div>
 
-    <PolicySection/>
+    <PolicySection />
 
     <div class="product-info mt-5 bg-white rounded-4 shadow-sm p-4 description-wrapper">
       <h4 class="fw-bold mb-3 text-black text-center">Mô tả sản phẩm</h4>

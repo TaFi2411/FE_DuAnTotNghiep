@@ -31,13 +31,13 @@
           <div class="card product-card h-100 text-center">
             <img :src="product.image" class="card-img-top mx-auto" alt="Ảnh sản phẩm" />
 
-            <div class="card-body d-flex flex-column justify-content-between">
-              <h6 class="fw-bold text-dark mb-2 product-name">
+            <div class="card-body ">
+              <h6 class="fw-bold text-dark product-name">
                 {{ product.name }}
               </h6>
 
               <!-- Giá thấp nhất -->
-              <p class="text-muted mb-1 fw-semibold">
+              <p class="text-muted  fw-semibold">
                 {{ formatPrice(product.price) }}
               </p>
 
@@ -51,11 +51,6 @@
                   <span v-for="(val, idx) in values.slice(0, 3)" :key="idx" class="attr-square">{{ val }}</span>
                   <span v-if="values.length > 3" class="attr-more">+{{ values.length - 3 }}</span>
                 </div>
-              </div>
-
-              <!-- 5 sao và số lượng đã bán -->
-              <div class="mb-2">
-                <span class="text-warning fs-6">★★★★★</span>
               </div>
 
 
@@ -236,7 +231,7 @@ onMounted(fetchProducts);
   align-items: stretch;
   flex: 1;
   width: 100%;
-  min-height: 440px;
+  min-height: 340px;
   border: 1px solid #eee;
   border-radius: 16px;
   overflow: hidden;

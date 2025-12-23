@@ -3,7 +3,7 @@ import { RouterView } from 'vue-router';
 
 import HeaderClient from '@/components/client/HeaderClient.vue';
 import FooterClient from '@/components/client/FooterClient.vue';
-import ChatBox from '@/components/AI/ChatBox.vue';
+
 
 </script>
 
@@ -14,10 +14,6 @@ import ChatBox from '@/components/AI/ChatBox.vue';
     <div class="content">
       <RouterView />
       
-      <div>
-         <ChatBox />
-      
-      </div>
      
 
     </div>

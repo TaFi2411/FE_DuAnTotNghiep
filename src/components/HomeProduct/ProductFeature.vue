@@ -80,11 +80,9 @@
               </div>
             </div>
 
-            <div class="mb-2">
-              <span class="text-warning fs-6">★★★★★</span>
-            </div>
+            
 
-            <p class="text-muted small mb-3">Đã bán {{ product.sold || 0 }}</p>
+           
 
             <div class="d-flex justify-content-center gap-2">
             
@@ -292,7 +290,7 @@ onMounted(fetchProducts);
   align-items: stretch;
   flex: 1;
   width: 100%;
-  min-height: 440px;
+  min-height: 340px;
   border: 1px solid #eee;
   border-radius: 16px;
   overflow: hidden;
