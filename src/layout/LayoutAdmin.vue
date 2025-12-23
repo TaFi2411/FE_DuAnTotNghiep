@@ -24,7 +24,7 @@ const toggleSidebar = () => {
 }
 
 const menu = [
-  { type: 'item', name: 'Tổng quan', path: '/admin', icon: 'bi bi-speedometer2' },
+  { type: 'item', name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-bar-chart' },
 
   { type: 'title', label: 'QUẢN LÝ SẢN PHẨM' },
   {
@@ -46,7 +46,6 @@ const menu = [
 
   { type: 'title', label: 'HỆ THỐNG' },
   { type: 'item', name: 'Người dùng', path: '/admin/account-management', icon: 'bi bi-people' },
-  { type: 'item', name: 'Thống kê', path: '/admin/statistical', icon: 'bi bi-bar-chart' },
 ]
 
 

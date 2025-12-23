@@ -374,28 +374,28 @@ async function markDelivered(orderId) {
 }
 
 async function cancelOrderByAdmin(orderId) {
-    const { value: reason, isConfirmed } = await Swal.fire({
-        title: 'Hủy đơn hàng này?',
-        input: 'textarea',
-        inputLabel: 'Lý do hủy đơn',
-        inputPlaceholder: 'Nhập lý do gửi đến khách hàng...',
-        inputAttributes: { 'aria-label': 'Nhập lý do hủy' },
+    const { isConfirmed } = await Swal.fire({
+        title: 'Xác nhận hủy đơn?',
+        text: "Bạn có chắc chắn muốn hủy đơn hàng này không?",
+        icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
         confirmButtonText: 'Xác nhận hủy',
         cancelButtonText: 'Quay lại',
-        inputValidator: (value) => {
-            if (!value) return 'Bạn cần nhập lý do hủy!'
-        }
     });
 
     if (isConfirmed) {
         try {
-            // Lưu ý: Nếu Backend nhận note qua body thì truyền { note: reason }
-            await axios.put(`http://localhost:8080/api/order/admin/${orderId}/cancel`, { note: reason }, {
+            // Gửi request với note mặc định hoặc để trống nếu Backend cho phép
+            await axios.put(`http://localhost:8080/api/order/admin/${orderId}/cancel`, 
+            { note: "Đơn hàng bị hủy bởi Quản trị viên" }, // Hoặc { note: "" }
+            {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             });
+
             Swal.fire('Đã hủy!', 'Đơn hàng đã được hủy thành công.', 'success');
+            
+            // Reload lại dữ liệu
             loadOrders(currentPage.value);
             loadOrderCounts();
             expandedOrder.value = null;

@@ -43,7 +43,7 @@ const isOpen = (item) => item.children && openItem.value === item.name
 <template>
   <div :class="['sidebar', { collapsed: isCollapsed }]">
     <div class="sidebar-header">
-      <router-link class="navbar-brand p-3" to="/admin" v-if="!isCollapsed">
+      <router-link class="navbar-brand p-3" to="/admin/statistical" v-if="!isCollapsed">
         <img src="/images/Logo.png" alt="Logo" height="40" width="120" />
       </router-link>
 
